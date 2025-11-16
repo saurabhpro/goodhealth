@@ -1,0 +1,212 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="JUnit5Converter" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="LocalCanBeFinal" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="Production" level="WARNING" enabled="true">
+        <option name="REPORT_VARIABLES" value="true" />
+        <option name="REPORT_PARAMETERS" value="false" />
+        <option name="REPORT_CATCH_PARAMETERS" value="false" />
+      </scope>
+      <option name="REPORT_VARIABLES" value="true" />
+      <option name="REPORT_PARAMETERS" value="true" />
+    </inspection_tool>
+    <inspection_tool class="OnDemandImport" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="OptionalUsedAsFieldOrParameterType" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="RedundantExplicitVariableType" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SSBasedInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <replaceConfiguration name="Constructor param should be validated for null or empty" suppressId="constructor_null_or_empty" text="this.$Field$ = $Value$;" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="com.revolut.butter.Checks.checkNotEmpty(&quot;$Value$&quot;, $Value$)">
+        <constraint name="__context__" script="&quot;def field = Field.resolve()&#10;if (!(field instanceof com.intellij.psi.PsiField)) return false&#10;def modifierList = field.getModifierList()&#10;if (!modifierList.hasModifierProperty('final')) return false&#10;if (Value instanceof com.intellij.psi.PsiMethodCallExpression || Value instanceof com.intellij.psi.PsiNewExpression) return false&#10;if (Value instanceof com.intellij.psi.PsiReferenceExpression &amp;&amp; Value.resolve() instanceof com.intellij.psi.PsiEnumConstant) return false&#10;def containingClass = field.getContainingClass()&#10;def superClasses = containingClass.getSupers().collect { it.getQualifiedName() }&#10;def skippedClasses = [&#10;    'com.revolut.alpha.action.Flow',&#10;    'com.revolut.alpha.model.ModelView', 'com.revolut.alpha.model.EntityView', 'com.revolut.alpha.model.AuditedEntityView',&#10;    'com.revolut.trading.message.MessageConsumer', 'com.revolut.eventstore.streaming.MultiEventConsumer',&#10;    'com.revolut.alpha.action.Action'&#10;]&#10;if (!superClasses.intersect(skippedClasses).isEmpty()) return false&#10;if (containingClass.enum) return false&#10;def containingClassModifiers = containingClass.getModifierList()&#10;if (!containingClassModifiers.hasModifierProperty('public')) return false&#10;def method = __context__?.getParent()?.getParent()&#10;if (!method || !(method instanceof com.intellij.psi.PsiMethod)) return false&#10;if (method.hasAnnotation('com.google.inject.Inject') || method.hasAnnotation('javax.inject.Inject')) return false&#10;return true&#10;&quot;" within="" contains="" />
+        <constraint name="Field" within="" contains="" />
+        <constraint name="Value" nameOfExprType="java\.lang\.String" target="true" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Constructor param should be validated for null or empty" text="this.$Field$ = $Value$;" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="com.revolut.butter.Checks.checkRequired(&quot;$Value$&quot;, $Value$)">
+        <constraint name="__context__" script="&quot;def field = Field.resolve()&#10;if (!(field instanceof com.intellij.psi.PsiField)) return false&#10;def modifierList = field.getModifierList()&#10;if (!modifierList.hasModifierProperty('final')) return false&#10;if (Value instanceof com.intellij.psi.PsiMethodCallExpression || Value instanceof com.intellij.psi.PsiNewExpression) return false&#10;if (Value instanceof com.intellij.psi.PsiReferenceExpression &amp;&amp; Value.resolve() instanceof com.intellij.psi.PsiEnumConstant) return false&#10;def containingClass = field.getContainingClass()&#10;def superClasses = containingClass.getSupers().collect { it.getQualifiedName() }&#10;def skippedClasses = [&#10;    'com.revolut.alpha.action.Flow',&#10;    'com.revolut.alpha.model.ModelView', 'com.revolut.alpha.model.EntityView', 'com.revolut.alpha.model.AuditedEntityView',&#10;    'com.revolut.trading.message.MessageConsumer', 'com.revolut.eventstore.streaming.MultiEventConsumer',&#10;    'com.revolut.alpha.action.Action'&#10;]&#10;if (!superClasses.intersect(skippedClasses).isEmpty()) return false&#10;if (containingClass.enum) return false&#10;def containingClassModifiers = containingClass.getModifierList()&#10;if (!containingClassModifiers.hasModifierProperty('public')) return false&#10;def method = __context__?.getParent()?.getParent()&#10;if (!method || !(method instanceof com.intellij.psi.PsiMethod)) return false&#10;if (method.hasAnnotation('com.google.inject.Inject') || method.hasAnnotation('javax.inject.Inject')) return false&#10;return true&#10;&quot;" within="" contains="" />
+        <constraint name="Field" within="" contains="" />
+        <constraint name="Value" nameOfExprType="java\.lang\.String|java\.util\.Optional|boolean|int|short|long" target="true" negateExprType="true" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Do not use Optional.of|ofNullable" suppressId="optional_of" text="java.util.Optional.of($Value$)" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="com.revolut.butter.Optionality.some($Value$)">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Value" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Do not use Optional.of|ofNullable" text="java.util.Optional.ofNullable($Value$)" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="com.revolut.butter.Optionality.optional($Value$)">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Value" within="" contains="" />
+      </replaceConfiguration>
+      <searchConfiguration name="Incorrect field name in butter check" text="com.revolut.butter.Checks.$anyMethod$(&quot;$var1$&quot;, $var2$)" recursive="true" caseInsensitive="true" type="JAVA" pattern_context="default">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="var2" script="&quot;!var2.text.toLowerCase().contains(var1.text.replaceAll('\\&quot;| |-|_', '').toLowerCase()) &amp;&amp; !var1.text.contains(' ')&quot;" within="" contains="" />
+        <constraint name="var1" within="" contains="" />
+        <constraint name="anyMethod" within="" contains="" />
+      </searchConfiguration>
+      <searchConfiguration name="Optional args should be after non optional args" suppressId="optional_params_order" text="$ReturnType$ $Method$($AnyParamType$ $AnyParam$, $OptionalType$ $OptParameter$, $ParameterType$ $Parameter$);&#10;" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="member">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="ParameterType" regexp="java.util.Optional" negateName="true" within="" contains="" />
+        <constraint name="Parameter" maxCount="2147483647" within="" contains="" />
+        <constraint name="OptionalType" regexp="java.util.Optional" within="" contains="" />
+        <constraint name="OptParameter" maxCount="2147483647" target="true" within="" contains="" />
+        <constraint name="AnyParam" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="AnyParamType" within="" contains="" />
+        <constraint name="Method" within="" contains="" />
+        <constraint name="ReturnType" minCount="0" within="" contains="" />
+      </searchConfiguration>
+      <replaceConfiguration name="Optional fields must not be checked for null value" uuid="66f48d1f-8856-309f-a388-b237d4156ed5" description="Optional fields must not be checked for null value, because it will cover the underlying problem: Optional fields can not be null by convention and null values should be treated as bugs. In addition, it will negate NPE reporting improvements introduced by default in Java 15&#10;https://revolut.atlassian.net/wiki/spaces/BD/pages/1457366441/Java+conventions#Optional" suppressId="optional_should_not_be_validated" problemDescriptor="Optional fields must not be checked for null value" text="this.$Field$ = java.util.Objects.requireNonNull($Value$, $Message$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="this.$Field$ = $Value$;">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Field" within="" contains="" />
+        <constraint name="Value" nameOfExprType="java\.util\.Optional" within="" contains="" />
+        <constraint name="Message" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Optional fields must not be checked for null value" uuid="66f48d1f-8856-309f-a388-b237d4156ed5" text="this.$Field$ = java.util.Objects.requireNonNull($Value$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="this.$Field$ = $Value$;">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Field" within="" contains="" />
+        <constraint name="Value" nameOfExprType="java\.util\.Optional" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Optional fields must not be checked for null value" uuid="66f48d1f-8856-309f-a388-b237d4156ed5" text="this.$Field$ = com.google.common.base.Preconditions.checkNotNull($Value$, $Message$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="this.$Field$ = $Value$;">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Field" within="" contains="" />
+        <constraint name="Value" nameOfExprType="java\.util\.Optional" within="" contains="" />
+        <constraint name="Message" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Optional fields must not be checked for null value" uuid="66f48d1f-8856-309f-a388-b237d4156ed5" text="this.$Field$ = com.google.common.base.Preconditions.checkNotNull($Value$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="this.$Field$ = $Value$;">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Field" within="" contains="" />
+        <constraint name="Value" nameOfExprType="java\.util\.Optional" within="" contains="" />
+      </replaceConfiguration>
+      <searchConfiguration name="Unnecessary 'final' on argument declarations" uuid="86257892-8def-3871-9f7b-96486cfa4740" description="Use of final keyword&#10;Production code: everywhere where syntactically allowed, except argument declarations.&#10;https://revolut.atlassian.net/wiki/spaces/BD/pages/1457366441/Java+conventions#Use-of-final-keyword" suppressId="uneccessary_final_argument" problemDescriptor="Unnecessary 'final' on parameter on #ref" text="$ReturnType$ $Method$($BeforeType$ $BeforeParameter$, final $ParameterType$ $Parameter$, $AfterType$ $AfterParameter$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="member">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="ReturnType" minCount="0" within="" contains="" />
+        <constraint name="Method" within="" contains="" />
+        <constraint name="BeforeType" within="" contains="" />
+        <constraint name="BeforeParameter" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="ParameterType" target="true" within="" contains="" />
+        <constraint name="Parameter" within="" contains="" />
+        <constraint name="AfterType" within="" contains="" />
+        <constraint name="AfterParameter" minCount="0" maxCount="2147483647" within="" contains="" />
+      </searchConfiguration>
+      <searchConfiguration name="Use assertj instead of hamcrest" uuid="ccd225c1-1541-33c4-923a-65e85faf279e" description="&lt;a href=&quot;https://revolut.atlassian.net/wiki/spaces/BD/pages/1457366441/Java+conventions#Assertions&quot;&gt;Java conventions -&gt; Assertions&lt;/a&gt;" suppressId="hamcrest_usage" text="$Instance$.$MethodCall$($Parameter$)" recursive="true" caseInsensitive="false" type="JAVA" pattern_context="default">
+        <constraint name="__context__" script="&quot;       if (!MethodCall instanceof com.intellij.psi.PsiMethodCallExpression) return false&#10;       def method = MethodCall?.resolveMethod()&#10;       def modifierList = method?.getModifierList()&#10;       if(!modifierList?.hasModifierProperty('static')) return false&#10;       def packageName = method?.getPresentation()?.getLocationString() ?: ''&#10;       return packageName.contains('org.hamcrest')&quot;" within="" contains="" />
+        <constraint name="Instance" minCount="0" within="" contains="" />
+        <constraint name="MethodCall" target="true" within="" contains="" />
+        <constraint name="Parameter" minCount="0" maxCount="2147483647" within="" contains="" />
+      </searchConfiguration>
+      <searchConfiguration name="Use Assertj instead of junit Assertions" suppressId="junit_assertions" text="org.junit.jupiter.api.Assertions.$MethodCall$($Parameter$)" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="MethodCall" within="" contains="" />
+      </searchConfiguration>
+      <replaceConfiguration name="Use Assertj instead of junit Assertions" text="org.junit.jupiter.api.Assertions.assertEquals($Expected$, $Actual$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" useStaticImport="true" replacement="org.assertj.core.api.Assertions.assertThat($Actual$).isEqualTo($Expected$);">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Expected" within="" contains="" />
+        <constraint name="Actual" within="" contains="" />
+      </replaceConfiguration>
+      <searchConfiguration name="Use Assertj instead of junit Assertions" text="org.junit.Assert.$MethodCall$($Parameter$)" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="MethodCall" within="" contains="" />
+      </searchConfiguration>
+      <replaceConfiguration name="Use Assertj instead of junit Assertions" text="org.junit.Assert.assertEquals($Expected$, $Actual$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" useStaticImport="true" replacement="org.assertj.core.api.Assertions.assertThat($Actual$).isEqualTo($Expected$);">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Expected" within="" contains="" />
+        <constraint name="Actual" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" suppressId="mockito_verify" text="org.mockito.Mockito.verify($Parameter$, $Verify$)" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" useStaticImport="true" replacement="org.mockito.BDDMockito.then($Parameter$).should($Verify$)">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" within="" contains="" />
+        <constraint name="Verify" minCount="0" maxCount="2147483647" within="" contains="" />
+      </replaceConfiguration>
+      <searchConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.when($Parameter$)" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" within="" contains="" />
+      </searchConfiguration>
+      <replaceConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.when($Parameter$).thenReturn($Args1$).thenReturn($Args2$).thenReturn($Args3$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" useStaticImport="true" replacement="org.mockito.BDDMockito.given($Parameter$)&#10;    .willReturn($Args1$)&#10;    .willReturn($Args2$)&#10;    .willReturn($Args3$);">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" within="" contains="" />
+        <constraint name="Args1" within="" contains="" />
+        <constraint name="Args2" within="" contains="" />
+        <constraint name="Args3" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.when($Parameter$).thenReturn($Args1$).thenReturn($Args2$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" useStaticImport="true" replacement="org.mockito.BDDMockito.given($Parameter$)&#10;    .willReturn($Args1$)&#10;    .willReturn($Args2$);">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" within="" contains="" />
+        <constraint name="Args1" within="" contains="" />
+        <constraint name="Args2" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.when($Parameter$).thenReturn($Args$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" useStaticImport="true" replacement="org.mockito.BDDMockito.given($Parameter$)&#10;    .willReturn($Args$);">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" within="" contains="" />
+        <constraint name="Args" within="" contains="" />
+      </replaceConfiguration>
+      <searchConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.verifyNoMoreInteractions($Parameter$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" minCount="2" maxCount="2147483647" within="" contains="" />
+      </searchConfiguration>
+      <replaceConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.verifyNoMoreInteractions($Parameter$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" useStaticImport="true" replacement="org.mockito.BDDMockito.then($Parameter$).shouldHaveNoMoreInteractions();">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" within="" contains="" />
+      </replaceConfiguration>
+      <searchConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.verifyNoInteractions($Parameter$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" minCount="3" maxCount="2147483647" within="" contains="" />
+      </searchConfiguration>
+      <replaceConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.verifyNoInteractions($Parameter$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="true" replacement="org.mockito.BDDMockito.then($Parameter$).shouldHaveNoInteractions();">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use BDDMockito instead Mockito" uuid="f2d70846-2997-3fe3-8d4e-09e152752769" text="org.mockito.Mockito.verifyNoInteractions($Parameter1$, $Parameter2$);" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="true" useStaticImport="true" replacement="org.mockito.BDDMockito.then($Parameter1$).shouldHaveNoInteractions();&#10;org.mockito.BDDMockito.then($Parameter2$).shouldHaveNoInteractions();">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="Parameter1" within="" contains="" />
+        <constraint name="Parameter2" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use Clock#utc" description="https://revolut.atlassian.net/wiki/spaces/BD/pages/2586182874/Java+17+Upgrade" suppressId="java17_time" text="java.time.Instant.now()" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="false" useStaticImport="true" replacement="com.revolut.common.time.Clock.utc().instant()">
+        <constraint name="__context__" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use Clock#utc" text="java.time.LocalDateTime.now()" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="false" useStaticImport="true" replacement="com.revolut.common.time.Clock.utc().datetime()">
+        <constraint name="__context__" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use Clock#utc" text="java.time.LocalDate.now()" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="false" useStaticImport="true" replacement="com.revolut.common.time.Clock.utc().date()">
+        <constraint name="__context__" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use Clock#utc" text="java.time.OffsetDateTime.now()" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="false" useStaticImport="true" replacement="com.revolut.common.time.Clock.utc().offsetDateTime()">
+        <constraint name="__context__" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use Clock#utc" text="java.time.ZonedDateTime.now()" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="false" useStaticImport="true" replacement="com.revolut.common.time.Clock.utc().zonedDateTime()">
+        <constraint name="__context__" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use Clock#utc" text="java.time.Clock.systemUTC()" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="false" useStaticImport="true" replacement="com.revolut.common.time.Clock.utc().javaClock()">
+        <constraint name="__context__" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use Clock#utc" text="java.time.Clock.system($ZoneId$)" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="false" useStaticImport="true" replacement="com.revolut.common.time.Clock.system($ZoneId$)">
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="ZoneId" within="" contains="" />
+      </replaceConfiguration>
+      <replaceConfiguration name="Use Clock#utc" text="java.time.Clock.systemDefaultZone()" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default" reformatAccordingToStyle="false" shortenFQN="false" useStaticImport="true" replacement="com.revolut.common.time.Clock.system()">
+        <constraint name="__context__" within="" contains="" />
+      </replaceConfiguration>
+      <searchConfiguration name="Use static import instead" suppressId="static_import" problemDescriptor="Use static import instead" text="$Instance$.$MethodCall$($Parameter$)" recursive="true" caseInsensitive="false" type="JAVA" pattern_context="default">
+        <constraint name="__context__" script="&quot;           def method = MethodCall.resolveMethod()&#10;           if (!method) return false&#10;           def modifierList = method.getModifierList()&#10;           if(!modifierList.hasModifierProperty('static')) return false&#10;           String methodName = method.getName()&#10;           def exclusions = [&#10;             'getLogger', 'valueOf', 'empty', 'random', 'generate', 'forClass', 'now', 'parse',&#10;             'include', 'exclude', 'override', 'get', 'contains', 'create', 'copy', 'copyFrom', 'copyOf',&#10;             'values', 'allOf', 'toString', 'compile', 'between', 'fixed', 'newKeySet', 'newBuilder',&#10;             'put', 'serialize', 'deserialize', 'none', 'builder', 'params', 'getInstance', 'add', 'remove', 'defaultConfig'&#10;           ].toSet()&#10;           def exclusionRegexes = [&#10;             /of.*/, /parse.*/, /from.*/, /to.*/, /create.*/, /get.*/, /for.*/, /by.*/, /copyOf.*/&#10;           ]&#10;           if (methodName.size() &lt; 3 || exclusions.contains(methodName)) return false&#10;           if (exclusionRegexes.any { methodName.matches(it) }) return false&#10;           def methodCallText = MethodCall.getText()&#10;           def hasGenerics = methodCallText.contains('&lt;') &amp;&amp; methodCallText.contains('&gt;')&#10;           return !hasGenerics&quot;" within="" contains="" />
+        <constraint name="Instance" within="" contains="" />
+        <constraint name="MethodCall" target="true" within="" contains="" />
+        <constraint name="Parameter" minCount="0" maxCount="2147483647" within="" contains="" />
+      </searchConfiguration>
+      <searchConfiguration name="Use static import instead" text="$Instance$.$Variable$" recursive="false" caseInsensitive="false" type="JAVA" pattern_context="default">
+        <constraint name="__context__" script="&quot;           if (!(Variable instanceof com.intellij.psi.PsiReferenceExpression)) return false&#10;           def resolved = Variable.resolve()&#10;           def exclusions = [&#10;                   'INSTANCE'&#10;           ].toSet()&#10;           if (resolved instanceof com.intellij.psi.PsiEnumConstant) return resolved.getName().length() &gt; 3 &amp;&amp; !exclusions.contains(resolved.getName())&#10;           if (resolved instanceof com.intellij.psi.PsiField) {&#10;               def modifierList = resolved.getModifierList()&#10;               return modifierList.hasModifierProperty('static') &amp;&amp; modifierList.hasModifierProperty('final') &amp;&amp; resolved.getName().length() &gt; 3 &amp;&amp; !exclusions.contains(resolved.getName())&#10;           }&#10;           return false&quot;" within="" contains="" />
+        <constraint name="Instance" within="" contains="" />
+        <constraint name="Variable" within="" contains="" />
+      </searchConfiguration>
+    </inspection_tool>
+    <inspection_tool class="ShouldBeInstanceOfInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="UnnecessarilyQualifiedStaticallyImportedElement" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="UnnecessaryFinalOnLocalVariableOrParameter" enabled="true" level="WARNING" enabled_by_default="true">
+      <scope name="Tests" level="WARNING" enabled="true" editorAttributes="NOT_USED_ELEMENT_ATTRIBUTES" />
+      <option name="onlyWarnOnAbstractMethods" value="true" />
+      <option name="reportLocalVariables" value="false" />
+    </inspection_tool>
+    <inspection_tool class="ccd225c1-1541-33c4-923a-65e85faf279e" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="Tests" level="WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="f2d70846-2997-3fe3-8d4e-09e152752769" enabled="true" level="WARNING" enabled_by_default="false">
+      <scope name="Tests" level="WARNING" enabled="true" />
+    </inspection_tool>
+  </profile>
+</component>
