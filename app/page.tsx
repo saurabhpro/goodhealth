@@ -1,8 +1,15 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { getUser } from '@/lib/auth/actions'
 
-export default function Home() {
+export default async function Home() {
+  // Redirect logged-in users to dashboard
+  const user = await getUser()
+  if (user) {
+    redirect('/dashboard')
+  }
   const features = [
     {
       title: 'Track Workouts',
