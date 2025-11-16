@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUser } from '@/lib/auth/hooks'
+import { toast } from 'sonner'
 
 export default function ProfilePage() {
   const { user, loading } = useUser()
@@ -30,6 +31,9 @@ export default function ProfilePage() {
     setTimeout(() => {
       setSaving(false)
       setEditing(false)
+      toast.success('Profile updated!', {
+        description: 'Your profile information has been saved successfully.'
+      })
     }, 1000)
   }
 

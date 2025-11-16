@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useUser } from '@/lib/auth/hooks'
+import { toast } from 'sonner'
 
 export default function SettingsPage() {
   const { user, loading } = useUser()
@@ -23,6 +24,9 @@ export default function SettingsPage() {
     // Simulate API call
     setTimeout(() => {
       setSaving(false)
+      toast.success('Settings saved!', {
+        description: 'Your preferences have been updated successfully.'
+      })
     }, 1000)
   }
 

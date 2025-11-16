@@ -9,25 +9,39 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from 'sonner'
+import { createGoal } from '@/lib/goals/actions'
 
 export default function NewGoalPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [unit, setUnit] = useState('kg')
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setError(null)
     setLoading(true)
 
-    // TODO: Save to Supabase
     const formData = new FormData(event.currentTarget)
-    console.log('Goal data:', Object.fromEntries(formData))
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false)
-      router.push('/goals')
-    }, 1000)
+    const result = await createGoal(formData)
+
+    setLoading(false)
+
+    if (result.error) {
+      setError(result.error)
+      toast.error('Failed to create goal', {
+        description: result.error
+      })
+    } else {
+      toast.success('Goal created successfully!', {
+        description: 'Your fitness goal has been saved. Track your progress on the goals page.'
+      })
+      setTimeout(() => {
+        router.push('/goals')
+      }, 500)
+    }
   }
 
   return (
@@ -40,6 +54,11 @@ export default function NewGoalPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
+        {error && (
+          <div className="mb-6 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>Goal Details</CardTitle>

@@ -3,7 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
+import { getGoals } from '@/lib/goals/actions'
 import { redirect } from 'next/navigation'
+
+// Force dynamic rendering to prevent caching issues
+export const dynamic = 'force-dynamic'
 
 export default async function GoalsPage() {
   const user = await getUser()
@@ -12,8 +16,8 @@ export default async function GoalsPage() {
     redirect('/login')
   }
 
-  // Placeholder for goals data - will be fetched from Supabase later
-  const goals: any[] = []
+  // Fetch goals from Supabase
+  const { goals } = await getGoals()
 
   return (
     <div className="container mx-auto px-4 py-8">

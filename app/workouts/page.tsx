@@ -3,7 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
+import { getWorkouts } from '@/lib/workouts/actions'
 import { redirect } from 'next/navigation'
+
+// Force dynamic rendering to prevent caching issues
+export const dynamic = 'force-dynamic'
 
 export default async function WorkoutsPage() {
   const user = await getUser()
@@ -12,8 +16,8 @@ export default async function WorkoutsPage() {
     redirect('/login')
   }
 
-  // Placeholder for workouts data - will be fetched from Supabase later
-  const workouts: any[] = []
+  // Fetch workouts from Supabase
+  const { workouts } = await getWorkouts()
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -53,16 +57,20 @@ export default async function WorkoutsPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle>{workout.name}</CardTitle>
-                    <CardDescription>{workout.description}</CardDescription>
+                    <CardDescription>{workout.description || 'No description'}</CardDescription>
                   </div>
-                  <Badge>{workout.date}</Badge>
+                  <Badge>{new Date(workout.date).toLocaleDateString()}</Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-4 text-sm text-muted-foreground">
-                  <span>{workout.duration_minutes} minutes</span>
-                  <span>•</span>
-                  <span>{workout.exercises_count} exercises</span>
+                  {workout.duration_minutes && (
+                    <>
+                      <span>{workout.duration_minutes} minutes</span>
+                      <span>•</span>
+                    </>
+                  )}
+                  <span>{workout.exercises?.length || 0} exercises</span>
                 </div>
               </CardContent>
             </Card>

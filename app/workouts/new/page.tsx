@@ -8,10 +8,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { createWorkout } from '@/lib/workouts/actions'
+import { toast } from 'sonner'
 
 export default function NewWorkoutPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [exercises, setExercises] = useState<Array<{ name: string; sets: string; reps: string; weight: string }>>([
     { name: '', sets: '', reps: '', weight: '' }
   ])
@@ -32,16 +35,32 @@ export default function NewWorkoutPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setError(null)
     setLoading(true)
 
-    // TODO: Save to Supabase
-    console.log('Workout data:', { exercises })
+    const formData = new FormData(event.currentTarget)
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false)
-      router.push('/workouts')
-    }, 1000)
+    // Add exercises as JSON string to FormData
+    formData.append('exercises', JSON.stringify(exercises))
+
+    const result = await createWorkout(formData)
+
+    setLoading(false)
+
+    if (result.error) {
+      setError(result.error)
+      toast.error('Failed to save workout', {
+        description: result.error
+      })
+    } else {
+      toast.success('Workout saved successfully!', {
+        description: 'Your workout has been logged and saved to your profile.'
+      })
+      // Wait a bit for the toast to show before redirecting
+      setTimeout(() => {
+        router.push('/workouts')
+      }, 500)
+    }
   }
 
   return (
@@ -54,6 +73,11 @@ export default function NewWorkoutPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
+        {error && (
+          <div className="mb-6 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Workout Details</CardTitle>
