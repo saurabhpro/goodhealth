@@ -52,28 +52,30 @@ export default async function WorkoutsPage() {
       ) : (
         <div className="grid gap-4">
           {workouts.map((workout) => (
-            <Card key={workout.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle>{workout.name}</CardTitle>
-                    <CardDescription>{workout.description || 'No description'}</CardDescription>
+            <Link href={`/workouts/${workout.id}`} key={workout.id}>
+              <Card className="cursor-pointer hover:border-primary transition-colors">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle>{workout.name}</CardTitle>
+                      <CardDescription>{workout.description || 'No description'}</CardDescription>
+                    </div>
+                    <Badge>{new Date(workout.date).toLocaleDateString()}</Badge>
                   </div>
-                  <Badge>{new Date(workout.date).toLocaleDateString()}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 text-sm text-muted-foreground">
-                  {workout.duration_minutes && (
-                    <>
-                      <span>{workout.duration_minutes} minutes</span>
-                      <span>•</span>
-                    </>
-                  )}
-                  <span>{workout.exercises?.length || 0} exercises</span>
-                </div>
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4 text-sm text-muted-foreground">
+                    {workout.duration_minutes && (
+                      <>
+                        <span>{workout.duration_minutes} minutes</span>
+                        <span>•</span>
+                      </>
+                    )}
+                    <span>{workout.exercises?.length || 0} exercises</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

@@ -21,6 +21,7 @@ export async function createWorkout(formData: FormData) {
   const date = formData.get('date') as string
   const duration = formData.get('duration') as string
   const description = formData.get('description') as string
+  const effortLevel = formData.get('effort_level') as string
   const exercisesJson = formData.get('exercises') as string
 
   // Parse exercises
@@ -40,6 +41,7 @@ export async function createWorkout(formData: FormData) {
       date,
       duration_minutes: duration ? parseInt(duration) : null,
       description,
+      effort_level: effortLevel ? parseInt(effortLevel) : null,
     })
     .select()
     .single()
@@ -56,10 +58,20 @@ export async function createWorkout(formData: FormData) {
     const exerciseRecords = exercises.map((ex: any) => ({
       workout_id: workout.id,
       name: ex.name,
-      sets: parseInt(ex.sets),
+      exercise_type: ex.type || 'strength',
+      // Strength fields
+      sets: ex.sets ? parseInt(ex.sets) : null,
       reps: ex.reps ? parseInt(ex.reps) : null,
       weight: ex.weight ? parseFloat(ex.weight) : null,
       weight_unit: 'kg',
+      // Cardio fields
+      duration_minutes: ex.duration ? parseInt(ex.duration) : null,
+      distance: ex.distance ? parseFloat(ex.distance) : null,
+      distance_unit: 'km',
+      speed: ex.speed ? parseFloat(ex.speed) : null,
+      calories: ex.calories ? parseInt(ex.calories) : null,
+      resistance_level: ex.resistance ? parseInt(ex.resistance) : null,
+      incline: ex.incline ? parseFloat(ex.incline) : null,
     }))
 
     console.log('Creating exercises:', exerciseRecords)
