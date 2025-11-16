@@ -1,0 +1,67 @@
+# .vercelignore - Files to exclude from Vercel deployment
+
+# Documentation (not needed in production)
+*.md
+DEPLOYMENT.md
+SETUP.md
+TESTING.md
+CONTRIBUTING.md
+LICENSE
+
+# Development files
+.vscode/
+.idea/
+*.code-workspace
+
+# Testing
+__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+jest.config.js
+jest.setup.js
+coverage/
+
+# CI/CD (GitHub Actions workflows not needed on Vercel)
+.github/
+
+# Migrations (if already applied in Supabase)
+migrations/
+
+# Local environment
+.env.local
+.env*.local
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Editor configs
+.editorconfig
+.prettierrc
+.prettierignore
+.eslintrc.json
+
+# Package manager
+.npmrc
+.yarnrc
+.pnpm-store/
+
+# Vercel CLI (already there)
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*~

@@ -74,6 +74,94 @@ VERCEL_PROJECT_ID               # Vercel project ID
 CODECOV_TOKEN                   # Optional: Codecov token for coverage reports
 ```
 
+#### How to Get Vercel Credentials
+
+**1. Get VERCEL_TOKEN (Access Token)**
+
+1. Go to [Vercel Account Settings](https://vercel.com/account/tokens)
+2. Click **"Create Token"** or **"Tokens"** tab
+3. Enter a token name (e.g., "GitHub Actions")
+4. Select scope:
+   - Choose **"Full Account"** for complete access
+   - Or select specific scopes if you prefer
+5. Set expiration (recommended: No Expiration for CI/CD, or 1 year)
+6. Click **"Create Token"**
+7. **Copy the token immediately** (you won't be able to see it again)
+8. Save as `VERCEL_TOKEN` in GitHub Secrets
+
+**2. Get VERCEL_ORG_ID (Organization ID)**
+
+Method A - Via Vercel Dashboard:
+1. Go to your [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click on **Settings** (in the left sidebar)
+3. Under **General**, find **"Team ID"** or **"Organization ID"**
+4. Copy the ID (looks like: `team_xxxxxxxxxxxxxx`)
+5. Save as `VERCEL_ORG_ID` in GitHub Secrets
+
+Method B - Via Project Settings:
+1. Open any project in Vercel
+2. Go to **Settings**
+3. Scroll down to find the **Team ID** or check the `.vercel/project.json` file
+4. The `orgId` field contains your organization ID
+
+Method C - Via CLI (after deploying once):
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Link to your project (creates .vercel folder)
+vercel link
+
+# Check .vercel/project.json
+cat .vercel/project.json
+```
+
+**3. Get VERCEL_PROJECT_ID**
+
+Method A - Via Project Settings:
+1. Go to your project on [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click on **Settings**
+3. Under **General**, find **"Project ID"**
+4. Copy the ID (looks like: `prj_xxxxxxxxxxxxxx`)
+5. Save as `VERCEL_PROJECT_ID` in GitHub Secrets
+
+Method B - From Project URL:
+1. Your project URL looks like: `https://vercel.com/your-team/your-project`
+2. The project ID is visible in the URL or settings page
+
+Method C - Via CLI:
+```bash
+# After running 'vercel link'
+cat .vercel/project.json
+
+# Look for "projectId" field
+```
+
+Method D - Create Project First:
+1. Deploy your app to Vercel manually first (via dashboard or CLI)
+2. Once deployed, the Project ID will be available in Settings
+3. This is the **recommended approach** - deploy manually first, then set up CI/CD
+
+**4. Get CODECOV_TOKEN (Optional)**
+
+Only needed if you want code coverage reports:
+1. Go to [codecov.io](https://codecov.io)
+2. Sign in with GitHub
+3. Add your repository
+4. Copy the upload token
+5. Save as `CODECOV_TOKEN` in GitHub Secrets
+
+#### Adding Secrets to GitHub
+
+1. Go to your GitHub repository
+2. Click **Settings** → **Secrets and variables** → **Actions**
+3. Click **"New repository secret"**
+4. Add each secret with its name and value
+5. Secrets are encrypted and hidden after saving
+
 ---
 
 ## Deployment Options
@@ -112,6 +200,50 @@ CODECOV_TOKEN                   # Optional: Codecov token for coverage reports
 
 ## Vercel Deployment (Recommended)
 
+### Understanding What Vercel Needs
+
+**Files Vercel NEEDS for deployment:**
+- ✅ `package.json` & `package-lock.json` - Dependencies
+- ✅ `next.config.ts` - Next.js configuration
+- ✅ `app/` directory - Your application code
+- ✅ `components/` - React components
+- ✅ `lib/` - Utility functions and API code
+- ✅ `types/` - TypeScript definitions
+- ✅ `public/` - Static assets
+- ✅ `proxy.ts` - Middleware/proxy for auth
+- ✅ Environment variables (set in Vercel dashboard)
+
+**Files Vercel DOESN'T need:**
+- ❌ `.github/` - CI/CD workflows (GitHub handles this)
+- ❌ `migrations/` - Database files (already in Supabase)
+- ❌ `__tests__/` - Test files (tests run in CI)
+- ❌ `*.test.ts` - Individual test files
+- ❌ `jest.config.js` - Test configuration
+- ❌ `*.md` - Documentation files
+- ❌ `.vscode/`, `.idea/` - Editor configurations
+- ❌ `.env.local` - Local environment (use Vercel env vars)
+- ❌ `node_modules/` - Rebuilt during deployment
+- ❌ `.next/` - Rebuilt during deployment
+
+**Result:** Smaller, faster deployments with only production-necessary files.
+
+---
+
+### Quick Start: Recommended Workflow
+
+**For first-time deployment:**
+1. Deploy manually via Vercel Dashboard (steps below)
+2. Once deployed, get the Project ID and Org ID from project settings
+3. Create Vercel access token
+4. Add these as GitHub Secrets for automated deployments
+
+**Why this order?**
+- Deploying manually first creates the project and generates IDs
+- You can then set up CI/CD with the correct credentials
+- Manual deployment verifies everything works before automation
+
+---
+
 ### Step 1: Install Vercel CLI (Optional)
 
 ```bash
@@ -145,12 +277,136 @@ npm install -g vercel
    - Wait 2-3 minutes for build to complete
    - Your app will be live at `https://your-app.vercel.app`
 
-### Step 3: Configure Custom Domain (Optional)
+### Step 3: Get Project Credentials for CI/CD
+
+After successful deployment, you'll need these credentials for GitHub Actions:
+
+**To find Project ID and Org ID:**
+1. Open your project in Vercel Dashboard
+2. Go to **Settings** (left sidebar)
+3. Scroll to **General** section
+4. Look for:
+   - **Project ID**: `prj_xxxxxxxxx` (copy this value)
+   - **Team ID** or **Organization ID**: `team_xxxxxxxxx` (copy this value)
+
+**To create Access Token:**
+1. Click your profile picture (top right)
+2. Go to **Settings** → **Tokens**
+3. Click **Create Token**
+4. Name it "GitHub Actions" or similar
+5. Set scope to "Full Account" (or customize as needed)
+6. Click **Create** and copy the token immediately
+
+**Alternative: Using Vercel CLI**
+```bash
+# Deploy once with CLI
+vercel
+
+# Check the generated .vercel/project.json file
+cat .vercel/project.json
+
+# You'll see:
+{
+  "orgId": "team_xxxxx",      # This is VERCEL_ORG_ID
+  "projectId": "prj_xxxxx"    # This is VERCEL_PROJECT_ID
+}
+```
+
+### Step 4: Configure Custom Domain (Optional)
 
 1. Go to Project Settings → Domains
 2. Add your custom domain
 3. Update DNS records as instructed
 4. Update `NEXT_PUBLIC_APP_URL` environment variable
+
+### Step 5: Optimize Vercel Deployment (Optional)
+
+**Create `.vercelignore` file**
+
+By default, Vercel respects `.gitignore`, but you may want additional exclusions for deployment optimization. Create a `.vercelignore` file in your project root:
+
+```bash
+# .vercelignore - Files to exclude from Vercel deployment
+
+# Documentation (not needed in production)
+*.md
+DEPLOYMENT.md
+SETUP.md
+TESTING.md
+CONTRIBUTING.md
+LICENSE
+
+# Development files
+.vscode/
+.idea/
+*.code-workspace
+
+# Testing
+__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+jest.config.js
+jest.setup.js
+coverage/
+
+# CI/CD (GitHub Actions workflows not needed on Vercel)
+.github/
+
+# Migrations (if already applied in Supabase)
+migrations/
+
+# Local environment
+.env.local
+.env*.local
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Editor configs
+.editorconfig
+.prettierrc
+.prettierignore
+.eslintrc.json
+
+# Package manager
+.npmrc
+.yarnrc
+.pnpm-store/
+
+# Vercel CLI (already there)
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*~
+```
+
+**Why use `.vercelignore`?**
+- ✅ Reduces deployment bundle size
+- ✅ Faster build times
+- ✅ Excludes sensitive development files
+- ✅ Keeps only production-necessary files
+
+**Note:** Your `.gitignore` already excludes most of these, but `.vercelignore` gives you more control over what gets deployed vs. what's in your repository.
+
+**Vercel automatically excludes:**
+- `node_modules/` (reinstalled during build)
+- `.next/` (rebuilt during deployment)
+- `.env.local` (use Vercel environment variables instead)
 
 ---
 
@@ -293,6 +549,103 @@ Consider integrating:
 - Verify Supabase anon key is correct
 - Check RLS policies are enabled
 - Ensure database migrations are run
+
+**GitHub Actions Failing - Vercel Credentials:**
+
+Error: "Invalid token" or "Project not found"
+- **Solution**: Verify your GitHub Secrets are correct:
+  1. Go to GitHub repo → Settings → Secrets and variables → Actions
+  2. Check that `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` are set
+  3. Ensure no extra spaces or quotes around the values
+  4. Token must have correct scopes (Full Account or project-specific)
+
+Error: "Team not found" or "Unauthorized"
+- **Solution**: Your `VERCEL_ORG_ID` might be wrong
+  1. For personal accounts, use your username or find Team ID in Vercel Settings
+  2. For team accounts, use the `team_xxxxx` format
+  3. Check `.vercel/project.json` after running `vercel` CLI locally
+
+Error: "Project does not exist"
+- **Solution**:
+  1. Make sure you've deployed to Vercel at least once manually
+  2. Verify `VERCEL_PROJECT_ID` matches the project in your Vercel dashboard
+  3. Project ID should start with `prj_`
+
+**Can't Find Project ID or Org ID:**
+- **Quick Solution**: Deploy with Vercel CLI once
+  ```bash
+  npm i -g vercel
+  vercel login
+  vercel
+  cat .vercel/project.json  # Contains both IDs
+  ```
+
+**GitHub Actions Getting Stuck: "Set up and deploy? [Y/n]"**
+
+The deployment is waiting for interactive confirmation. This happens when the `--yes` flag is missing.
+
+**Solution:**
+The workflows have been updated to include `--yes` flag:
+```yaml
+vercel-args: '--prod --yes'  # For production
+vercel-args: '--yes'         # For preview
+```
+
+If you created custom workflows, make sure to add `--yes` to `vercel-args` to skip interactive prompts.
+
+**GitHub Actions Error: "Input required and not supplied: vercel-token"**
+
+This error means GitHub Actions can't find your `VERCEL_TOKEN` secret. Here's how to fix it:
+
+**Step 1: Verify Secret Name is Exact**
+1. Go to your GitHub repository
+2. Navigate to: **Settings** → **Secrets and variables** → **Actions**
+3. Look for a secret named **exactly** `VERCEL_TOKEN` (case-sensitive, no spaces)
+4. If it's named differently (e.g., `VERCEL_ACCESS_TOKEN`), either:
+   - Rename it to `VERCEL_TOKEN`, OR
+   - Update the workflow files to match your secret name
+
+**Step 2: Check Secret is in Repository Secrets (not Environment Secrets)**
+1. In **Settings** → **Secrets and variables** → **Actions**
+2. Make sure you're looking at the **"Secrets"** tab (Repository secrets)
+3. NOT the "Variables" tab
+4. NOT Environment secrets (unless your workflow specifies an environment)
+
+**Step 3: Verify All Three Secrets Exist**
+You need all three of these secrets (exact names):
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+**Step 4: Check for Copy/Paste Issues**
+1. When you added the secret, make sure:
+   - No leading/trailing spaces
+   - No quotes around the value
+   - You clicked "Add secret" to save
+2. If unsure, delete and re-add the secret:
+   - Click the secret name
+   - Click "Remove"
+   - Click "New repository secret"
+   - Add it again
+
+**Step 5: Trigger Workflow Correctly**
+- For **deploy-production.yml**: Push to `main` branch
+- For **deploy-preview.yml**: Open a pull request to `main`
+- Workflows won't run on commits to other branches
+
+**Quick Test:**
+Add this temporary step to your workflow to debug:
+```yaml
+- name: Check secrets
+  run: |
+    if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+      echo "VERCEL_TOKEN is not set!"
+    else
+      echo "VERCEL_TOKEN is set (length: ${#VERCEL_TOKEN})"
+    fi
+```
+
+If it shows "not set", the secret isn't configured properly in GitHub.
 
 ---
 

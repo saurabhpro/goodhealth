@@ -141,6 +141,7 @@ goodhealth/
 ├── public/                   # Static assets
 │   └── manifest.json         # PWA manifest
 ├── proxy.ts                  # Auth proxy (Next.js 16 middleware)
+├── .vercelignore             # Files to exclude from Vercel deployment
 └── supabase-schema.sql       # Database schema
 ```
 

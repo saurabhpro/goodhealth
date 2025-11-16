@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,7 +18,9 @@ import { signOut } from '@/lib/auth/actions'
 
 export function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, loading } = useUser()
+  const [signingOut, setSigningOut] = useState(false)
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard' },
@@ -27,7 +30,14 @@ export function Navbar() {
   ]
 
   const handleSignOut = async () => {
-    await signOut()
+    try {
+      setSigningOut(true)
+      await signOut()
+      router.refresh()
+    } catch (error) {
+      console.error('Error signing out:', error)
+      setSigningOut(false)
+    }
   }
 
   return (
@@ -58,7 +68,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            {loading ? (
+            {loading || signingOut ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
             ) : user ? (
               <DropdownMenu>
@@ -93,9 +103,10 @@ export function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleSignOut}
+                    disabled={signingOut}
                     className="text-red-600 cursor-pointer"
                   >
-                    Sign out
+                    {signingOut ? 'Signing out...' : 'Sign out'}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
