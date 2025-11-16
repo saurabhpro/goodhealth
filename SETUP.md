@@ -32,6 +32,32 @@ Follow these steps to get your GoodHealth app running.
    - **Project URL** (looks like: `https://xxxxx.supabase.co`)
    - **anon/public key** (long string starting with `eyJ...`)
 
+### Enable Google OAuth (Optional)
+
+To allow users to sign in with Google:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Go to **APIs & Services** > **Credentials**
+4. Click **"Create Credentials"** > **"OAuth client ID"**
+5. If prompted, configure the OAuth consent screen first:
+   - Choose "External" user type
+   - Add your app name and email
+   - Add authorized domains (e.g., `supabase.co` and your domain)
+6. For OAuth client ID:
+   - Application type: **Web application**
+   - Name: `GoodHealth`
+   - Authorized redirect URIs: Add your Supabase callback URL:
+     - Format: `https://YOUR-PROJECT-REF.supabase.co/auth/v1/callback`
+     - Find your exact URL in Supabase: **Authentication** > **Providers** > **Google**
+7. Copy the **Client ID** and **Client Secret**
+
+8. In your Supabase Dashboard:
+   - Go to **Authentication** > **Providers**
+   - Find **Google** and toggle it **ON**
+   - Paste your **Client ID** and **Client Secret**
+   - Click **Save**
+
 ## Step 2: Configure Environment Variables
 
 1. In your project root, copy the example file:
@@ -61,8 +87,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## Step 4: Test the App
 
 1. Click **"Sign up"** in the navigation
-2. Create an account with your email and password
-3. Check your email for a confirmation link (if email confirmation is enabled)
+2. Choose one of these sign-up methods:
+   - **Email/Password**: Fill out the form and create an account
+   - **Google**: Click "Continue with Google" button (if you configured Google OAuth)
+3. For email signup: Check your email for a confirmation link (if email confirmation is enabled)
 4. Once logged in, you'll be redirected to the dashboard
 
 ## Troubleshooting
@@ -85,6 +113,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
   - Go to Authentication > URL Configuration
   - Add `http://localhost:3000/api/auth/callback` to allowed redirect URLs
 - Check that the `handle_new_user()` function was created successfully
+
+### Google OAuth Not Working
+
+- Make sure Google provider is enabled in Supabase Authentication > Providers
+- Verify the redirect URI in Google Cloud Console matches your Supabase callback URL exactly
+- Check that your Google OAuth consent screen is configured correctly
+- For local development, you may need to add your test users to the OAuth consent screen
+- Clear browser cookies and try again if you see OAuth errors
 
 ### PWA Not Installing
 
