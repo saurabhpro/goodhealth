@@ -22,7 +22,7 @@ export default function AuthCodeErrorPage() {
             <p className="font-semibold">What you can try:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Request a new authentication link</li>
-              <li>Make sure you're using the latest link from your email</li>
+              <li>Make sure you&apos;re using the latest link from your email</li>
               <li>Try signing in again from the beginning</li>
               <li>Clear your browser cache and cookies</li>
             </ul>

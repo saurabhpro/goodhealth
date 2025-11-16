@@ -51,7 +51,7 @@ export default async function ProgressPage() {
     )
 
     let streak = 0
-    let currentDate = new Date()
+    const currentDate = new Date()
     currentDate.setHours(0, 0, 0, 0)
 
     for (const workout of sortedWorkouts) {
@@ -263,12 +263,13 @@ export default async function ProgressPage() {
                       }
                       acc[exercise.name].push(exercise)
                       return acc
-                    }, {} as Record<string, typeof strengthExercises>)
+                    }, {} as Record<string, Array<typeof strengthExercises[number]>>)
                   ).map(([exerciseName, exercises]) => {
-                    const latest = exercises[0]
-                    const totalSessions = exercises.length
-                    const maxWeight = Math.max(...exercises.map(e => e.weight || 0))
-                    const avgWeight = exercises.reduce((sum, e) => sum + (e.weight || 0), 0) / exercises.length
+                    const exerciseList = exercises as Array<typeof strengthExercises[number]>
+                    const latest = exerciseList[0]
+                    const totalSessions = exerciseList.length
+                    const maxWeight = Math.max(...exerciseList.map(e => e.weight || 0))
+                    const avgWeight = exerciseList.reduce((sum, e) => sum + (e.weight || 0), 0) / exerciseList.length
 
                     return (
                       <div key={exerciseName} className="p-4 border rounded-lg">

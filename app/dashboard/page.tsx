@@ -34,7 +34,7 @@ export default async function DashboardPage() {
     )
 
     let streak = 0
-    let currentDate = new Date()
+    const currentDate = new Date()
     currentDate.setHours(0, 0, 0, 0)
 
     for (const workout of sortedWorkouts) {
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
           Welcome back, {user.user_metadata?.full_name || user.email?.split('@')[0] || 'there'}!
         </h1>
         <p className="text-muted-foreground">
-          Here's an overview of your fitness journey
+          Here&apos;s an overview of your fitness journey
         </p>
       </div>
 

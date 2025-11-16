@@ -52,7 +52,7 @@ export default function SignUpPage() {
           <CardHeader>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
-              We've sent you a confirmation link. Please check your email to verify your account.
+              We&apos;ve sent you a confirmation link. Please check your email to verify your account.
             </CardDescription>
           </CardHeader>
           <CardFooter>

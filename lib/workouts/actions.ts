@@ -2,7 +2,20 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+
+interface ExerciseInput {
+  name: string
+  type?: string
+  sets?: string
+  reps?: string
+  weight?: string
+  duration?: string
+  distance?: string
+  speed?: string
+  calories?: string
+  resistance?: string
+  incline?: string
+}
 
 export async function createWorkout(formData: FormData) {
   const supabase = await createClient()
@@ -28,7 +41,7 @@ export async function createWorkout(formData: FormData) {
   let exercises = []
   try {
     exercises = JSON.parse(exercisesJson)
-  } catch (e) {
+  } catch {
     return { error: 'Invalid exercises data' }
   }
 
@@ -55,7 +68,7 @@ export async function createWorkout(formData: FormData) {
 
   // Create exercises
   if (exercises.length > 0) {
-    const exerciseRecords = exercises.map((ex: any) => ({
+    const exerciseRecords = exercises.map((ex: ExerciseInput) => ({
       workout_id: workout.id,
       name: ex.name,
       exercise_type: ex.type || 'strength',

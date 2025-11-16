@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,13 +13,10 @@ export default function ProfilePage() {
   const { user, loading } = useUser()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [fullName, setFullName] = useState('')
 
-  useEffect(() => {
-    if (user) {
-      setFullName(user.user_metadata?.full_name || '')
-    }
-  }, [user])
+  // Initialize fullName from user metadata, memoized to prevent unnecessary updates
+  const initialFullName = useMemo(() => user?.user_metadata?.full_name || '', [user?.user_metadata?.full_name])
+  const [fullName, setFullName] = useState(initialFullName)
 
   async function handleSave() {
     setSaving(true)

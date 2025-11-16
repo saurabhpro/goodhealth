@@ -9,7 +9,7 @@ import { useUser } from '@/lib/auth/hooks'
 import { toast } from 'sonner'
 
 export default function SettingsPage() {
-  const { user, loading } = useUser()
+  const { loading } = useUser()
   const [weightUnit, setWeightUnit] = useState('kg')
   const [distanceUnit, setDistanceUnit] = useState('km')
   const [notifications, setNotifications] = useState(true)
