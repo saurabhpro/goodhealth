@@ -90,7 +90,7 @@ goodhealth/
 - **Google OAuth** sign-in
 - Email verification
 - Password reset functionality
-- Protected routes with middleware
+- Protected routes with proxy (Next.js 16 middleware)
 - Row Level Security policies
 
 ### 2. Workout Tracking

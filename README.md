@@ -30,7 +30,7 @@ A comprehensive Progressive Web App for tracking gym workouts, visualizing progr
 - Email/Password authentication
 - Google OAuth sign-in
 - Row Level Security (RLS) policies
-- Protected routes with middleware
+- Protected routes with proxy (Next.js 16 middleware)
 
 ### 📱 Progressive Web App
 - **Install on mobile devices** - Works like a native app
@@ -140,7 +140,7 @@ goodhealth/
 │   └── index.ts              # App-specific types
 ├── public/                   # Static assets
 │   └── manifest.json         # PWA manifest
-├── middleware.ts             # Auth middleware
+├── proxy.ts                  # Auth proxy (Next.js 16 middleware)
 └── supabase-schema.sql       # Database schema
 ```
 
