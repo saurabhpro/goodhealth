@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUser } from '@/lib/auth/hooks'
-import { signOut } from '@/lib/auth/actions'
+import { createClient } from '@/lib/supabase/client'
 
 export function Navbar() {
   const pathname = usePathname()
@@ -32,7 +32,10 @@ export function Navbar() {
   const handleSignOut = async () => {
     try {
       setSigningOut(true)
-      await signOut()
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      // The auth state change listener in useUser will update the UI
+      router.push('/')
       router.refresh()
     } catch (error) {
       console.error('Error signing out:', error)

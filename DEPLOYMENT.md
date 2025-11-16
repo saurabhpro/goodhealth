@@ -50,15 +50,30 @@ Runs on every push and pull request to `main` or `develop` branches.
 Runs on pull requests to `main` branch.
 
 **Steps:**
-- Creates preview deployment on Vercel
-- Posts preview URL in PR comments
+- Checkout code
+- Setup Node.js 20
+- Install dependencies
+- Install Vercel CLI
+- Pull Vercel environment configuration (`vercel pull --yes`)
+- Build project artifacts (`vercel build`)
+- Deploy to Vercel preview (`vercel deploy --prebuilt`)
+
+**Note:** Uses official Vercel CLI for reliable, non-interactive deployments.
 
 #### 3. **Deploy Production** (`.github/workflows/deploy-production.yml`)
 Runs when code is pushed to `main` branch.
 
 **Steps:**
+- Checkout code
+- Setup Node.js 20
+- Install dependencies
 - Run tests
-- Deploy to Vercel production
+- Install Vercel CLI
+- Pull Vercel environment configuration (`vercel pull --yes --environment=production`)
+- Build project artifacts (`vercel build --prod`)
+- Deploy to Vercel production (`vercel deploy --prebuilt --prod`)
+
+**Note:** Uses Vercel's recommended CI/CD pattern with the `--prebuilt` flag for faster deployments.
 
 ### Required GitHub Secrets
 
@@ -69,10 +84,10 @@ NEXT_PUBLIC_SUPABASE_URL        # Your Supabase project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY   # Your Supabase anonymous key
 NEXT_PUBLIC_APP_URL             # Your production app URL
 VERCEL_TOKEN                    # Vercel authentication token
-VERCEL_ORG_ID                   # Vercel organization ID
-VERCEL_PROJECT_ID               # Vercel project ID
 CODECOV_TOKEN                   # Optional: Codecov token for coverage reports
 ```
+
+**Important:** With the new Vercel CLI approach, you **only need `VERCEL_TOKEN`**. The `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` are no longer required as they're automatically detected from your linked Vercel project.
 
 #### How to Get Vercel Credentials
 
@@ -582,16 +597,17 @@ Error: "Project does not exist"
 
 **GitHub Actions Getting Stuck: "Set up and deploy? [Y/n]"**
 
-The deployment is waiting for interactive confirmation. This happens when the `--yes` flag is missing.
+The deployment is waiting for interactive confirmation.
 
 **Solution:**
-The workflows have been updated to include `--yes` flag:
+The workflows have been updated to use the official Vercel CLI instead of the third-party action. The new approach uses:
 ```yaml
-vercel-args: '--prod --yes'  # For production
-vercel-args: '--yes'         # For preview
+- vercel pull --yes  # Pulls environment config
+- vercel build       # Builds the project
+- vercel deploy --prebuilt  # Deploys the built project
 ```
 
-If you created custom workflows, make sure to add `--yes` to `vercel-args` to skip interactive prompts.
+This eliminates all interactive prompts and uses Vercel's recommended CI/CD pattern. The `--yes` flag in `vercel pull` automatically confirms the setup.
 
 **GitHub Actions Error: "Input required and not supplied: vercel-token"**
 
