@@ -1,27 +1,53 @@
-# GoodHealth - Gym Activity Tracker
+# GoodHealth - Fitness Tracking App
 
-A modern, progressive web application for tracking gym workouts, visualizing progress, setting fitness goals, and sharing achievements with a community.
+A comprehensive Progressive Web App for tracking gym workouts, visualizing progress, setting fitness goals, and monitoring your fitness journey with detailed analytics.
 
-## Features
+[![Tests](https://img.shields.io/github/actions/workflow/status/your-username/goodhealth/ci.yml?branch=main&label=tests)](https://github.com/your-username/goodhealth/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- **Workout Logging**: Track exercises, sets, reps, and weights
-- **Progress Visualization**: View your gains with beautiful charts and analytics
-- **Goal Setting**: Create and monitor fitness goals
-- **Social Features**: Share workouts and connect with the community
-- **AI Recommendations**: Get smart workout suggestions (coming soon)
-- **Progressive Web App**: Install on mobile devices and use offline
-- **Responsive Design**: Works seamlessly on desktop and mobile
+## ✨ Features
 
-## Tech Stack
+### 🏋️ Workout Tracking
+- **Smart Exercise Inputs** - Automatically adapts based on exercise type (cardio/strength/functional)
+- **68+ Pre-defined Equipment** from major brands (Technogym, Life Fitness, Hammer Strength)
+- **Effort Level Tracking** - Visual heatmap selector (1-6 scale)
+- **Workout Details** - Click any workout to see complete exercise breakdown
+- **Custom Exercises** - Add your own exercises
 
-- **Framework**: Next.js 14+ (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Backend/Database**: Supabase (PostgreSQL + Auth + Storage)
+### 📊 Progress Analytics
+- **Real-time Dashboard** - Live statistics showing workout count, total time, exercises, and streaks
+- **Workout History** - Chronological view with clickable cards
+- **Strength Tracking** - Per-exercise progress with max/average weights
+- **Goal Monitoring** - Visual progress bars with percentage completion
+
+### 🎯 Goal Management
+- Create fitness goals with targets and deadlines
+- Track current progress vs. target
+- Achievement badges when goals completed
+- Support for multiple goal types (weight, reps, distance, duration)
+
+### 🔐 Authentication & Security
+- Email/Password authentication
+- Google OAuth sign-in
+- Row Level Security (RLS) policies
+- Protected routes with middleware
+
+### 📱 Progressive Web App
+- **Install on mobile devices** - Works like a native app
+- **Offline support** - Service worker for offline functionality
+- **Responsive design** - Mobile-first approach
+- **Toast notifications** - Success/error feedback
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 16 (App Router) + React 19 + TypeScript 5
+- **Styling**: Tailwind CSS 4 + shadcn/ui components
+- **Backend**: Supabase (PostgreSQL + Auth + RLS)
 - **State Management**: Zustand
-- **Data Visualization**: Recharts
-- **PWA**: next-pwa
-- **Deployment**: Vercel
+- **Forms**: React Hook Form + Zod validation
+- **Testing**: Jest + React Testing Library
+- **CI/CD**: GitHub Actions
+- **Deployment**: Vercel (recommended)
 
 ## Getting Started
 
@@ -68,7 +94,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-### 5. Build for Production
+### 5. Run Tests
+
+```bash
+npm test                 # Run all tests
+npm run test:watch       # Watch mode for development
+npm run test:coverage    # Generate coverage report
+```
+
+### 6. Build for Production
 
 ```bash
 npm run build
@@ -149,34 +183,98 @@ If you modify the database schema, regenerate TypeScript types:
 npx supabase gen types typescript --project-id your-project-id > types/database.ts
 ```
 
-## Deployment
+## 🧪 Testing
 
-### Deploy to Vercel
+The project includes comprehensive unit tests:
 
-1. Push your code to GitHub
-2. Import your repository on [vercel.com](https://vercel.com)
-3. Add your environment variables in Vercel settings
-4. Deploy
+```bash
+npm test                 # Run all tests (26 passing)
+npm run test:watch       # Watch mode
+npm run test:coverage    # Coverage report
+```
 
-The app will automatically deploy on every push to main.
+**Test Coverage:**
+- ✅ Utility functions
+- ✅ Gym equipment data (68+ items)
+- ✅ UI components (Button, etc.)
 
-### Environment Variables for Production
+See `TESTING.md` for detailed testing guide.
 
-Make sure to set these in your deployment platform:
+## 🚀 Deployment
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_APP_URL` (your production URL)
+### Recommended: Vercel (Free)
 
-## Future Enhancements
+**Why Vercel?**
+- ✅ Zero-config for Next.js
+- ✅ Automatic HTTPS & CDN
+- ✅ Preview deployments for PRs
+- ✅ Free tier with generous limits
 
+**Quick Deploy:**
+1. Push code to GitHub
+2. Import repo on [vercel.com](https://vercel.com)
+3. Add environment variables
+4. Click Deploy (~5 minutes)
+
+### Alternative Options
+- **Netlify** - Similar to Vercel, good Next.js support
+- **Railway** - Best for full-stack + database
+- **Render** - Free tier with cold starts
+
+### Why NOT GitHub Pages?
+- ❌ Static HTML only (no SSR/API routes/server actions)
+
+See `DEPLOYMENT.md` for complete deployment guide.
+
+## 🔄 CI/CD Pipeline
+
+The project includes GitHub Actions workflows:
+
+### CI Workflow
+- ✅ Runs tests on every push/PR
+- ✅ Lints code with ESLint
+- ✅ Generates coverage reports
+- ✅ Builds application
+
+### Deployment Workflows
+- ✅ Preview deployments for PRs
+- ✅ Auto-deploy to production on push to main
+
+Configure by adding GitHub secrets for Vercel integration.
+
+## 📚 Documentation
+
+- **[SETUP.md](./SETUP.md)** - Detailed setup instructions
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide
+- **[TESTING.md](./TESTING.md)** - Testing guide and best practices
+- **[.claude/context.md](./.claude/context.md)** - Full project context for development
+
+## 🗺️ Roadmap
+
+### Completed ✅
+- ✅ Smart exercise inputs (cardio/strength/functional)
+- ✅ 68+ gym equipment database
+- ✅ Effort level tracking
+- ✅ Workout detail views
+- ✅ Dashboard with real statistics
+- ✅ Progress page with analytics
+- ✅ Goal tracking system
+- ✅ Jest + React Testing Library setup
+- ✅ GitHub Actions CI/CD
+- ✅ Vercel deployment ready
+
+### Planned 📋
+- [ ] Workout templates
+- [ ] Charts using recharts
+- [ ] Profile/settings persistence
+- [ ] Exercise history tracking
+- [ ] Personal records (PRs)
+- [ ] Workout edit functionality
+- [ ] Social features (sharing)
+- [ ] Export data functionality
 - [ ] AI-powered workout recommendations
-- [ ] Social feed and user following
-- [ ] Workout sharing and community templates
-- [ ] Advanced analytics and insights
 - [ ] Nutrition tracking
 - [ ] Integration with fitness wearables
-- [ ] Mobile app (React Native or Flutter)
 
 ## Contributing
 

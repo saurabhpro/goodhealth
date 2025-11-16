@@ -97,11 +97,21 @@ goodhealth/
 - **Custom Exercises** - Add your own exercises
 
 ### 3. Progress Tracking
-- Tabbed interface: Overview, Workouts, Strength, Goals
-- Workout frequency tracking
-- Strength progression charts
-- Goal progress monitoring
-- Statistics and analytics
+- **Real-time Statistics Dashboard**:
+  - This month's workout count
+  - Total training time (hours & minutes)
+  - Total exercises completed
+  - Current workout streak calculation
+- **Tabbed Interface**:
+  - **Overview**: Monthly summary with total workouts, duration, and averages
+  - **Workouts**: Complete workout history with clickable cards
+  - **Strength**: Exercise-specific tracking (latest, max, avg weights)
+  - **Goals**: Visual progress bars with percentage completion
+- **Smart Data Display**:
+  - Automatic grouping of exercises by name
+  - Max weight and average weight calculations
+  - Progress visualization with color-coded bars
+  - Target date tracking
 
 ### 4. Goal Management
 - Create fitness goals with targets
@@ -174,7 +184,7 @@ goodhealth/
 - Migration: `supabase-migration-effort.sql`
 
 ### 3. Comprehensive Gym Equipment Database
-- 70+ equipment items from major brands
+- 68+ equipment items from major brands
 - Categorized by muscle group and type
 - Brand information (Technogym, Life Fitness, Hammer Strength, etc.)
 - Exercise type metadata (cardio/strength/functional)
@@ -184,11 +194,36 @@ goodhealth/
 - Exercise-by-exercise breakdown
 - Type-specific data display
 - Effort level badges
+- Fixed Next.js 16 async params handling
 
 ### 5. Toast Notifications
 - Success confirmations for all save operations
 - Error messages with details
 - Auto-dismiss with smooth animations
+
+### 6. Dashboard with Real Statistics
+- Displays actual workout counts and totals
+- Workout streak calculation
+- Recent activity feed with clickable workout cards
+- Monthly statistics aggregation
+
+### 7. Progress Page Enhancements
+- Overview tab: Real monthly/all-time statistics
+- Workouts tab: Chronological workout history
+- Strength tab: Per-exercise progress tracking
+- Goals tab: Visual progress bars and achievement tracking
+
+### 8. Homepage Routing
+- Logged-in users redirected to dashboard
+- Non-logged-in users see marketing landing page
+
+### 9. Testing & CI/CD
+- Jest + React Testing Library setup
+- 26 unit tests (utilities, data, components)
+- GitHub Actions workflows for CI
+- Automated testing on push/PR
+- Preview deployments for pull requests
+- Production deployment pipeline
 
 ## Environment Variables
 
@@ -239,10 +274,13 @@ Run these in order in Supabase SQL Editor:
 
 ### Running the App
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm start        # Start production server
-npm run lint     # Run ESLint
+npm run dev              # Start development server
+npm run build            # Build for production
+npm start                # Start production server
+npm run lint             # Run ESLint
+npm test                 # Run unit tests
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Run tests with coverage report
 ```
 
 ### Adding New Features
@@ -303,34 +341,107 @@ toast.success('Title', { description: 'Details' })
 toast.error('Title', { description: error.message })
 ```
 
+## Testing
+
+### Test Suite
+- **Jest** + **React Testing Library**
+- **26 passing tests** covering:
+  - Utility functions (cn class merging)
+  - Gym equipment data (68+ items)
+  - UI components (Button variants)
+
+### Test Commands
+```bash
+npm test                 # Run all tests
+npm run test:watch       # Watch mode for development
+npm run test:coverage    # Generate coverage report
+```
+
+### Test Files
+```
+lib/__tests__/utils.test.ts              # Utility tests
+lib/data/__tests__/gym-equipment.test.ts # Data tests
+components/ui/__tests__/button.test.tsx  # Component tests
+```
+
+See `TESTING.md` for full testing guide.
+
+## CI/CD Pipeline
+
+### GitHub Actions Workflows
+
+**1. CI Workflow** (`.github/workflows/ci.yml`)
+- Runs on push/PR to main/develop
+- Lints code with ESLint
+- Runs test suite
+- Generates coverage report
+- Builds application
+- Uploads coverage to Codecov
+
+**2. Preview Deployments** (`.github/workflows/deploy-preview.yml`)
+- Creates preview environment for PRs
+- Posts preview URL in PR comments
+
+**3. Production Deploy** (`.github/workflows/deploy-production.yml`)
+- Auto-deploys to Vercel on push to main
+- Runs tests before deployment
+
+### Required GitHub Secrets
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_APP_URL
+VERCEL_TOKEN
+VERCEL_ORG_ID
+VERCEL_PROJECT_ID
+CODECOV_TOKEN (optional)
+```
+
 ## Deployment
 
-### Vercel (Recommended)
+### Recommended: Vercel
+**Why Vercel?**
+- ✅ Built for Next.js (zero-config)
+- ✅ Free tier with generous limits
+- ✅ Automatic HTTPS and CDN
+- ✅ Preview deployments for PRs
+- ✅ Serverless functions support
+
+**Quick Deploy:**
 1. Push to GitHub
 2. Import project in Vercel
 3. Add environment variables
-4. Deploy
+4. Deploy (~5 minutes)
 
-### Environment Setup
-- Set `NEXT_PUBLIC_SUPABASE_URL`
-- Set `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- Set `NEXT_PUBLIC_APP_URL` to your domain
+### Why Not GitHub Pages?
+- ❌ Static HTML only (no SSR)
+- ❌ No API routes
+- ❌ No server actions
+- ❌ No backend functionality
 
-### Post-Deployment
-1. Update Supabase Auth redirect URLs
-2. Configure Google OAuth redirect URIs
-3. Test authentication flow
-4. Verify PWA installation
+### Alternative Providers
+- **Netlify**: Good Next.js support, similar to Vercel
+- **Railway**: Best for full-stack + database hosting
+- **Render**: Free tier with cold starts
+- **AWS Amplify**: Most powerful but complex setup
+
+See `DEPLOYMENT.md` for complete deployment guide with step-by-step instructions.
+
+### Post-Deployment Checklist
+1. ✅ Update Supabase Auth redirect URLs
+2. ✅ Configure Google OAuth redirect URIs
+3. ✅ Test authentication flow
+4. ✅ Verify PWA installation
+5. ✅ Monitor error logs
+6. ✅ Test workout/goal creation
 
 ## Known Issues & TODOs
 
 ### Current Limitations
 - Workout templates not yet implemented (table exists)
-- Progress charts placeholder (no data visualization yet)
 - Profile updates don't save to Supabase (UI only)
 - Settings don't persist (UI only)
 - No workout edit functionality yet
-- No workout delete functionality yet
 
 ### Future Enhancements
 - [ ] Implement workout templates
