@@ -19,7 +19,7 @@ Follow these steps to get your GoodHealth app running.
 
 1. Once your project is ready, go to the **SQL Editor** (left sidebar)
 2. Click **"New Query"**
-3. Open the `supabase-schema.sql` file from this project
+3. Open the `migrations/001_initial_schema.sql` file from this project
 4. Copy all the SQL code and paste it into the Supabase SQL Editor
 5. Click **"Run"** to execute the schema
 6. You should see "Success. No rows returned" - that's normal!
@@ -103,7 +103,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Database Errors
 
-- Make sure you ran the entire `supabase-schema.sql` script
+- Make sure you ran all migrations in `migrations/` directory in order (see `migrations/README.md`)
 - Check the Supabase logs in the Dashboard for specific errors
 - Verify that Row Level Security is enabled on all tables
 

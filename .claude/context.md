@@ -71,7 +71,15 @@ goodhealth/
 ├── types/
 │   ├── database.ts               # Supabase generated types
 │   └── index.ts                  # Custom types
-└── supabase-*.sql                # Database migrations
+├── migrations/                   # Database migrations
+│   ├── README.md                 # Migration instructions
+│   ├── 001_initial_schema.sql    # Initial database schema
+│   ├── 002_add_effort_level.sql  # Effort level feature
+│   └── 003_add_exercise_types.sql # Exercise type detection
+└── .github/workflows/            # GitHub Actions CI/CD
+    ├── ci.yml                    # Continuous integration
+    ├── deploy-preview.yml        # PR preview deployments
+    └── deploy-production.yml     # Production deployment
 
 ```
 
@@ -236,17 +244,19 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## Database Migrations
 
-Run these in order in Supabase SQL Editor:
+All migrations are in the `migrations/` directory. Run in order in Supabase SQL Editor:
 
-1. **Initial Schema**: `supabase-schema.sql`
+1. **Initial Schema**: `migrations/001_initial_schema.sql`
    - Creates all tables, RLS policies, triggers
 
-2. **Effort Level**: `supabase-migration-effort.sql`
+2. **Effort Level**: `migrations/002_add_effort_level.sql`
    - Adds effort_level to workouts table
 
-3. **Exercise Types**: `supabase-migration-exercise-types.sql`
+3. **Exercise Types**: `migrations/003_add_exercise_types.sql`
    - Adds exercise_type and cardio fields to exercises table
    - Makes sets column nullable
+
+See `migrations/README.md` for detailed migration instructions.
 
 ## API Structure
 

@@ -1,45 +1,29 @@
 # GoodHealth Deployment Guide
 
-This guide covers testing, CI/CD setup, and deployment options for the GoodHealth fitness tracking application.
+This guide covers CI/CD setup and deployment options for the GoodHealth fitness tracking application.
+
+> **Prerequisites:** Complete local setup first. See [SETUP.md](./SETUP.md) for installation and configuration instructions.
 
 ## Table of Contents
-1. [Testing](#testing)
+1. [Pre-Deployment Checklist](#pre-deployment-checklist)
 2. [CI/CD Pipeline](#cicd-pipeline)
 3. [Deployment Options](#deployment-options)
 4. [Vercel Deployment (Recommended)](#vercel-deployment-recommended)
 5. [Alternative Hosting Providers](#alternative-hosting-providers)
-6. [Environment Variables](#environment-variables)
+6. [Post-Deployment Setup](#post-deployment-setup)
+7. [Monitoring & Troubleshooting](#monitoring--troubleshooting)
 
 ---
 
-## Testing
+## Pre-Deployment Checklist
 
-### Running Tests
+Before deploying, ensure:
 
-The project uses Jest and React Testing Library for unit tests.
-
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode (for development)
-npm run test:watch
-
-# Run tests with coverage report
-npm run test:coverage
-```
-
-### Test Structure
-
-```
-lib/__tests__/              # Library utility tests
-lib/data/__tests__/         # Data module tests
-components/ui/__tests__/    # UI component tests
-```
-
-### Coverage
-
-Coverage reports are generated in the `coverage/` directory and uploaded to Codecov in CI.
+- ✅ All tests pass: `npm test`
+- ✅ Build succeeds locally: `npm run build`
+- ✅ Database migrations run in Supabase
+- ✅ Environment variables configured
+- ✅ Google OAuth credentials set up (if using)
 
 ---
 
@@ -168,31 +152,46 @@ npm install -g vercel
 3. Update DNS records as instructed
 4. Update `NEXT_PUBLIC_APP_URL` environment variable
 
-### Step 4: Update Supabase Redirect URLs
+---
+
+## Post-Deployment Setup
+
+### 1. Update Supabase Redirect URLs
 
 In Supabase Dashboard → Authentication → URL Configuration:
 
-Add these to **Redirect URLs**:
+**Redirect URLs** (add both):
 ```
 https://your-app.vercel.app/api/auth/callback
 https://your-app.vercel.app/auth/auth-code-error
 ```
 
-Add to **Site URL**:
+**Site URL**:
 ```
 https://your-app.vercel.app
 ```
 
-### Step 5: Update Google OAuth Redirect URIs
+### 2. Update Google OAuth (if using)
 
 In Google Cloud Console → APIs & Services → Credentials:
 
-Add to **Authorized redirect URIs**:
+**Authorized redirect URIs**:
 ```
 https://<your-supabase-project>.supabase.co/auth/v1/callback
 ```
 
+### 3. Test Deployment
+
+- [ ] Visit your deployed URL
+- [ ] Test authentication (email/password and Google OAuth)
+- [ ] Create a workout
+- [ ] Create a goal
+- [ ] Check dashboard statistics
+- [ ] Verify PWA installation on mobile
+
 ---
+
+## Monitoring & Troubleshooting
 
 ## Alternative Hosting Providers
 
@@ -260,36 +259,40 @@ Add environment variables in your hosting provider's dashboard:
 - **Railway**: Settings → Variables
 - **Render**: Environment → Environment Variables
 
----
+### Vercel Logs
 
-## Post-Deployment Checklist
+**Dashboard:**
+- Project → Deployments → [Select deployment] → Function Logs
 
-- [ ] Verify environment variables are set correctly
-- [ ] Test authentication (email/password and Google OAuth)
-- [ ] Update Supabase redirect URLs
-- [ ] Update Google OAuth redirect URIs
-- [ ] Test creating a workout
-- [ ] Test creating a goal
-- [ ] Check that RLS policies are working
-- [ ] Test PWA installation on mobile
-- [ ] Monitor error logs in hosting provider dashboard
-- [ ] Set up custom domain (optional)
-- [ ] Enable SSL certificate (usually automatic)
-
----
-
-## Monitoring & Logs
-
-### Vercel
-- View logs: Project → Deployments → [Select deployment] → Function Logs
-- Real-time logs: `vercel logs --follow`
+**CLI:**
+```bash
+vercel logs --follow
+```
 
 ### Error Tracking (Optional)
 
-Consider adding:
-- **Sentry** - Error tracking
-- **LogRocket** - Session replay
+Consider integrating:
+- **Sentry** - Error tracking and monitoring
+- **LogRocket** - Session replay for debugging
 - **PostHog** - Product analytics
+
+### Common Issues
+
+**Build Fails:**
+- Check environment variables are set
+- Verify Node version (20.x)
+- Run `npm run build` locally first
+- Check for TypeScript errors
+
+**Authentication Not Working:**
+- Verify Supabase redirect URLs include production URL
+- Check Google OAuth redirect URIs
+- Ensure `NEXT_PUBLIC_APP_URL` matches deployment URL
+
+**Database Connection Issues:**
+- Verify Supabase anon key is correct
+- Check RLS policies are enabled
+- Ensure database migrations are run
 
 ---
 
@@ -345,50 +348,60 @@ vercel
 
 ---
 
-## Troubleshooting
-
-### Build Fails
-
-**Check:**
-- Environment variables are set correctly
-- All dependencies are in `package.json`
-- No TypeScript errors: `npm run build` locally
-- Node version matches (20.x)
-
-### Authentication Not Working
-
-**Check:**
-- Supabase redirect URLs include your production URL
-- Google OAuth redirect URIs are configured
-- `NEXT_PUBLIC_APP_URL` matches your deployment URL
-
-### Database Connection Issues
-
-**Check:**
-- Supabase anon key is correct
-- RLS policies are enabled
-- Database migrations are run in Supabase SQL Editor
-
----
-
 ## Security Best Practices
 
-- ✅ Never commit `.env.local` to Git
+Before going to production:
+
+- ✅ Never commit `.env.local` to Git (in `.gitignore`)
 - ✅ Use environment variables for all secrets
-- ✅ Enable Supabase Row Level Security (RLS)
+- ✅ Enable Supabase Row Level Security (RLS) on all tables
 - ✅ Use HTTPS in production (automatic with Vercel)
 - ✅ Keep dependencies updated: `npm audit fix`
-- ✅ Enable CORS only for your domain
-- ✅ Use secure authentication flows
+- ✅ Configure CORS appropriately
+- ✅ Review Google OAuth scopes
+- ✅ Enable rate limiting (consider Vercel Edge Config)
 
 ---
 
-## Support
+## Performance Optimization
 
-For deployment issues:
-- **Vercel**: [vercel.com/support](https://vercel.com/support)
-- **Next.js**: [nextjs.org/docs](https://nextjs.org/docs)
-- **Supabase**: [supabase.com/docs](https://supabase.com/docs)
+The app is already optimized with:
+
+- ✅ Next.js 16 with Turbopack
+- ✅ Automatic code splitting
+- ✅ Image optimization
+- ✅ Server components
+- ✅ PWA with service worker
+
+**Future optimizations:**
+- Add Redis caching for frequently accessed data
+- Implement Edge Functions for global low-latency
+- Add CDN for static assets
+
+---
+
+## Quick Reference
+
+### Deployment Commands
+
+```bash
+# Vercel CLI deployment
+vercel --prod                    # Deploy to production
+vercel                           # Deploy preview
+
+# Build and test locally
+npm run build                    # Build for production
+npm start                        # Start production server
+npm test                         # Run tests
+```
+
+### Support Resources
+
+- **Vercel Support**: [vercel.com/support](https://vercel.com/support)
+- **Next.js Docs**: [nextjs.org/docs](https://nextjs.org/docs)
+- **Supabase Docs**: [supabase.com/docs](https://supabase.com/docs)
+- **Project Setup**: [SETUP.md](./SETUP.md)
+- **Testing Guide**: [TESTING.md](./TESTING.md)
 
 ---
 

@@ -68,7 +68,12 @@ npm install
 
 1. Create a new project at [app.supabase.com](https://app.supabase.com)
 2. Go to Project Settings > API to find your project URL and anon key
-3. Go to SQL Editor and run the schema from `supabase-schema.sql`
+3. Go to SQL Editor and run migrations from `migrations/` directory in order:
+   - `001_initial_schema.sql`
+   - `002_add_effort_level.sql`
+   - `003_add_exercise_types.sql`
+
+See `migrations/README.md` for detailed instructions.
 
 ### 3. Configure Environment Variables
 
