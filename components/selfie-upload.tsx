@@ -125,7 +125,6 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
           accept="image/jpeg,image/png,image/webp,image/heic"
           onChange={handleFileSelect}
           className="hidden"
-          capture="environment"
         />
 
         {!selectedFile ? (
@@ -200,7 +199,6 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
         accept="image/jpeg,image/png,image/webp,image/heic"
         onChange={handleFileSelect}
         className="hidden"
-        capture="environment"
       />
 
       {!selectedFile ? (
