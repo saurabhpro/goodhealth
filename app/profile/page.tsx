@@ -1,53 +1,26 @@
-'use client'
-
-import { useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useUser } from '@/lib/auth/hooks'
-import { toast } from 'sonner'
+import { getUser } from '@/lib/auth/actions'
+import { getWorkouts } from '@/lib/workouts/actions'
+import { getGoals } from '@/lib/goals/actions'
+import { redirect } from 'next/navigation'
+import { ProfileEditForm } from '@/components/profile/profile-edit-form'
 
-export default function ProfilePage() {
-  const { user, loading } = useUser()
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
+export const dynamic = 'force-dynamic'
 
-  // Initialize fullName from user metadata, memoized to prevent unnecessary updates
-  const initialFullName = useMemo(() => user?.user_metadata?.full_name || '', [user?.user_metadata?.full_name])
-  const [fullName, setFullName] = useState(initialFullName)
-
-  async function handleSave() {
-    setSaving(true)
-
-    // TODO: Update profile in Supabase
-    console.log('Saving profile:', { fullName })
-
-    // Simulate API call
-    setTimeout(() => {
-      setSaving(false)
-      setEditing(false)
-      toast.success('Profile updated!', {
-        description: 'Your profile information has been saved successfully.'
-      })
-    }, 1000)
-  }
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-1/4 mb-8"></div>
-          <div className="h-64 bg-muted rounded"></div>
-        </div>
-      </div>
-    )
-  }
+export default async function ProfilePage() {
+  const user = await getUser()
 
   if (!user) {
-    return null
+    redirect('/login')
   }
+
+  // Fetch data for statistics
+  const { workouts } = await getWorkouts()
+  const { goals } = await getGoals()
+
+  const totalWorkouts = workouts.length
+  const totalGoals = goals.length
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -80,55 +53,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={user.email || ''}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground">
-                Email cannot be changed
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                disabled={!editing || saving}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4 pt-4">
-            {!editing ? (
-              <Button onClick={() => setEditing(true)}>
-                Edit Profile
-              </Button>
-            ) : (
-              <>
-                <Button onClick={handleSave} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditing(false)
-                    setFullName(user.user_metadata?.full_name || '')
-                  }}
-                  disabled={saving}
-                >
-                  Cancel
-                </Button>
-              </>
-            )}
-          </div>
+          <ProfileEditForm user={user} />
         </CardContent>
       </Card>
 
@@ -151,11 +76,11 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Total Workouts</p>
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">{totalWorkouts}</p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Total Goals</p>
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">{totalGoals}</p>
             </div>
           </div>
         </CardContent>
