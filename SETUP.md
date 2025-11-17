@@ -58,7 +58,92 @@ To allow users to sign in with Google:
    - Paste your **Client ID** and **Client Secret**
    - Click **Save**
 
-## Step 2: Configure Environment Variables
+## Step 2: Connect Supabase Database to IntelliJ (Optional)
+
+If you want to explore and manage your Supabase database directly from IntelliJ IDEA, follow these steps:
+
+### Get Database Connection Details
+
+1. In your Supabase Dashboard, go to **Project Settings** (gear icon)
+2. Click **Database** in the settings menu
+3. Under "Connection string", select the **URI** tab
+4. You'll see a connection string like:
+   ```
+   postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres
+   ```
+5. Note these values:
+   - **Host**: `db.xxxxx.supabase.co`
+   - **Port**: `5432`
+   - **Database**: `postgres`
+   - **User**: `postgres`
+   - **Password**: (the database password you set when creating the project)
+
+### Configure IntelliJ Database Connection
+
+1. In IntelliJ IDEA, open the **Database** tool window:
+   - Go to **View** > **Tool Windows** > **Database**
+   - Or press **Ctrl+Shift+F12** (Windows/Linux) or **Cmd+Shift+F12** (Mac) and select Database
+
+2. Click the **+** icon and select **Data Source** > **PostgreSQL**
+
+3. In the Data Source configuration window:
+   - **Name**: `GoodHealth Supabase` (or your preferred name)
+   - **Host**: `db.xxxxx.supabase.co` (from step 1)
+   - **Port**: `5432`
+   - **Database**: `postgres`
+   - **User**: `postgres`
+   - **Password**: Your database password
+   - **Save**: Select "Forever" to save the password
+
+4. Click **Download missing driver files** if prompted (IntelliJ will download the PostgreSQL JDBC driver)
+
+5. Click **Test Connection** to verify the connection works
+   - You should see a green checkmark with "Succeeded"
+   - If it fails, double-check your credentials and ensure your IP is allowed in Supabase
+
+6. Click **OK** to save the connection
+
+### Enable Connection Pooler (Recommended)
+
+For better connection stability, you can use Supabase's connection pooler:
+
+1. In Supabase Dashboard, go to **Project Settings** > **Database**
+2. Under "Connection string", select **Connection pooling** tab
+3. Choose **Transaction mode** (recommended for most use cases)
+4. Use these settings in IntelliJ:
+   - **Host**: `aws-0-us-east-1.pooler.supabase.com` (or your region's pooler)
+   - **Port**: `6543` (pooler port, not 5432)
+   - All other settings remain the same
+
+### Using the Database Tool
+
+Once connected, you can:
+- Browse all tables, views, and schemas
+- Run SQL queries in the console
+- View and edit table data
+- Generate database diagrams
+- Export data to various formats
+
+### Troubleshooting
+
+**Connection timeout or refused:**
+- Check if your IP address is allowed:
+  - Go to Supabase Dashboard > **Project Settings** > **Database**
+  - Under "Connection pooling", click **Add IP address**
+  - Add your current IP or use `0.0.0.0/0` (allows all IPs, use with caution)
+
+**SSL certificate errors:**
+- In IntelliJ Data Source settings, go to the **SSH/SSL** tab
+- Select **Require** or **Verify CA** for SSL mode
+- Or disable SSL verification (not recommended for production)
+
+**"Too many connections" error:**
+- Use the connection pooler (port 6543) instead of direct connection (port 5432)
+- Or limit the number of connection pools in IntelliJ:
+  - In Data Source settings, go to **Advanced** tab
+  - Set **Maximum pool size** to 2-3
+
+## Step 3: Configure Environment Variables
 
 1. In your project root, copy the example file:
    ```bash
@@ -72,7 +157,7 @@ To allow users to sign in with Google:
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 
-## Step 3: Install and Run
+## Step 4: Install and Run
 
 ```bash
 # Install dependencies (if you haven't already)
@@ -84,7 +169,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Step 4: Test the App
+## Step 5: Test the App
 
 1. Click **"Sign up"** in the navigation
 2. Choose one of these sign-up methods:

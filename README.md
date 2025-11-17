@@ -3,6 +3,7 @@
 A comprehensive Progressive Web App for tracking gym workouts, visualizing progress, setting fitness goals, and monitoring your fitness journey with detailed analytics.
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/your-username/goodhealth/ci.yml?branch=main&label=tests)](https://github.com/your-username/goodhealth/actions)
+[![codecov](https://codecov.io/gh/your-username/goodhealth/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/goodhealth)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Features
@@ -240,19 +241,39 @@ The project includes GitHub Actions workflows:
 - ✅ Runs tests on every push/PR
 - ✅ Lints code with ESLint
 - ✅ Generates coverage reports
+- ✅ Uploads coverage to Codecov
 - ✅ Builds application
 
 ### Deployment Workflows
 - ✅ Preview deployments for PRs
 - ✅ Auto-deploy to production on push to main
 
-Configure by adding GitHub secrets for Vercel integration.
+### Setting Up Codecov
+
+1. **Sign up for Codecov** at [codecov.io](https://codecov.io) using your GitHub account
+2. **Add your repository** to Codecov
+3. **Get your repository token** from Codecov dashboard
+4. **Add the token as a GitHub secret**:
+   - Go to your repository on GitHub
+   - Navigate to Settings > Secrets and variables > Actions
+   - Click "New repository secret"
+   - Name: `CODECOV_TOKEN`
+   - Value: Your Codecov repository token (e.g., `27b4f80b-aad4-40ad-9b94-968b02a109f7`)
+5. **Merge to main** - Once merged, Codecov will start tracking coverage on all PRs
+
+The workflow automatically:
+- Runs `npm run test:coverage` to generate coverage reports
+- Uploads coverage data (JSON and LCOV formats) to Codecov
+- Adds coverage badges and PR comments
+
+Configure by adding GitHub secrets for Vercel and Codecov integration.
 
 ## 📚 Documentation
 
 - **[SETUP.md](./SETUP.md)** - Detailed setup instructions
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide
 - **[TESTING.md](./TESTING.md)** - Testing guide and best practices
+- **[CODECOV_SETUP.md](./CODECOV_SETUP.md)** - Codecov integration guide
 - **[.claude/context.md](./.claude/context.md)** - Full project context for development
 
 ## 🗺️ Roadmap
@@ -267,6 +288,7 @@ Configure by adding GitHub secrets for Vercel integration.
 - ✅ Goal tracking system
 - ✅ Jest + React Testing Library setup
 - ✅ GitHub Actions CI/CD
+- ✅ Codecov integration for coverage tracking
 - ✅ Vercel deployment ready
 
 ### Planned 📋

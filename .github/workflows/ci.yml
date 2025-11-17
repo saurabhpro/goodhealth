@@ -27,18 +27,19 @@ jobs:
       - name: Run linter
         run: npm run lint
 
-      - name: Run tests
-        run: npm test
-
       - name: Run tests with coverage
         run: npm run test:coverage
 
-      - name: Upload coverage reports
+      - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         if: always()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+          files: ./coverage/coverage-final.json,./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          verbose: true
 
   build:
     name: Build Application
