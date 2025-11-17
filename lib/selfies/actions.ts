@@ -168,8 +168,8 @@ export async function getWorkoutSelfies(workoutId: string) {
 }
 
 /**
- * Get a proxied URL for viewing a selfie
- * Uses Next.js API route to proxy the image, allowing for image optimization
+ * Get a signed URL for viewing a selfie
+ * Returns a temporary signed URL from Supabase Storage
  */
 export async function getSelfieUrl(filePath: string) {
   const supabase = await createClient()
@@ -182,11 +182,17 @@ export async function getSelfieUrl(filePath: string) {
     return { url: null, error: 'Not authenticated' }
   }
 
-  // Return proxied URL through Next.js API route
-  // This allows Next.js Image optimization to work properly
-  const proxiedUrl = `/api/images/${filePath}`
+  // Create a signed URL that expires in 1 hour
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from(BUCKET_NAME)
+    .createSignedUrl(filePath, 3600) // 1 hour expiry
 
-  return { url: proxiedUrl, error: null }
+  if (signedError || !signedData?.signedUrl) {
+    console.error('Failed to create signed URL:', signedError)
+    return { url: null, error: 'Failed to generate image URL' }
+  }
+
+  return { url: signedData.signedUrl, error: null }
 }
 
 /**
