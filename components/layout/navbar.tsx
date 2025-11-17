@@ -33,10 +33,19 @@ export function Navbar() {
     try {
       setSigningOut(true)
       const supabase = createClient()
-      await supabase.auth.signOut()
-      // The auth state change listener in useUser will update the UI
-      router.push('/')
-      router.refresh()
+
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+
+      if (error) {
+        console.error('Error signing out:', error)
+        setSigningOut(false)
+        return
+      }
+
+      // Navigate to home page (which shows onboarding)
+      // Use window.location for full page reload to ensure clean state
+      window.location.href = '/'
     } catch (error) {
       console.error('Error signing out:', error)
       setSigningOut(false)

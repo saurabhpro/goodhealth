@@ -29,7 +29,54 @@ Before deploying, ensure:
 
 ## CI/CD Pipeline
 
-### GitHub Actions Workflows
+### Deployment Options
+
+You have **two options** for automated deployments:
+
+**Option 1: Vercel GitHub Integration (Recommended - Easier)** ✅
+- Connect your GitHub repo directly in Vercel Dashboard
+- Vercel automatically deploys on every push
+- No GitHub Actions workflows needed for deployment
+- Preview deployments for PRs automatically created
+- Zero configuration required
+
+**Option 2: GitHub Actions Workflows (Advanced)**
+- More control over CI/CD pipeline
+- Can run custom tests/checks before deployment
+- Useful if you need specific build steps
+- Requires manual setup of secrets
+
+---
+
+### If Using Vercel GitHub Integration (Current Setup) ✅
+
+**The deployment workflows have been disabled:**
+- ✅ `.github/workflows/ci.yml` - **ACTIVE** (runs tests on push/PR)
+- ⏸️ `.github/workflows/deploy-production.yml.disabled` - **DISABLED**
+- ⏸️ `.github/workflows/deploy-preview.yml.disabled` - **DISABLED**
+
+**How it works:**
+- Push to `main` → Vercel automatically deploys to production
+- Open PR → Vercel automatically creates preview deployment
+- No secrets configuration needed (Vercel handles it)
+- Tests still run via `ci.yml` workflow
+
+**To re-enable GitHub Actions deployments:**
+```bash
+# Rename files to remove .disabled extension
+mv .github/workflows/deploy-production.yml.disabled .github/workflows/deploy-production.yml
+mv .github/workflows/deploy-preview.yml.disabled .github/workflows/deploy-preview.yml
+```
+
+**To permanently delete them:**
+```bash
+rm .github/workflows/deploy-production.yml.disabled
+rm .github/workflows/deploy-preview.yml.disabled
+```
+
+---
+
+### GitHub Actions Workflows (If Using Option 2)
 
 The project includes three automated workflows:
 
@@ -246,16 +293,33 @@ Only needed if you want code coverage reports:
 
 ### Quick Start: Recommended Workflow
 
-**For first-time deployment:**
-1. Deploy manually via Vercel Dashboard (steps below)
-2. Once deployed, get the Project ID and Org ID from project settings
-3. Create Vercel access token
-4. Add these as GitHub Secrets for automated deployments
+**For first-time deployment (Using Vercel GitHub Integration):**
+1. Import your GitHub repository in Vercel Dashboard
+2. Configure environment variables
+3. Deploy
+4. **Done!** Future deployments happen automatically on push
 
-**Why this order?**
-- Deploying manually first creates the project and generates IDs
-- You can then set up CI/CD with the correct credentials
-- Manual deployment verifies everything works before automation
+**Benefits:**
+- ✅ Automatic deployments on every push to `main`
+- ✅ Automatic preview deployments for PRs
+- ✅ No secrets configuration needed
+- ✅ Managed by Vercel (zero maintenance)
+
+---
+
+**Alternative: Using GitHub Actions (Advanced Users Only)**
+
+Only needed if you require custom CI/CD logic:
+1. Deploy manually via Vercel Dashboard first
+2. Get Project ID and Org ID from project settings
+3. Create Vercel access token
+4. Add these as GitHub Secrets
+5. Keep the deployment workflow files
+
+**When to use:**
+- Need to run custom tests before deployment
+- Want more control over build process
+- Have complex deployment requirements
 
 ---
 
