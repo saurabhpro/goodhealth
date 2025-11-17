@@ -1,7 +1,7 @@
 # GoodHealth - Fitness Tracking App
 
 ## Project Overview
-GoodHealth is a comprehensive fitness tracking Progressive Web App (PWA) built with Next.js 16, TypeScript, and Supabase. It allows users to log workouts, track progress, set fitness goals, and monitor their fitness journey with detailed analytics.
+GoodHealth is a comprehensive fitness tracking Progressive Web App (PWA) built with Next.js 16, TypeScript, and Supabase. It allows users to log workouts with smart exercise inputs, track body measurements over time with interactive charts, upload progress photos, set fitness goals, and monitor their fitness journey with detailed analytics.
 
 ## Tech Stack
 
@@ -11,8 +11,8 @@ GoodHealth is a comprehensive fitness tracking Progressive Web App (PWA) built w
 - **React 19** - UI library
 - **Tailwind CSS 4** - Styling
 - **shadcn/ui** - UI component library
+- **Recharts 3.4.1** - Interactive time-series charts
 - **Sonner** - Toast notifications
-- **Zustand** - State management
 - **React Hook Form + Zod** - Form handling and validation
 
 ### Backend & Database
@@ -20,6 +20,7 @@ GoodHealth is a comprehensive fitness tracking Progressive Web App (PWA) built w
   - PostgreSQL database
   - Authentication (Email/Password + Google OAuth)
   - Row Level Security (RLS)
+  - Supabase Storage for images
   - Real-time capabilities
 - **Server Actions** - Next.js server-side data mutations
 
@@ -33,13 +34,19 @@ GoodHealth is a comprehensive fitness tracking Progressive Web App (PWA) built w
 ```
 goodhealth/
 ├── app/                          # Next.js App Router pages
-│   ├── api/auth/callback/        # OAuth callback handler
+│   ├── api/
+│   │   ├── auth/callback/        # OAuth callback handler
+│   │   └── images/[...path]/     # Image serving proxy
 │   ├── auth/auth-code-error/     # Auth error page
 │   ├── dashboard/                # Main dashboard
 │   ├── workouts/                 # Workout management
 │   │   ├── [id]/                 # Workout detail view
+│   │   │   └── edit/             # Edit workout
 │   │   └── new/                  # Create new workout
+│   ├── measurements/             # Body measurements tracking
+│   │   └── new/                  # Add new measurement
 │   ├── goals/                    # Goal management
+│   │   ├── [id]/edit/            # Edit goal
 │   │   └── new/                  # Create new goal
 │   ├── progress/                 # Progress tracking & analytics
 │   ├── profile/                  # User profile management
@@ -50,20 +57,34 @@ goodhealth/
 │   └── debug/                    # Debug utilities
 ├── components/
 │   ├── layout/                   # Layout components
-│   │   └── navbar.tsx            # Main navigation
-│   └── ui/                       # shadcn/ui components
-│       ├── effort-selector.tsx   # Custom effort level selector
-│       └── sonner.tsx            # Toast notifications
+│   │   └── navbar.tsx            # Main navigation (with Measurements link)
+│   ├── ui/                       # shadcn/ui components
+│   │   ├── effort-selector.tsx   # Custom effort level selector
+│   │   ├── alert-dialog.tsx      # Confirmation dialogs
+│   │   ├── tabs.tsx              # Tab navigation
+│   │   └── sonner.tsx            # Toast notifications
+│   ├── workout-edit-form.tsx     # Edit workout form with exercise management
+│   ├── workout-actions.tsx       # Workout delete actions
+│   ├── measurement-form.tsx      # Body measurement input form
+│   ├── measurements-chart.tsx    # Time series charts for measurements
+│   ├── measurements-list.tsx     # Measurement history with trends
+│   ├── selfie-upload.tsx         # Progress photo upload
+│   └── workout-selfie-display.tsx # Display uploaded photos
 ├── lib/
 │   ├── auth/                     # Authentication
 │   │   ├── actions.ts            # Auth server actions
 │   │   └── hooks.ts              # Auth React hooks
 │   ├── workouts/                 # Workout operations
-│   │   └── actions.ts            # Workout CRUD actions
+│   │   └── actions.ts            # Workout CRUD actions (includes updateWorkout)
+│   ├── measurements/             # Measurement operations
+│   │   └── actions.ts            # Measurement CRUD actions
 │   ├── goals/                    # Goal operations
-│   │   └── actions.ts            # Goal CRUD actions
+│   │   ├── actions.ts            # Goal CRUD actions
+│   │   └── calculate-initial-value.ts # Goal value calculations
+│   ├── selfies/                  # Selfie operations
+│   │   └── actions.ts            # Selfie upload/delete with storage
 │   ├── data/                     # Static data
-│   │   └── gym-equipment.ts      # 70+ gym equipment database
+│   │   └── gym-equipment.ts      # 68+ gym equipment database with type detection
 │   ├── supabase/                 # Supabase clients
 │   │   ├── client.ts             # Browser client
 │   │   └── server.ts             # Server client
@@ -75,12 +96,17 @@ goodhealth/
 │   ├── README.md                 # Migration instructions
 │   ├── 001_initial_schema.sql    # Initial database schema
 │   ├── 002_add_effort_level.sql  # Effort level feature
-│   └── 003_add_exercise_types.sql # Exercise type detection
+│   ├── 003_add_exercise_types.sql # Exercise type detection
+│   ├── 004_add_workout_selfies.sql # Selfies table
+│   ├── 004b_add_storage_policies.sql # Storage bucket policies
+│   └── 005_add_body_measurements.sql # Body measurements table
+├── __tests__/                    # Test files
+│   ├── goals/                    # Goal calculation tests
+│   └── workouts/                 # Workout logic tests
 └── .github/workflows/            # GitHub Actions CI/CD
     ├── ci.yml                    # Continuous integration
     ├── deploy-preview.yml        # PR preview deployments
     └── deploy-production.yml     # Production deployment
-
 ```
 
 ## Key Features
@@ -97,14 +123,56 @@ goodhealth/
 - **Smart Exercise Inputs** - Dynamically adapts based on exercise type:
   - **Cardio**: Duration, Distance, Speed, Calories, Resistance, Incline
   - **Strength**: Sets, Reps, Weight
-  - **Functional**: Duration, Rounds, Reps
-- **70+ Pre-defined Equipment** from major brands (Technogym, Life Fitness, etc.)
+  - **Functional**: Sets, Reps (no weight field)
+- **68+ Pre-defined Equipment** from major brands (Technogym, Life Fitness, etc.)
 - **Exercise Categories**: Cardio, Chest, Back, Shoulders, Arms, Legs, Core, Free Weights, Functional
+- **Auto-detection** - Exercise type automatically set when selecting predefined equipment
+- **Manual override** - Users can change exercise type for custom exercises
 - **Effort Level Tracking** - Visual heatmap selector (1-6 scale)
-- **Workout Details** - View complete exercise breakdowns
-- **Custom Exercises** - Add your own exercises
+- **Full CRUD Operations**:
+  - Create workouts with multiple exercises
+  - View workout details with complete exercise breakdown
+  - Edit workouts (add, remove, modify exercises)
+  - Delete workouts with confirmation
+- **Workout Selfies**:
+  - Upload progress photos during/after workout
+  - Multiple photos per workout
+  - Secure storage in Supabase Storage
+  - Delete capability with storage cleanup
+  - Gallery view on workout details
 
-### 3. Progress Tracking
+### 3. Body Measurements Tracking
+- **Comprehensive Tracking Form** (20+ metrics):
+  - **Body Composition**: Weight, Height, Body Fat %, Muscle Mass, Bone Mass, Water %, Protein %
+  - **Circumference**: Chest, Waist, Hips, Shoulders, Neck
+  - **Arms**: Biceps (L/R), Forearms (L/R)
+  - **Legs**: Thighs (L/R), Calves (L/R)
+  - **Additional Metrics**: BMR, Metabolic Age, Visceral Fat
+  - **Notes**: Optional text field
+- **Time Series Visualization**:
+  - Interactive line charts using Recharts
+  - Metric selector dropdown (8 metrics available)
+  - Statistics dashboard: Latest, Change, Change %, Average, Min-Max range
+  - Responsive chart with tooltips
+- **Health-Aware Trend Indicators**:
+  - **Green** for positive changes:
+    - Weight/Body Fat/Waist decreasing
+    - Muscle Mass/Chest/Biceps increasing
+  - **Red** for negative changes:
+    - Weight/Body Fat/Waist increasing
+    - Muscle Mass/Chest/Biceps decreasing
+  - **Blue** for neutral metrics (Hips)
+  - Visual arrows (↑↓→) with change values
+- **Measurement History**:
+  - Chronological list with latest badge
+  - Comparison with previous measurement
+  - Organized sections by body part
+  - Delete capability with confirmation
+- **Tabbed Interface**:
+  - Progress Chart tab (default): Chart + 3 recent measurements
+  - All Measurements tab: Complete history
+
+### 4. Progress Tracking
 - **Real-time Statistics Dashboard**:
   - This month's workout count
   - Total training time (hours & minutes)
@@ -121,27 +189,34 @@ goodhealth/
   - Progress visualization with color-coded bars
   - Target date tracking
 
-### 4. Goal Management
-- Create fitness goals with targets
-- Track current progress
-- Set target dates
-- Progress bars and achievement badges
+### 5. Goal Management
+- Create fitness goals with targets and deadlines
+- Track current progress vs. target
+- Visual progress bars with percentage completion
 - Goal types: Weight, Reps, Distance, Duration, etc.
+- Edit and delete goals
+- Achievement badges when goals completed
 
-### 5. Profile & Settings
-- Edit profile information
-- View account statistics
-- Customize units (kg/lbs, km/miles)
-- Notification preferences
-- Privacy settings
+### 6. Navigation
+- **Main Navigation Links**:
+  - Dashboard
+  - Workouts
+  - **Measurements** (new)
+  - Progress
+  - Goals
+- User dropdown with Profile, Settings, Sign out
+- Theme toggle (dark/light mode ready)
+- Responsive mobile menu
 
-### 6. UI/UX Features
+### 7. UI/UX Features
 - **Toast Notifications** - Success/error feedback for all actions
 - **Responsive Design** - Mobile-first approach
 - **Dark/Light Mode** ready
 - **Loading States** - Proper feedback during async operations
 - **Empty States** - Helpful prompts when no data exists
 - **Form Validation** - Client and server-side validation
+- **Confirmation Dialogs** - AlertDialog for destructive actions
+- **Image Optimization** - Efficient loading and display
 
 ## Database Schema
 
@@ -161,11 +236,25 @@ goodhealth/
 - **Polymorphic fields** based on exercise_type:
   - Strength: sets, reps, weight
   - Cardio: duration_minutes, distance, speed, calories, resistance_level, incline
+  - Functional: sets, reps (no weight)
 - User-scoped via workout relationship
+
+**workout_selfies**
+- Progress photos
+- Fields: workout_id, image_path, created_at
+- Stored in Supabase Storage bucket: `workout-selfies`
+- RLS policies for secure access
+
+**body_measurements**
+- Comprehensive body tracking (20+ fields)
+- Fields: measured_at, weight, height, body_fat_percentage, muscle_mass, bone_mass, water_percentage, protein_percentage, neck, shoulders, chest, waist, hips, bicep_left, bicep_right, forearm_left, forearm_right, thigh_left, thigh_right, calf_left, calf_right, bmr, metabolic_age, visceral_fat, notes
+- User-scoped with RLS
+- Ordered by measured_at for time series
 
 **workout_templates**
 - Reusable workout templates
 - JSONB field for exercise list
+- Not yet implemented in UI
 
 **goals**
 - Fitness goals
@@ -177,57 +266,65 @@ goodhealth/
 - Policies ensure users can only access their own data
 - Server-side authentication checks
 - Protected API routes
+- Secure image storage with RLS policies
 
 ## Recent Major Updates
 
-### 1. Smart Exercise Type Detection
+### 1. Workout Editing (Full CRUD)
+- Complete workout edit functionality
+- Add, remove, and modify exercises in existing workouts
+- Exercise type selector with dynamic field rendering
+- Same smart inputs as new workout form
+- Effort level updates
+- Migration: `updateWorkout` action updated with all fields
+
+### 2. Body Measurements Time Series
+- Comprehensive measurement tracking form (20+ metrics)
+- Interactive Recharts line graphs
+- Health-aware color coding:
+  - Green for positive health changes
+  - Red for negative health changes
+- Statistics dashboard (Latest, Change, %, Average, Range)
+- Measurement history with trend indicators
+- Delete measurements capability
+- Migration: `005_add_body_measurements.sql`
+
+### 3. Workout Selfies
+- Upload progress photos during workouts
+- Supabase Storage integration
+- Secure image serving via API route
+- Delete capability with storage cleanup
+- Gallery view on workout details
+- Migration: `004_add_workout_selfies.sql`, `004b_add_storage_policies.sql`
+
+### 4. Smart Exercise Type Detection
 - Automatic input field adaptation based on equipment selection
 - Separate data models for cardio vs strength exercises
-- Migration: `supabase-migration-exercise-types.sql`
+- Manual override capability
+- Functional type (no weight field)
+- Migration: `003_add_exercise_types.sql`
 
-### 2. Effort Level Tracking
+### 5. Effort Level Tracking
 - Visual heatmap-style effort selector
 - 6 levels from "Very Easy" to "Maximum"
 - Color-coded interface with emojis
-- Migration: `supabase-migration-effort.sql`
+- Migration: `002_add_effort_level.sql`
 
-### 3. Comprehensive Gym Equipment Database
+### 6. Comprehensive Gym Equipment Database
 - 68+ equipment items from major brands
 - Categorized by muscle group and type
 - Brand information (Technogym, Life Fitness, Hammer Strength, etc.)
 - Exercise type metadata (cardio/strength/functional)
+- Auto-detection support
 
-### 4. Workout Detail Views
-- Click any workout to see full details
-- Exercise-by-exercise breakdown
-- Type-specific data display
-- Effort level badges
-- Fixed Next.js 16 async params handling
+### 7. Navigation Updates
+- Added "Measurements" link to main navigation
+- Positioned between Workouts and Progress
+- Accessible from all authenticated pages
 
-### 5. Toast Notifications
-- Success confirmations for all save operations
-- Error messages with details
-- Auto-dismiss with smooth animations
-
-### 6. Dashboard with Real Statistics
-- Displays actual workout counts and totals
-- Workout streak calculation
-- Recent activity feed with clickable workout cards
-- Monthly statistics aggregation
-
-### 7. Progress Page Enhancements
-- Overview tab: Real monthly/all-time statistics
-- Workouts tab: Chronological workout history
-- Strength tab: Per-exercise progress tracking
-- Goals tab: Visual progress bars and achievement tracking
-
-### 8. Homepage Routing
-- Logged-in users redirected to dashboard
-- Non-logged-in users see marketing landing page
-
-### 9. Testing & CI/CD
+### 8. Testing & CI/CD
 - Jest + React Testing Library setup
-- 26 unit tests (utilities, data, components)
+- 26+ unit tests (utilities, data, components)
 - GitHub Actions workflows for CI
 - Automated testing on push/PR
 - Preview deployments for pull requests
@@ -246,15 +343,12 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 All migrations are in the `migrations/` directory. Run in order in Supabase SQL Editor:
 
-1. **Initial Schema**: `migrations/001_initial_schema.sql`
-   - Creates all tables, RLS policies, triggers
-
-2. **Effort Level**: `migrations/002_add_effort_level.sql`
-   - Adds effort_level to workouts table
-
-3. **Exercise Types**: `migrations/003_add_exercise_types.sql`
-   - Adds exercise_type and cardio fields to exercises table
-   - Makes sets column nullable
+1. **Initial Schema**: `001_initial_schema.sql` - Creates all base tables, RLS policies, triggers
+2. **Effort Level**: `002_add_effort_level.sql` - Adds effort_level to workouts
+3. **Exercise Types**: `003_add_exercise_types.sql` - Adds exercise_type and cardio fields, makes sets nullable
+4. **Workout Selfies**: `004_add_workout_selfies.sql` - Creates workout_selfies table
+5. **Storage Policies**: `004b_add_storage_policies.sql` - Sets up storage bucket and RLS
+6. **Body Measurements**: `005_add_body_measurements.sql` - Creates body_measurements table with 20+ fields
 
 See `migrations/README.md` for detailed migration instructions.
 
@@ -272,11 +366,26 @@ See `migrations/README.md` for detailed migration instructions.
 ### Workouts (`lib/workouts/actions.ts`)
 - `createWorkout()` - Create workout with exercises
 - `getWorkouts()` - Fetch all user workouts
-- `deleteWorkout()` - Delete workout
+- `getWorkoutById()` - Fetch single workout with exercises
+- `updateWorkout()` - Update workout with exercises (full replace)
+- `deleteWorkout()` - Delete workout and all exercises
+
+### Measurements (`lib/measurements/actions.ts`)
+- `createMeasurement()` - Create new body measurement
+- `getMeasurements()` - Fetch all user measurements (ordered by date)
+- `getLatestMeasurement()` - Fetch most recent measurement
+- `updateMeasurement()` - Update existing measurement
+- `deleteMeasurement()` - Delete measurement
+
+### Selfies (`lib/selfies/actions.ts`)
+- `uploadWorkoutSelfie()` - Upload image to storage and create record
+- `getWorkoutSelfies()` - Fetch selfies for a workout
+- `deleteWorkoutSelfie()` - Delete selfie and remove from storage
 
 ### Goals (`lib/goals/actions.ts`)
 - `createGoal()` - Create new goal
 - `getGoals()` - Fetch all user goals
+- `updateGoal()` - Update goal
 - `updateGoalProgress()` - Update goal progress
 - `deleteGoal()` - Delete goal
 
@@ -285,7 +394,8 @@ See `migrations/README.md` for detailed migration instructions.
 ### Running the App
 ```bash
 npm run dev              # Start development server
-npm run build            # Build for production
+npm run build            # Build for production (with lint)
+npm run build:skip-lint  # Build without linting (faster)
 npm start                # Start production server
 npm run lint             # Run ESLint
 npm test                 # Run unit tests
@@ -299,12 +409,14 @@ npm run test:coverage    # Run tests with coverage report
 3. Update database schema if needed (create migration)
 4. Add types in `types/` if needed
 5. Test with Supabase RLS policies
+6. Update navigation if needed (`components/layout/navbar.tsx`)
 
 ### Debugging
 - Use `/debug` page to check user auth and database connection
 - Check browser console for client-side errors
 - Check terminal for server-side logs
 - Inspect Supabase logs in dashboard
+- Check Supabase Storage for image issues
 
 ## Common Patterns
 
@@ -325,6 +437,24 @@ export async function myAction(formData: FormData) {
   revalidatePath('/your-path')
   return { success: true }
 }
+```
+
+### Health-Aware Trend Indicators
+```typescript
+// Define which metrics improve when decreasing
+const BETTER_WHEN_DECREASING: Record<string, boolean> = {
+  weight: true,
+  body_fat_percentage: true,
+  waist: true,
+  muscle_mass: false, // Better when increasing
+  chest: false,
+  bicep_left: false,
+}
+
+// Calculate if trend is positive for health
+const isPositiveTrend = betterWhenDecreasing
+  ? change < 0  // Decrease is good
+  : change > 0  // Increase is good
 ```
 
 ### Dynamic Pages
@@ -351,14 +481,31 @@ toast.success('Title', { description: 'Details' })
 toast.error('Title', { description: error.message })
 ```
 
+### Image Upload to Supabase Storage
+```typescript
+const file = formData.get('image') as File
+const fileName = `${Date.now()}-${file.name}`
+const filePath = `${user.id}/${fileName}`
+
+const { error: uploadError } = await supabase.storage
+  .from('workout-selfies')
+  .upload(filePath, file)
+
+if (uploadError) return { error: uploadError.message }
+
+// Save record to database with image_path
+```
+
 ## Testing
 
 ### Test Suite
 - **Jest** + **React Testing Library**
-- **26 passing tests** covering:
+- **26+ passing tests** covering:
   - Utility functions (cn class merging)
   - Gym equipment data (68+ items)
   - UI components (Button variants)
+  - Goal calculations
+  - Workout logic
 
 ### Test Commands
 ```bash
@@ -369,6 +516,11 @@ npm run test:coverage    # Generate coverage report
 
 ### Test Files
 ```
+__tests__/
+├── goals/
+│   └── calculate-initial-value.test.ts  # Goal calculation tests
+├── workouts/
+│   └── workout-logic.test.ts            # Workout logic tests
 lib/__tests__/utils.test.ts              # Utility tests
 lib/data/__tests__/gym-equipment.test.ts # Data tests
 components/ui/__tests__/button.test.tsx  # Component tests
@@ -423,45 +575,51 @@ CODECOV_TOKEN (optional)
 3. Add environment variables
 4. Deploy (~5 minutes)
 
-### Why Not GitHub Pages?
-- ❌ Static HTML only (no SSR)
-- ❌ No API routes
-- ❌ No server actions
-- ❌ No backend functionality
-
-### Alternative Providers
-- **Netlify**: Good Next.js support, similar to Vercel
-- **Railway**: Best for full-stack + database hosting
-- **Render**: Free tier with cold starts
-- **AWS Amplify**: Most powerful but complex setup
-
-See `DEPLOYMENT.md` for complete deployment guide with step-by-step instructions.
-
 ### Post-Deployment Checklist
 1. ✅ Update Supabase Auth redirect URLs
 2. ✅ Configure Google OAuth redirect URIs
-3. ✅ Test authentication flow
-4. ✅ Verify PWA installation
-5. ✅ Monitor error logs
-6. ✅ Test workout/goal creation
+3. ✅ Set up Storage bucket (`workout-selfies`)
+4. ✅ Test authentication flow
+5. ✅ Verify PWA installation
+6. ✅ Test image uploads
+7. ✅ Test workout/goal/measurement creation
 
-## Known Issues & TODOs
+See `DEPLOYMENT.md` for complete deployment guide.
 
-### Current Limitations
-- Workout templates not yet implemented (table exists)
-- Profile updates don't save to Supabase (UI only)
-- Settings don't persist (UI only)
-- No workout edit functionality yet
+## Known Issues & Current State
+
+### Fully Implemented ✅
+- ✅ Workout CRUD (Create, Read, Update, Delete)
+- ✅ Exercise type detection and smart forms
+- ✅ Effort level tracking
+- ✅ Workout selfies with storage
+- ✅ Body measurements with time series charts
+- ✅ Health-aware trend indicators
+- ✅ Goal CRUD operations
+- ✅ Dashboard with real statistics
+- ✅ Progress tracking analytics
+- ✅ Authentication (Email + Google OAuth)
+- ✅ PWA functionality
+
+### Not Yet Implemented ❌
+- ❌ Workout templates (table exists, UI pending)
+- ❌ Profile/Settings persistence (UI only)
+- ❌ Exercise history charts
+- ❌ Personal records (PRs) tracking
+- ❌ Social features
+- ❌ Data export
 
 ### Future Enhancements
-- [ ] Implement workout templates
-- [ ] Add charts using recharts
-- [ ] Profile/settings persistence
-- [ ] Exercise history tracking
-- [ ] Personal records (PRs)
+- [ ] Workout templates implementation
+- [ ] Profile/settings persistence to database
+- [ ] Exercise history tracking with charts
+- [ ] Personal records (PRs) tracking
 - [ ] Social features (sharing)
-- [ ] Export data functionality
+- [ ] Export data functionality (CSV/JSON)
 - [ ] Import from other apps
+- [ ] Body measurement photo comparisons
+- [ ] Progress reports (weekly/monthly)
+- [ ] Custom date ranges for analytics
 
 ## Contributing
 
@@ -474,10 +632,15 @@ When adding features:
 6. Update RLS policies if needed
 7. Test authentication flow
 8. Update this context file
+9. Add tests for new functionality
 
-## Support
+## Support & Documentation
 
-- Check SETUP.md for setup instructions
-- Check README.md for project info
+- **SETUP.md** - Setup instructions
+- **README.md** - Project overview
+- **TESTING.md** - Testing guide
+- **DEPLOYMENT.md** - Deployment guide
+- **SELFIES_SETUP.md** - Selfie feature setup
+- **CODECOV_SETUP.md** - Codecov integration
 - Review Supabase logs for errors
 - Use /debug page for troubleshooting

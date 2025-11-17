@@ -138,6 +138,100 @@ export async function getWorkouts() {
   return { workouts: workouts || [] }
 }
 
+export async function updateWorkout(workoutId: string, formData: FormData) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Extract workout data
+  const name = formData.get('name') as string
+  const date = formData.get('date') as string
+  const duration = formData.get('duration') as string
+  const description = formData.get('description') as string
+  const effortLevel = formData.get('effort_level') as string
+  const exercisesJson = formData.get('exercises') as string
+
+  // Parse exercises
+  let exercises = []
+  try {
+    exercises = JSON.parse(exercisesJson)
+  } catch {
+    return { error: 'Invalid exercises data' }
+  }
+
+  // Update workout
+  const { error: workoutError } = await supabase
+    .from('workouts')
+    .update({
+      name,
+      date,
+      duration_minutes: duration ? Number.parseInt(duration) : null,
+      description,
+      effort_level: effortLevel ? Number.parseInt(effortLevel) : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', workoutId)
+    .eq('user_id', user.id)
+
+  if (workoutError) {
+    console.error('Workout update error:', workoutError)
+    return { error: `Failed to update workout: ${workoutError.message}` }
+  }
+
+  // Delete existing exercises
+  const { error: deleteError } = await supabase
+    .from('exercises')
+    .delete()
+    .eq('workout_id', workoutId)
+
+  if (deleteError) {
+    console.error('Exercise delete error:', deleteError)
+    return { error: `Failed to delete old exercises: ${deleteError.message}` }
+  }
+
+  // Insert updated exercises
+  if (exercises.length > 0) {
+    const exerciseRecords = exercises.map((exercise: ExerciseInput) => ({
+      workout_id: workoutId,
+      name: exercise.name,
+      exercise_type: exercise.type || 'strength',
+      // Strength fields
+      sets: exercise.sets ? Number.parseInt(exercise.sets) : null,
+      reps: exercise.reps ? Number.parseInt(exercise.reps) : null,
+      weight: exercise.weight ? Number.parseFloat(exercise.weight) : null,
+      weight_unit: 'kg',
+      // Cardio fields
+      duration_minutes: exercise.duration ? Number.parseInt(exercise.duration) : null,
+      distance: exercise.distance ? Number.parseFloat(exercise.distance) : null,
+      distance_unit: 'km',
+      speed: exercise.speed ? Number.parseFloat(exercise.speed) : null,
+      calories: exercise.calories ? Number.parseInt(exercise.calories) : null,
+      resistance_level: exercise.resistance ? Number.parseInt(exercise.resistance) : null,
+      incline: exercise.incline ? Number.parseFloat(exercise.incline) : null,
+      notes: null,
+    }))
+
+    const { error: exerciseError } = await supabase
+      .from('exercises')
+      .insert(exerciseRecords)
+
+    if (exerciseError) {
+      console.error('Exercise insert error:', exerciseError)
+      return { error: `Failed to update exercises: ${exerciseError.message}` }
+    }
+  }
+
+  revalidatePath('/workouts')
+  revalidatePath(`/workouts/${workoutId}`)
+  return { success: true }
+}
+
 export async function deleteWorkout(workoutId: string) {
   const supabase = await createClient()
 
@@ -159,5 +253,44 @@ export async function deleteWorkout(workoutId: string) {
     return { error: error.message }
   }
 
+  revalidatePath('/workouts')
+  return { success: true }
+}
+
+export async function deleteExercise(exerciseId: string, workoutId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Verify the exercise belongs to a workout owned by the user
+  const { data: workout, error: workoutError } = await supabase
+    .from('workouts')
+    .select('id')
+    .eq('id', workoutId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (workoutError || !workout) {
+    return { error: 'Workout not found or unauthorized' }
+  }
+
+  // Delete the exercise
+  const { error } = await supabase
+    .from('exercises')
+    .delete()
+    .eq('id', exerciseId)
+    .eq('workout_id', workoutId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath(`/workouts/${workoutId}`)
   return { success: true }
 }

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
 import { getGoals } from '@/lib/goals/actions'
+import { GoalActions } from '@/components/goal-actions'
 import { redirect } from 'next/navigation'
 
 // Force dynamic rendering to prevent caching issues
@@ -59,11 +60,14 @@ export default async function GoalsPage() {
                     <CardTitle className="mb-2">{goal.title}</CardTitle>
                     <CardDescription>{goal.description}</CardDescription>
                   </div>
-                  {goal.achieved ? (
-                    <Badge variant="default">Achieved</Badge>
-                  ) : (
-                    <Badge variant="secondary">In Progress</Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {goal.achieved ? (
+                      <Badge variant="default">Achieved</Badge>
+                    ) : (
+                      <Badge variant="secondary">In Progress</Badge>
+                    )}
+                    <GoalActions goalId={goal.id} goalTitle={goal.title} />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef, ChangeEvent } from 'react'
+import { useState, useRef, useEffect, ChangeEvent } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
@@ -22,6 +22,15 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
   const [caption, setCaption] = useState('')
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Cleanup preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
 
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -47,15 +56,21 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
 
     setSelectedFile(file)
 
-    // Create preview
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string)
+    // Create preview using object URL (more memory efficient than data URL)
+    // Revoke previous URL if it exists
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl)
     }
-    reader.readAsDataURL(file)
+    const objectUrl = URL.createObjectURL(file)
+    setPreviewUrl(objectUrl)
   }
 
   const handleClearFile = () => {
+    // Revoke the object URL to free memory
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl)
+    }
+
     setSelectedFile(null)
     setPreviewUrl(null)
     setCaption('')
@@ -88,7 +103,7 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
         handleClearFile()
         onUploadComplete?.()
       }
-    } catch (error) {
+    } catch {
       toast.error('Upload failed', {
         description: 'An unexpected error occurred.',
       })
@@ -129,10 +144,14 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
             <CardContent className="pt-6 space-y-4">
               <div className="relative">
                 {previewUrl && (
-                  <img
+                  <Image
                     src={previewUrl}
                     alt="Preview"
+                    width={600}
+                    height={192}
                     className="w-full h-48 object-cover rounded-lg"
+                    unoptimized
+                    priority
                   />
                 )}
                 <button
@@ -206,10 +225,14 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
         <div className="space-y-4">
           <div className="relative">
             {previewUrl && (
-              <img
+              <Image
                 src={previewUrl}
                 alt="Preview"
+                width={800}
+                height={256}
                 className="w-full h-64 object-cover rounded-lg"
+                unoptimized
+                priority
               />
             )}
             <button

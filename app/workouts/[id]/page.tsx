@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
 import { createClient } from '@/lib/supabase/server'
 import { WorkoutSelfieDisplay } from '@/components/workout-selfie-display'
+import { WorkoutActions } from '@/components/workout-actions'
+import { ExerciseActions } from '@/components/exercise-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -91,6 +93,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
               })}
             </p>
           </div>
+          <WorkoutActions workoutId={typedWorkout.id} workoutName={typedWorkout.name} />
         </div>
       </div>
 
@@ -158,6 +161,11 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
                         </Badge>
                       </CardDescription>
                     </div>
+                    <ExerciseActions
+                      exerciseId={exercise.id}
+                      exerciseName={exercise.name}
+                      workoutId={typedWorkout.id}
+                    />
                   </div>
                 </CardHeader>
                 <CardContent>

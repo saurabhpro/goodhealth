@@ -1,6 +1,6 @@
 # GoodHealth - Fitness Tracking App
 
-A comprehensive Progressive Web App for tracking gym workouts, visualizing progress, setting fitness goals, and monitoring your fitness journey with detailed analytics.
+A comprehensive Progressive Web App for tracking gym workouts, body measurements, visualizing progress, setting fitness goals, and monitoring your fitness journey with detailed analytics and time-series tracking.
 
 [![CI](https://github.com/saurabhpro/goodhealth/actions/workflows/ci.yml/badge.svg)](https://github.com/saurabhpro/goodhealth/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/saurabhpro/goodhealth/graph/badge.svg?token=ESKjLLgWVw)](https://codecov.io/gh/saurabhpro/goodhealth)
@@ -9,42 +9,75 @@ A comprehensive Progressive Web App for tracking gym workouts, visualizing progr
 ## ✨ Features
 
 ### 🏋️ Workout Tracking
-- **Smart Exercise Inputs** - Automatically adapts based on exercise type (cardio/strength/functional)
+- **Smart Exercise Inputs** - Automatically adapts based on exercise type:
+  - **Cardio**: Duration, Distance, Speed, Calories, Resistance, Incline
+  - **Strength**: Sets, Reps, Weight
+  - **Functional**: Sets, Reps (no weight)
 - **68+ Pre-defined Equipment** from major brands (Technogym, Life Fitness, Hammer Strength)
+- **Auto-detection** - Select equipment and exercise type auto-fills
 - **Effort Level Tracking** - Visual heatmap selector (1-6 scale)
-- **Workout Details** - Click any workout to see complete exercise breakdown
-- **Custom Exercises** - Add your own exercises
+- **Workout Selfies** - Upload photos to track visual progress
+- **Full CRUD Operations** - Create, view, edit, and delete workouts
+- **Exercise Management** - Add, remove, and modify exercises in workouts
+- **Custom Exercises** - Add your own exercises beyond the predefined list
+
+### 📏 Body Measurements Tracking
+- **Comprehensive Measurement Form** - Track 20+ body metrics:
+  - Body Composition: Weight, Body Fat %, Muscle Mass, Bone Mass, Water %, Protein %
+  - Circumference: Chest, Waist, Hips, Shoulders, Neck
+  - Arms: Biceps and Forearms (left & right)
+  - Legs: Thighs and Calves (left & right)
+  - Additional: BMR, Metabolic Age, Visceral Fat
+- **Time Series Charts** - Interactive line graphs showing progress over time
+- **Health-Aware Trends** - Smart color coding:
+  - Green when measurements improve (weight/fat down, muscle up)
+  - Red when measurements worsen
+  - Visual trend indicators (↑↓) with change values
+- **Statistics Dashboard** - Latest, Change, Change %, Average, Min-Max range
+- **Multiple Metrics** - Switch between 8 different measurements in charts
+- **Measurement History** - Complete chronological list with trends
+- **Delete Measurements** - Remove incorrect entries with confirmation
 
 ### 📊 Progress Analytics
-- **Real-time Dashboard** - Live statistics showing workout count, total time, exercises, and streaks
+- **Real-time Dashboard** - Live statistics showing:
+  - Workout count and total time
+  - Exercises completed
+  - Current workout streak
+  - Recent activity feed
 - **Workout History** - Chronological view with clickable cards
 - **Strength Tracking** - Per-exercise progress with max/average weights
 - **Goal Monitoring** - Visual progress bars with percentage completion
+- **Tabbed Interface** - Overview, Workouts, Strength, Goals views
 
 ### 🎯 Goal Management
 - Create fitness goals with targets and deadlines
 - Track current progress vs. target
 - Achievement badges when goals completed
 - Support for multiple goal types (weight, reps, distance, duration)
+- Visual progress bars
+- Goal editing and deletion
 
 ### 🔐 Authentication & Security
 - Email/Password authentication
 - Google OAuth sign-in
 - Row Level Security (RLS) policies
 - Protected routes with proxy (Next.js 16 middleware)
+- Secure session management
 
 ### 📱 Progressive Web App
 - **Install on mobile devices** - Works like a native app
 - **Offline support** - Service worker for offline functionality
 - **Responsive design** - Mobile-first approach
 - **Toast notifications** - Success/error feedback
+- **Dark mode ready** - Theme toggle support
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 16 (App Router) + React 19 + TypeScript 5
 - **Styling**: Tailwind CSS 4 + shadcn/ui components
-- **Backend**: Supabase (PostgreSQL + Auth + RLS)
-- **State Management**: Zustand
+- **Backend**: Supabase (PostgreSQL + Auth + Storage + RLS)
+- **Charts**: Recharts for time-series visualizations
+- **State Management**: React hooks + Server Actions
 - **Forms**: React Hook Form + Zod validation
 - **Testing**: Jest + React Testing Library
 - **CI/CD**: GitHub Actions
@@ -73,6 +106,9 @@ npm install
    - `001_initial_schema.sql`
    - `002_add_effort_level.sql`
    - `003_add_exercise_types.sql`
+   - `004_add_workout_selfies.sql`
+   - `004b_add_storage_policies.sql`
+   - `005_add_body_measurements.sql`
 
 See `migrations/README.md` for detailed instructions.
 
@@ -121,29 +157,54 @@ npm start
 goodhealth/
 ├── app/                      # Next.js app directory
 │   ├── api/                  # API routes
-│   │   └── auth/callback/    # Supabase auth callback
-│   ├── layout.tsx            # Root layout with navbar
-│   └── page.tsx              # Landing page
+│   │   ├── auth/callback/    # Supabase auth callback
+│   │   └── images/[...path]/ # Image serving proxy
+│   ├── workouts/             # Workout management
+│   │   ├── [id]/             # Workout detail view
+│   │   │   └── edit/         # Edit workout
+│   │   └── new/              # Create new workout
+│   ├── measurements/         # Body measurements
+│   │   └── new/              # Add new measurement
+│   ├── goals/                # Goal management
+│   │   ├── [id]/edit/        # Edit goal
+│   │   └── new/              # Create goal
+│   ├── progress/             # Progress tracking
+│   ├── dashboard/            # Main dashboard
+│   └── layout.tsx            # Root layout with navbar
 ├── components/               # React components
-│   ├── layout/               # Layout components (navbar, etc.)
-│   ├── workout/              # Workout-related components
-│   ├── dashboard/            # Dashboard components
-│   └── ui/                   # shadcn/ui components
+│   ├── layout/               # Layout components
+│   │   └── navbar.tsx        # Main navigation
+│   ├── ui/                   # shadcn/ui components
+│   │   └── effort-selector.tsx # Effort level selector
+│   ├── workout-edit-form.tsx # Workout editing
+│   ├── measurement-form.tsx  # Measurement input
+│   ├── measurements-chart.tsx # Time series charts
+│   ├── measurements-list.tsx # Measurement history
+│   └── selfie-upload.tsx     # Photo upload
 ├── lib/                      # Utility functions and configs
 │   ├── supabase/             # Supabase client configs
 │   │   ├── client.ts         # Browser client
 │   │   └── server.ts         # Server client
-│   └── auth/                 # Authentication utilities
-│       ├── actions.ts        # Server actions for auth
-│       └── hooks.ts          # Client hooks for auth
+│   ├── auth/                 # Authentication utilities
+│   │   ├── actions.ts        # Server actions for auth
+│   │   └── hooks.ts          # Client hooks for auth
+│   ├── workouts/             # Workout operations
+│   │   └── actions.ts        # Workout CRUD actions
+│   ├── measurements/         # Measurement operations
+│   │   └── actions.ts        # Measurement CRUD actions
+│   ├── goals/                # Goal operations
+│   │   └── actions.ts        # Goal CRUD actions
+│   ├── selfies/              # Selfie operations
+│   │   └── actions.ts        # Selfie upload/delete
+│   └── data/                 # Static data
+│       └── gym-equipment.ts  # 68+ equipment database
 ├── types/                    # TypeScript type definitions
 │   ├── database.ts           # Supabase database types
 │   └── index.ts              # App-specific types
 ├── public/                   # Static assets
 │   └── manifest.json         # PWA manifest
-├── proxy.ts                  # Auth proxy (Next.js 16 middleware)
-├── .vercelignore             # Files to exclude from Vercel deployment
-└── supabase-schema.sql       # Database schema
+├── migrations/               # Database migrations
+└── proxy.ts                  # Auth proxy (Next.js 16 middleware)
 ```
 
 ## Database Schema
@@ -151,12 +212,49 @@ goodhealth/
 The app uses the following main tables:
 
 - **profiles**: User profile information
-- **workouts**: Workout sessions
-- **exercises**: Individual exercises within workouts
+- **workouts**: Workout sessions with effort level
+- **exercises**: Individual exercises with type-specific fields (cardio/strength/functional)
 - **workout_templates**: Reusable workout templates
 - **goals**: Fitness goals and tracking
+- **workout_selfies**: Progress photos with metadata
+- **body_measurements**: Comprehensive body tracking (20+ metrics)
 
-See `supabase-schema.sql` for the complete schema with Row Level Security policies.
+See `migrations/` directory for the complete schema with Row Level Security policies.
+
+## Key Features in Detail
+
+### Smart Exercise Type System
+- **Auto-detection** based on equipment selection
+- **Dynamic forms** showing relevant fields:
+  - Strength: Sets, Reps, Weight
+  - Cardio: Duration, Distance, Speed, Resistance, Incline, Calories
+  - Functional: Sets, Reps (no weight field)
+- **Type selector** with clear visual indicators
+- **Custom exercises** with manual type selection
+
+### Body Measurements Time Series
+- **Interactive charts** with Recharts
+- **8 metrics available**: Weight, Body Fat %, Muscle Mass, Waist, Chest, Hips, Biceps
+- **Health-aware colors**:
+  - Green when improving (weight/fat down, muscle up)
+  - Red when worsening
+  - Blue for neutral metrics
+- **Statistics**: Latest, Change, Change %, Average, Range
+- **Comparison** with previous measurements
+- **Full history** with trend indicators
+
+### Workout Selfies
+- **Upload photos** to track visual progress
+- **Secure storage** in Supabase Storage
+- **Auto-optimization** for web viewing
+- **Gallery view** on workout details
+- **Delete capability** with confirmation
+
+### Progress Dashboard
+- **Real-time stats** from actual data
+- **Workout streaks** calculated automatically
+- **Recent activity** with clickable cards
+- **Tabbed navigation** for different views
 
 ## PWA Installation
 
@@ -195,7 +293,7 @@ npx supabase gen types typescript --project-id your-project-id > types/database.
 The project includes comprehensive unit tests:
 
 ```bash
-npm test                 # Run all tests (26 passing)
+npm test                 # Run all tests
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
 ```
@@ -204,6 +302,8 @@ npm run test:coverage    # Coverage report
 - ✅ Utility functions
 - ✅ Gym equipment data (68+ items)
 - ✅ UI components (Button, etc.)
+- ✅ Goal calculations
+- ✅ Workout logic
 
 See `TESTING.md` for detailed testing guide.
 
@@ -248,32 +348,13 @@ The project includes GitHub Actions workflows:
 - ✅ Preview deployments for PRs
 - ✅ Auto-deploy to production on push to main
 
-### Setting Up Codecov
-
-1. **Sign up for Codecov** at [codecov.io](https://codecov.io) using your GitHub account
-2. **Add your repository** to Codecov
-3. **Get your repository token** from Codecov dashboard
-4. **Add the token as a GitHub secret**:
-   - Go to your repository on GitHub
-   - Navigate to Settings > Secrets and variables > Actions
-   - Click "New repository secret"
-   - Name: `CODECOV_TOKEN`
-   - Value: Your Codecov repository token (e.g., `27b4f80b-aad4-40ad-9b94-968b02a109f7`)
-5. **Merge to main** - Once merged, Codecov will start tracking coverage on all PRs
-
-The workflow automatically:
-- Runs `npm run test:coverage` to generate coverage reports
-- Uploads coverage data (JSON and LCOV formats) to Codecov
-- Adds coverage badges and PR comments
-
-Configure by adding GitHub secrets for Vercel and Codecov integration.
-
 ## 📚 Documentation
 
 - **[SETUP.md](./SETUP.md)** - Detailed setup instructions
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide
 - **[TESTING.md](./TESTING.md)** - Testing guide and best practices
 - **[CODECOV_SETUP.md](./CODECOV_SETUP.md)** - Codecov integration guide
+- **[SELFIES_SETUP.md](./SELFIES_SETUP.md)** - Selfie feature setup guide
 - **[.claude/context.md](./.claude/context.md)** - Full project context for development
 
 ## 🗺️ Roadmap
@@ -286,6 +367,12 @@ Configure by adding GitHub secrets for Vercel and Codecov integration.
 - ✅ Dashboard with real statistics
 - ✅ Progress page with analytics
 - ✅ Goal tracking system
+- ✅ **Workout editing** - Full CRUD operations
+- ✅ **Workout selfies** - Progress photo uploads
+- ✅ **Body measurements** - Comprehensive tracking
+- ✅ **Time series charts** - Interactive progress visualization
+- ✅ **Health-aware trends** - Smart color coding
+- ✅ **Delete functionality** - For measurements and selfies
 - ✅ Jest + React Testing Library setup
 - ✅ GitHub Actions CI/CD
 - ✅ Codecov integration for coverage tracking
@@ -293,21 +380,22 @@ Configure by adding GitHub secrets for Vercel and Codecov integration.
 
 ### Planned 📋
 - [ ] Workout templates
-- [ ] Charts using recharts
 - [ ] Profile/settings persistence
-- [ ] Exercise history tracking
-- [ ] Personal records (PRs)
-- [ ] Workout edit functionality
-- [ ] Social features (sharing)
-- [ ] Export data functionality
+- [ ] Exercise history tracking with charts
+- [ ] Personal records (PRs) tracking
+- [ ] Social features (sharing workouts)
+- [ ] Export data functionality (CSV/JSON)
 - [ ] AI-powered workout recommendations
-- [ ] Nutrition tracking
+- [ ] Nutrition tracking integration
 - [ ] Integration with fitness wearables
 - [ ] Apple Health integration (iOS companion app with HealthKit)
   - Native iOS app to sync Apple Health workout data to Supabase
   - Automatic background sync of workouts from Apple Health
   - Support for workout types, duration, calories, heart rate
   - Unified data view in PWA and iOS app
+- [ ] Body measurement photo comparisons
+- [ ] Progress reports (weekly/monthly summaries)
+- [ ] Custom date ranges for analytics
 
 ## Contributing
 
@@ -323,4 +411,4 @@ If you encounter any issues or have questions, please open an issue on GitHub.
 
 ---
 
-Built with Next.js, Supabase, and TypeScript
+Built with ❤️ using Next.js, Supabase, and TypeScript

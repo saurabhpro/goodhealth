@@ -15,6 +15,20 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   turbopack: {},
   reactStrictMode: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb', // Increased from default 1MB to support selfie uploads (max 5MB files)
+    },
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/**',
+      },
+    ],
+  },
 };
 
 export default withPWA(nextConfig);

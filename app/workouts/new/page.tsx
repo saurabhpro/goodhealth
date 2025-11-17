@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createWorkout } from '@/lib/workouts/actions'
 import { toast } from 'sonner'
 import { gymEquipment, equipmentCategories, getEquipmentType, type ExerciseType } from '@/lib/data/gym-equipment'
@@ -53,12 +53,11 @@ export default function NewWorkoutPage() {
   const updateExercise = (index: number, field: string, value: string) => {
     const updated = [...exercises]
 
-    // If updating the name, also update the type
-    if (field === 'name') {
-      const exerciseType = getEquipmentType(value) || 'strength'
+    // If updating the type, clear fields that don't apply
+    if (field === 'type') {
+      const exerciseType = value as ExerciseType
       updated[index] = {
         ...updated[index],
-        name: value,
         type: exerciseType,
         // Clear fields that don't apply to the new type
         ...(exerciseType === 'cardio' ? {
@@ -73,6 +72,34 @@ export default function NewWorkoutPage() {
           resistance: undefined,
           incline: undefined,
         })
+      }
+    }
+    // If updating the name, try to auto-detect type from predefined list
+    else if (field === 'name') {
+      const detectedType = getEquipmentType(value)
+      // Only auto-update type if we found a match in the predefined list
+      if (detectedType) {
+        updated[index] = {
+          ...updated[index],
+          name: value,
+          type: detectedType,
+          // Clear fields that don't apply to the detected type
+          ...(detectedType === 'cardio' ? {
+            sets: undefined,
+            reps: undefined,
+            weight: undefined,
+          } : {
+            duration: undefined,
+            distance: undefined,
+            speed: undefined,
+            calories: undefined,
+            resistance: undefined,
+            incline: undefined,
+          })
+        }
+      } else {
+        // For custom names, just update the name, keep the current type
+        updated[index] = { ...updated[index], name: value }
       }
     } else {
       updated[index] = { ...updated[index], [field]: value }
@@ -259,44 +286,49 @@ export default function NewWorkoutPage() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor={`exercise-select-${index}`}>Select Equipment/Exercise</Label>
-                    <Select
-                      value={exercise.name}
-                      onValueChange={(value) => updateExercise(index, 'name', value)}
-                      disabled={loading}
-                    >
-                      <SelectTrigger id={`exercise-select-${index}`}>
-                        <SelectValue placeholder="Choose from list or type custom below" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {equipmentCategories.map((category) => (
-                          <SelectGroup key={category.value}>
-                            <SelectLabel>{category.label}</SelectLabel>
-                            {gymEquipment[category.value as keyof typeof gymEquipment]?.map((equipment) => (
-                              <SelectItem key={equipment.name} value={equipment.name}>
-                                {equipment.name}
-                                {equipment.brands.length > 0 && (
-                                  <span className="text-xs text-muted-foreground ml-1">
-                                    ({equipment.brands[0]})
-                                  </span>
-                                )}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor={`exercise-name-${index}`}>Or Enter Custom Exercise</Label>
+                    <Label htmlFor={`exercise-name-${index}`}>Exercise Name</Label>
                     <Input
                       id={`exercise-name-${index}`}
-                      placeholder="e.g., My Custom Exercise"
+                      placeholder="Type exercise name or select from dropdown"
                       value={exercise.name}
                       onChange={(e) => updateExercise(index, 'name', e.target.value)}
                       required
                       disabled={loading}
+                      list={`exercise-list-${index}`}
                     />
+                    <datalist id={`exercise-list-${index}`}>
+                      {equipmentCategories.map((category) =>
+                        gymEquipment[category.value as keyof typeof gymEquipment]?.map((equipment) => (
+                          <option key={equipment.name} value={equipment.name}>
+                            {equipment.name}
+                            {equipment.brands.length > 0 && ` (${equipment.brands[0]})`}
+                          </option>
+                        ))
+                      )}
+                    </datalist>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Start typing to see suggestions or enter a custom exercise name
+                    </p>
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor={`exercise-type-${index}`}>Exercise Type</Label>
+                    <Select
+                      value={exercise.type}
+                      onValueChange={(value) => updateExercise(index, 'type', value as ExerciseType)}
+                      disabled={loading}
+                    >
+                      <SelectTrigger id={`exercise-type-${index}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="strength">💪 Strength (sets, reps, weight)</SelectItem>
+                        <SelectItem value="cardio">🏃 Cardio (duration, distance, speed)</SelectItem>
+                        <SelectItem value="functional">⚡ Functional (sets, reps)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Select the type to show relevant input fields below
+                    </p>
                   </div>
 
                   {/* Conditional inputs based on exercise type */}
@@ -375,7 +407,7 @@ export default function NewWorkoutPage() {
                     </>
                   ) : (
                     <>
-                      {/* Strength Inputs */}
+                      {/* Strength/Functional Inputs */}
                       <div className="space-y-2">
                         <Label htmlFor={`exercise-sets-${index}`}>Sets</Label>
                         <Input
@@ -398,18 +430,20 @@ export default function NewWorkoutPage() {
                           disabled={loading}
                         />
                       </div>
-                      <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor={`exercise-weight-${index}`}>Weight (kg)</Label>
-                        <Input
-                          id={`exercise-weight-${index}`}
-                          type="number"
-                          step="0.1"
-                          placeholder="50"
-                          value={exercise.weight || ''}
-                          onChange={(e) => updateExercise(index, 'weight', e.target.value)}
-                          disabled={loading}
-                        />
-                      </div>
+                      {exercise.type === 'strength' && (
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label htmlFor={`exercise-weight-${index}`}>Weight (kg)</Label>
+                          <Input
+                            id={`exercise-weight-${index}`}
+                            type="number"
+                            step="0.1"
+                            placeholder="50"
+                            value={exercise.weight || ''}
+                            onChange={(e) => updateExercise(index, 'weight', e.target.value)}
+                            disabled={loading}
+                          />
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

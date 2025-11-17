@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -27,34 +28,53 @@ export function WorkoutSelfieDisplay({ workoutId }: WorkoutSelfieDisplayProps) {
   const [editing, setEditing] = useState(false)
   const [editCaption, setEditCaption] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [reloadTrigger, setReloadTrigger] = useState(0)
+
+  // Function to trigger reload
+  const reloadSelfie = () => {
+    setReloadTrigger(prev => prev + 1)
+  }
 
   useEffect(() => {
+    let cancelled = false
+
+    const loadSelfie = async () => {
+      setLoading(true)
+      const { selfies, error } = await getWorkoutSelfies(workoutId)
+
+      if (cancelled) return
+
+      if (error) {
+        console.error('Failed to load selfie:', error)
+        setLoading(false)
+        return
+      }
+
+      // Get only the first selfie (one per workout)
+      if (selfies && selfies.length > 0) {
+        const firstSelfie = selfies[0]
+        const { url } = await getSelfieUrl(firstSelfie.file_path)
+
+        if (!cancelled) {
+          setSelfie({ ...firstSelfie, signedUrl: url || undefined })
+          setShowUpload(false)
+        }
+      } else if (!cancelled) {
+        setSelfie(null)
+        setShowUpload(false)
+      }
+
+      if (!cancelled) {
+        setLoading(false)
+      }
+    }
+
     loadSelfie()
-  }, [workoutId])
 
-  const loadSelfie = async () => {
-    setLoading(true)
-    const { selfies, error } = await getWorkoutSelfies(workoutId)
-
-    if (error) {
-      console.error('Failed to load selfie:', error)
-      setLoading(false)
-      return
+    return () => {
+      cancelled = true
     }
-
-    // Get only the first selfie (one per workout)
-    if (selfies && selfies.length > 0) {
-      const firstSelfie = selfies[0]
-      const { url } = await getSelfieUrl(firstSelfie.file_path)
-      setSelfie({ ...firstSelfie, signedUrl: url || undefined })
-      setShowUpload(false)
-    } else {
-      setSelfie(null)
-      setShowUpload(false)
-    }
-
-    setLoading(false)
-  }
+  }, [workoutId, reloadTrigger])
 
   const handleDelete = async () => {
     if (!selfie) return
@@ -159,10 +179,12 @@ export function WorkoutSelfieDisplay({ workoutId }: WorkoutSelfieDisplayProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           {selfie.signedUrl ? (
-            <div className="relative overflow-hidden rounded-lg bg-muted">
-              <img
+            <div className="relative w-full overflow-hidden rounded-lg bg-muted">
+              <Image
                 src={selfie.signedUrl}
                 alt={selfie.caption || 'Workout selfie'}
+                width={1200}
+                height={600}
                 className="w-full h-auto max-h-[600px] object-contain"
               />
             </div>
@@ -247,7 +269,7 @@ export function WorkoutSelfieDisplay({ workoutId }: WorkoutSelfieDisplayProps) {
           <SelfieUpload
             workoutId={workoutId}
             onUploadComplete={() => {
-              loadSelfie()
+              reloadSelfie()
               setShowUpload(false)
             }}
             variant="default"
