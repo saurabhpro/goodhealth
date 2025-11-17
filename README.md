@@ -303,6 +303,11 @@ Configure by adding GitHub secrets for Vercel and Codecov integration.
 - [ ] AI-powered workout recommendations
 - [ ] Nutrition tracking
 - [ ] Integration with fitness wearables
+- [ ] Apple Health integration (iOS companion app with HealthKit)
+  - Native iOS app to sync Apple Health workout data to Supabase
+  - Automatic background sync of workouts from Apple Health
+  - Support for workout types, duration, calories, heart rate
+  - Unified data view in PWA and iOS app
 
 ## Contributing
 
