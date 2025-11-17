@@ -54,9 +54,9 @@ A comprehensive Progressive Web App for tracking gym workouts, visualizing progr
 
 ### Prerequisites
 
-- Node.js 18+ installed
+- Node.js 25.2.0+ installed (latest stable version)
+- npm 11.6.2+ package manager
 - A Supabase account (free tier available at [supabase.com](https://supabase.com))
-- npm or yarn package manager
 
 ### 1. Clone and Install Dependencies
 

@@ -2,6 +2,18 @@
 
 Follow these steps to get your GoodHealth app running.
 
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js 25.2.0+** - [Download from nodejs.org](https://nodejs.org/)
+  - Check your version: `node --version`
+  - Upgrade using nvm: `nvm install 25.2.0 && nvm use 25.2.0`
+- **npm 11.6.2+** - Comes with Node.js
+  - Check your version: `npm --version`
+- **Git** - For version control
+- A **Supabase account** (free tier available)
+
 ## Step 1: Supabase Setup (10 minutes)
 
 ### Create a Supabase Project
