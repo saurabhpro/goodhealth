@@ -167,6 +167,43 @@ export interface Database {
           updated_at?: string
         }
       }
+      workout_selfies: {
+        Row: {
+          id: string
+          workout_id: string
+          user_id: string
+          file_path: string
+          file_name: string
+          file_size: number | null
+          mime_type: string | null
+          caption: string | null
+          taken_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          workout_id: string
+          user_id: string
+          file_path: string
+          file_name: string
+          file_size?: number | null
+          mime_type?: string | null
+          caption?: string | null
+          taken_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          workout_id?: string
+          user_id?: string
+          file_path?: string
+          file_name?: string
+          file_size?: number | null
+          mime_type?: string | null
+          caption?: string | null
+          taken_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

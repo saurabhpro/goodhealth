@@ -13,6 +13,7 @@ import { createWorkout } from '@/lib/workouts/actions'
 import { toast } from 'sonner'
 import { gymEquipment, equipmentCategories, getEquipmentType, type ExerciseType } from '@/lib/data/gym-equipment'
 import { EffortSelector } from '@/components/ui/effort-selector'
+import { SelfieUpload } from '@/components/selfie-upload'
 
 interface Exercise {
   name: string
@@ -38,6 +39,8 @@ export default function NewWorkoutPage() {
   const [exercises, setExercises] = useState<Exercise[]>([
     { name: '', type: 'strength', sets: '', reps: '', weight: '' }
   ])
+  const [createdWorkoutId, setCreatedWorkoutId] = useState<string | null>(null)
+  const [showSelfieUpload, setShowSelfieUpload] = useState(false)
 
   const addExercise = () => {
     setExercises([...exercises, { name: '', type: 'strength', sets: '', reps: '', weight: '' }])
@@ -104,11 +107,54 @@ export default function NewWorkoutPage() {
       toast.success('Workout saved successfully!', {
         description: 'Your workout has been logged and saved to your profile.'
       })
-      // Wait a bit for the toast to show before redirecting
-      setTimeout(() => {
-        router.push('/workouts')
-      }, 500)
+
+      // Set the created workout ID and show selfie upload option
+      if (result.workoutId) {
+        setCreatedWorkoutId(result.workoutId)
+        setShowSelfieUpload(true)
+      } else {
+        // If no workout ID, just redirect
+        setTimeout(() => {
+          router.push('/workouts')
+        }, 500)
+      }
     }
+  }
+
+  // If workout is created and selfie upload is shown
+  if (showSelfieUpload && createdWorkoutId) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Workout Saved!</h1>
+          <p className="text-muted-foreground">
+            Want to add a selfie to track your progress?
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          <SelfieUpload
+            workoutId={createdWorkoutId}
+            onUploadComplete={() => {
+              toast.success('Selfie added!')
+              setTimeout(() => {
+                router.push('/workouts')
+              }, 500)
+            }}
+          />
+
+          <div className="flex gap-4">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/workouts')}
+              className="flex-1"
+            >
+              Skip for now
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

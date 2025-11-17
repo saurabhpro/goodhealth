@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
 import { createClient } from '@/lib/supabase/server'
+import { WorkoutSelfieDisplay } from '@/components/workout-selfie-display'
 
 export const dynamic = 'force-dynamic'
 
@@ -93,40 +94,46 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* Workout Summary */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Workout Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {typedWorkout.duration_minutes && (
+      {/* Workout Summary and Selfie Grid */}
+      <div className="grid gap-6 lg:grid-cols-2 mb-6">
+        {/* Workout Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Workout Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {typedWorkout.duration_minutes && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Duration</p>
+                  <p className="text-2xl font-bold">{typedWorkout.duration_minutes} min</p>
+                </div>
+              )}
               <div>
-                <p className="text-sm text-muted-foreground">Duration</p>
-                <p className="text-2xl font-bold">{typedWorkout.duration_minutes} min</p>
+                <p className="text-sm text-muted-foreground">Exercises</p>
+                <p className="text-2xl font-bold">{typedWorkout.exercises?.length || 0}</p>
+              </div>
+              {typedWorkout.effort_level && (
+                <div className="sm:col-span-2">
+                  <p className="text-sm text-muted-foreground mb-2">Effort Level</p>
+                  <Badge className={effortColors[typedWorkout.effort_level]}>
+                    {effortLabels[typedWorkout.effort_level]}
+                  </Badge>
+                </div>
+              )}
+            </div>
+            {typedWorkout.description && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-1">Notes</p>
+                <p className="text-sm">{typedWorkout.description}</p>
               </div>
             )}
-            <div>
-              <p className="text-sm text-muted-foreground">Exercises</p>
-              <p className="text-2xl font-bold">{typedWorkout.exercises?.length || 0}</p>
-            </div>
-            {typedWorkout.effort_level && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Effort Level</p>
-                <Badge className={effortColors[typedWorkout.effort_level]}>
-                  {effortLabels[typedWorkout.effort_level]}
-                </Badge>
-              </div>
-            )}
-          </div>
-          {typedWorkout.description && (
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-muted-foreground mb-1">Notes</p>
-              <p className="text-sm">{typedWorkout.description}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Workout Selfie */}
+        <WorkoutSelfieDisplay workoutId={id} />
+      </div>
 
       {/* Exercises */}
       <div className="space-y-4">
