@@ -2,8 +2,8 @@
 
 A comprehensive Progressive Web App for tracking gym workouts, visualizing progress, setting fitness goals, and monitoring your fitness journey with detailed analytics.
 
-[![Tests](https://img.shields.io/github/actions/workflow/status/your-username/goodhealth/ci.yml?branch=main&label=tests)](https://github.com/your-username/goodhealth/actions)
-[![codecov](https://codecov.io/gh/your-username/goodhealth/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/goodhealth)
+[![CI](https://github.com/saurabhpro/goodhealth/actions/workflows/ci.yml/badge.svg)](https://github.com/saurabhpro/goodhealth/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/saurabhpro/goodhealth/graph/badge.svg?token=ESKjLLgWVw)](https://codecov.io/gh/saurabhpro/goodhealth)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Features
