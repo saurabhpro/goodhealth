@@ -56,6 +56,7 @@ export function createMockGoal(overrides = {}): Database['public']['Tables']['go
     description: 'Test goal description',
     target_value: 100,
     current_value: 50,
+    initial_value: 0, // Default initial value for mock goals
     unit: 'kg',
     target_date: '2024-12-31',
     achieved: false,

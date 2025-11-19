@@ -6,6 +6,7 @@ import { getUser } from '@/lib/auth/actions'
 import { getGoals } from '@/lib/goals/actions'
 import { GoalActions } from '@/components/goal-actions'
 import { redirect } from 'next/navigation'
+import { calculateGoalProgress } from '@/lib/goals/progress'
 
 // Force dynamic rendering to prevent caching issues
 export const dynamic = 'force-dynamic'
@@ -84,7 +85,11 @@ export default async function GoalsPage() {
                       <div
                         className="h-full bg-primary transition-all"
                         style={{
-                          width: `${Math.min((goal.current_value / goal.target_value) * 100, 100)}%`
+                          width: `${calculateGoalProgress({
+                            initial_value: goal.initial_value,
+                            current_value: goal.current_value,
+                            target_value: goal.target_value
+                          })}%`
                         }}
                       />
                     </div>

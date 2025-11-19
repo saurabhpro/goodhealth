@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { syncGoalProgress } from '@/lib/goals/sync'
 
 export async function createMeasurement(formData: FormData) {
   const supabase = await createClient()
@@ -80,9 +81,13 @@ export async function createMeasurement(formData: FormData) {
     return { error: `Failed to save measurement: ${error.message}` }
   }
 
+  // Sync goal progress (weight goals)
+  await syncGoalProgress(user.id)
+
   revalidatePath('/measurements')
   revalidatePath('/progress')
   revalidatePath('/profile')
+  revalidatePath('/goals')
 
   return { success: true, data }
 }
