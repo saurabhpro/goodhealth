@@ -142,8 +142,8 @@ describe('Selfie Upload Validation', () => {
       const timestamp1 = Date.now()
       const path1 = `${userId}/${workoutId}/${timestamp1}_${fileName}`
 
-      // Wait 1ms to ensure different timestamp
-      await new Promise(resolve => setTimeout(resolve, 1))
+      // Wait 10ms to ensure different timestamp (CI/CD environments can be very fast)
+      await new Promise(resolve => setTimeout(resolve, 10))
 
       const timestamp2 = Date.now()
       const path2 = `${userId}/${workoutId}/${timestamp2}_${fileName}`
