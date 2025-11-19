@@ -41,7 +41,7 @@ const METRICS: MetricConfig[] = [
   { key: 'bicep_right', label: 'Bicep (R)', unit: 'cm', color: '#ffa07a', betterWhenDecreasing: false },
 ]
 
-export function MeasurementsChart({ measurements }: MeasurementsChartProps) {
+export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartProps>) {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('weight')
 
   const chartData = useMemo(() => {
@@ -66,8 +66,8 @@ export function MeasurementsChart({ measurements }: MeasurementsChartProps) {
     const values = chartData.map(d => d.value).filter((v): v is number => v !== null)
     if (values.length === 0) return null
 
-    const latest = values[values.length - 1]
-    const earliest = values[0]
+    const latest = values.at(-1)!
+    const earliest = values.at(0)!
     const change = latest - earliest
     const changePercent = earliest !== 0 ? (change / earliest) * 100 : 0
     const avg = values.reduce((a, b) => a + b, 0) / values.length
@@ -206,7 +206,7 @@ export function MeasurementsChart({ measurements }: MeasurementsChartProps) {
                   />
                   <Tooltip
                     content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
+                      if (active && payload?.length) {
                         const data = payload[0].payload
                         return (
                           <div className="bg-background border rounded-lg p-3 shadow-lg">

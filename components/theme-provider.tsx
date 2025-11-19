@@ -22,7 +22,7 @@ function getSystemTheme(): 'light' | 'dark' {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   // Check if we're on the client side
-  const isClient = typeof globalThis.window !== 'undefined'
+  const isClient = globalThis.window !== undefined
 
   // Initialize theme from localStorage or default to system
   const [theme, setThemeState] = useState<Theme>(() => {
@@ -75,7 +75,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme)
-    if (typeof globalThis.localStorage !== 'undefined') {
+    if (globalThis.localStorage !== undefined) {
       globalThis.localStorage.setItem('theme', newTheme)
     }
   }

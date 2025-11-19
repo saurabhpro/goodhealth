@@ -98,7 +98,7 @@ function TrendIndicator({
   )
 }
 
-export function MeasurementsList({ measurements }: MeasurementsListProps) {
+export function MeasurementsList({ measurements }: Readonly<MeasurementsListProps>) {
   const router = useRouter()
   const [deletingId, setDeletingId] = useState<string | null>(null)
 

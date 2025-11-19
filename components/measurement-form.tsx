@@ -17,7 +17,7 @@ interface MeasurementFormProps {
   latestMeasurement?: Measurement | null
 }
 
-export function MeasurementForm({ latestMeasurement }: MeasurementFormProps) {
+export function MeasurementForm({ latestMeasurement }: Readonly<MeasurementFormProps>) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 

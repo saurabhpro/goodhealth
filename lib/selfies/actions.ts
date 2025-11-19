@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 const BUCKET_NAME = 'workout-selfies'
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
 
 interface UploadSelfieResult {
   success?: boolean
@@ -45,7 +45,7 @@ export async function uploadWorkoutSelfie(
     return { error: 'File size must be less than 5MB' }
   }
 
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+  if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return { error: 'File must be a valid image (JPEG, PNG, WebP, or HEIC)' }
   }
 

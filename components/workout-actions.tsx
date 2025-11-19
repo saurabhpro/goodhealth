@@ -24,8 +24,8 @@ import {
 import { deleteWorkout } from '@/lib/workouts/actions'
 
 interface WorkoutActionsProps {
-  workoutId: string
-  workoutName: string
+  readonly workoutId: string
+  readonly workoutName: string
 }
 
 export function WorkoutActions({ workoutId, workoutName }: WorkoutActionsProps) {

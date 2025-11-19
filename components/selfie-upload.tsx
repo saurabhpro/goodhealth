@@ -26,7 +26,7 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
   // Cleanup preview URL on unmount
   useEffect(() => {
     return () => {
-      if (previewUrl && previewUrl.startsWith('blob:')) {
+      if (previewUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl)
       }
     }
@@ -58,7 +58,7 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
 
     // Create preview using object URL (more memory efficient than data URL)
     // Revoke previous URL if it exists
-    if (previewUrl && previewUrl.startsWith('blob:')) {
+    if (previewUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl)
     }
     const objectUrl = URL.createObjectURL(file)
@@ -67,7 +67,7 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
 
   const handleClearFile = () => {
     // Revoke the object URL to free memory
-    if (previewUrl && previewUrl.startsWith('blob:')) {
+    if (previewUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl)
     }
 

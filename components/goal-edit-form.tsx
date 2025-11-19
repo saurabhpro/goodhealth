@@ -14,7 +14,7 @@ import type { Database } from '@/types/database'
 type Goal = Database['public']['Tables']['goals']['Row']
 
 interface GoalEditFormProps {
-  goal: Goal
+  readonly goal: Goal
 }
 
 const UNIT_OPTIONS = [

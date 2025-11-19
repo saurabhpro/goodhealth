@@ -24,8 +24,8 @@ import {
 import { deleteGoal } from '@/lib/goals/actions'
 
 interface GoalActionsProps {
-  goalId: string
-  goalTitle: string
+  readonly goalId: string
+  readonly goalTitle: string
 }
 
 export function GoalActions({ goalId, goalTitle }: GoalActionsProps) {

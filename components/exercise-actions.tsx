@@ -29,7 +29,7 @@ interface ExerciseActionsProps {
   workoutId: string
 }
 
-export function ExerciseActions({ exerciseId, exerciseName, workoutId }: ExerciseActionsProps) {
+export function ExerciseActions({ exerciseId, exerciseName, workoutId }: Readonly<ExerciseActionsProps>) {
   const router = useRouter()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
