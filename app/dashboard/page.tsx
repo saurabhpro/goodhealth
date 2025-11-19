@@ -177,52 +177,50 @@ export default async function DashboardPage() {
               return (
                 <Link href={`/workouts/${workout.id}`} key={workout.id}>
                   <Card className="cursor-pointer hover:border-primary transition-colors overflow-hidden">
-                    <div className="flex">
+                    <div className="flex gap-3 p-3">
                       {/* Selfie thumbnail on the left */}
                       {selfie?.signedUrl && (
-                        <div className="relative w-24 h-24 flex-shrink-0 bg-muted p-2">
+                        <div className="relative w-20 h-20 flex-shrink-0 bg-muted rounded-md overflow-hidden">
                           <Image
                             src={selfie.signedUrl}
                             alt={selfie.caption || 'Workout selfie'}
-                            width={96}
-                            height={96}
-                            className="object-cover w-full h-full rounded-md"
-                            sizes="96px"
+                            width={80}
+                            height={80}
+                            className="object-cover w-full h-full"
+                            sizes="80px"
                             quality={80}
                           />
                         </div>
                       )}
 
                       {/* Content on the right */}
-                      <div className="flex-1 flex flex-col">
-                        <CardHeader className="pb-2">
+                      <div className="flex-1 flex flex-col justify-center min-w-0">
+                        <div className="space-y-1.5">
                           <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <CardTitle className="text-lg">{workout.name}</CardTitle>
-                              <CardDescription className="mt-1">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-base font-semibold leading-none tracking-tight">{workout.name}</h3>
+                              <p className="text-xs text-muted-foreground mt-1">
                                 {new Date(workout.date).toLocaleDateString('en-US', {
                                   weekday: 'short',
                                   month: 'short',
                                   day: 'numeric',
                                   year: 'numeric'
                                 })}
-                              </CardDescription>
+                              </p>
                             </div>
-                            <Badge variant="secondary" className="flex-shrink-0">
+                            <Badge variant="secondary" className="flex-shrink-0 text-xs">
                               {workout.exercises?.length || 0} exercises
                             </Badge>
                           </div>
-                        </CardHeader>
-                        {(workout.duration_minutes || workout.description || selfie) && (
-                          <CardContent className="pt-0">
-                            <div className="flex gap-3 text-sm text-muted-foreground items-center flex-wrap">
+                          {(workout.duration_minutes || workout.description || selfie) && (
+                            <div className="flex gap-2 text-xs text-muted-foreground items-center flex-wrap">
                               {workout.duration_minutes && (
                                 <span>{workout.duration_minutes} min</span>
                               )}
                               {workout.description && (
                                 <>
                                   {workout.duration_minutes && <span>•</span>}
-                                  <span className="truncate">{workout.description}</span>
+                                  <span className="truncate line-clamp-1">{workout.description}</span>
                                 </>
                               )}
                               {selfie && !workout.description && (
@@ -235,8 +233,8 @@ export default async function DashboardPage() {
                                 </>
                               )}
                             </div>
-                          </CardContent>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Card>

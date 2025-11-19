@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
@@ -59,35 +59,33 @@ export default async function WorkoutsPage() {
             return (
               <Link href={`/workouts/${workout.id}`} key={workout.id}>
                 <Card className="cursor-pointer hover:border-primary transition-colors overflow-hidden">
-                  <div className="flex">
+                  <div className="flex gap-4 p-4">
                     {/* Selfie thumbnail on the left */}
                     {selfie?.signedUrl && (
-                      <div className="relative w-32 h-32 flex-shrink-0 bg-muted p-2">
+                      <div className="relative w-24 h-24 flex-shrink-0 bg-muted rounded-md overflow-hidden">
                         <Image
                           src={selfie.signedUrl}
                           alt={selfie.caption || 'Workout selfie'}
-                          width={128}
-                          height={128}
-                          className="object-cover w-full h-full rounded-md"
-                          sizes="128px"
+                          width={96}
+                          height={96}
+                          className="object-cover w-full h-full"
+                          sizes="96px"
                           quality={80}
                         />
                       </div>
                     )}
 
                     {/* Content on the right */}
-                    <div className="flex-1 flex flex-col">
-                      <CardHeader className="pb-2">
+                    <div className="flex-1 flex flex-col justify-center min-w-0">
+                      <div className="space-y-2">
                         <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <CardTitle>{workout.name}</CardTitle>
-                            <CardDescription>{workout.description || 'No description'}</CardDescription>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold leading-none tracking-tight">{workout.name}</h3>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{workout.description || 'No description'}</p>
                           </div>
                           <Badge className="flex-shrink-0">{new Date(workout.date).toLocaleDateString()}</Badge>
                         </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="flex gap-4 text-sm text-muted-foreground items-center flex-wrap">
+                        <div className="flex gap-3 text-sm text-muted-foreground items-center flex-wrap">
                           {workout.duration_minutes && (
                             <>
                               <span>{workout.duration_minutes} minutes</span>
@@ -105,7 +103,7 @@ export default async function WorkoutsPage() {
                             </>
                           )}
                         </div>
-                      </CardContent>
+                      </div>
                     </div>
                   </div>
                 </Card>
