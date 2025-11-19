@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { isGoalAchieved } from './progress'
 
 export async function createGoal(formData: FormData) {
   const supabase = await createClient()
@@ -23,6 +24,8 @@ export async function createGoal(formData: FormData) {
   const unit = formData.get('unit') as string
   const targetDate = formData.get('target_date') as string
 
+  const parsedCurrentValue = currentValue ? Number.parseFloat(currentValue) : 0
+
   // Create goal
   const { data: goal, error: goalError } = await supabase
     .from('goals')
@@ -31,7 +34,8 @@ export async function createGoal(formData: FormData) {
       title,
       description,
       target_value: Number.parseFloat(targetValue),
-      current_value: currentValue ? Number.parseFloat(currentValue) : 0,
+      current_value: parsedCurrentValue,
+      initial_value: parsedCurrentValue, // Store initial value for progress tracking
       unit,
       target_date: targetDate || null,
       achieved: false,
@@ -93,6 +97,18 @@ export async function updateGoal(goalId: string, formData: FormData) {
     return { error: 'Not authenticated' }
   }
 
+  // Get the existing goal to retrieve initial_value
+  const { data: existingGoal } = await supabase
+    .from('goals')
+    .select('initial_value')
+    .eq('id', goalId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!existingGoal) {
+    return { error: 'Goal not found' }
+  }
+
   // Extract goal data
   const title = formData.get('title') as string
   const description = formData.get('description') as string
@@ -101,10 +117,14 @@ export async function updateGoal(goalId: string, formData: FormData) {
   const unit = formData.get('unit') as string
   const targetDate = formData.get('target_date') as string
 
-  // Check if target is reached
+  // Check if target is reached using bidirectional logic
   const parsedCurrentValue = Number.parseFloat(currentValue)
   const parsedTargetValue = Number.parseFloat(targetValue)
-  const achieved = parsedCurrentValue >= parsedTargetValue
+  const achieved = isGoalAchieved({
+    initial_value: existingGoal.initial_value,
+    current_value: parsedCurrentValue,
+    target_value: parsedTargetValue,
+  })
 
   const { error } = await supabase
     .from('goals')
@@ -144,11 +164,17 @@ export async function updateGoalProgress(goalId: string, currentValue: number) {
   // Get the goal to check if target is reached
   const { data: goal } = await supabase
     .from('goals')
-    .select('target_value')
+    .select('initial_value, target_value')
     .eq('id', goalId)
     .single()
 
-  const achieved = goal ? currentValue >= goal.target_value : false
+  const achieved = goal
+    ? isGoalAchieved({
+        initial_value: goal.initial_value,
+        current_value: currentValue,
+        target_value: goal.target_value,
+      })
+    : false
 
   const { error } = await supabase
     .from('goals')

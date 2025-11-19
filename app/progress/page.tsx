@@ -7,6 +7,7 @@ import { getUser } from '@/lib/auth/actions'
 import { getWorkouts } from '@/lib/workouts/actions'
 import { getGoals } from '@/lib/goals/actions'
 import { redirect } from 'next/navigation'
+import { calculateGoalProgress, getGoalDirection } from '@/lib/goals/progress'
 
 export const dynamic = 'force-dynamic'
 
@@ -339,10 +340,19 @@ export default async function ProgressPage() {
               ) : (
                 <div className="space-y-4">
                   {goals.map((goal) => {
-                    const progress = goal.target_value > 0
-                      ? Math.round((goal.current_value / goal.target_value) * 100)
-                      : 0
-                    const isAchieved = goal.achieved || progress >= 100
+                    const progress = Math.round(calculateGoalProgress({
+                      initial_value: goal.initial_value,
+                      current_value: goal.current_value,
+                      target_value: goal.target_value
+                    }))
+                    const isAchieved = goal.achieved
+                    const direction = getGoalDirection({
+                      initial_value: goal.initial_value,
+                      target_value: goal.target_value
+                    })
+                    const remaining = direction === 'increase'
+                      ? Math.max(0, goal.target_value - goal.current_value)
+                      : Math.max(0, goal.current_value - goal.target_value)
 
                     return (
                       <div key={goal.id} className="p-4 border rounded-lg">
@@ -394,7 +404,7 @@ export default async function ProgressPage() {
                             <div>
                               <p className="text-muted-foreground">Remaining</p>
                               <p className="font-semibold">
-                                {Math.max(0, goal.target_value - goal.current_value)} {goal.unit}
+                                {remaining.toFixed(1)} {goal.unit}
                               </p>
                             </div>
                           </div>

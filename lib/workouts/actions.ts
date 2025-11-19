@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { syncGoalProgress } from '@/lib/goals/sync'
 
 interface ExerciseInput {
   name: string
@@ -99,8 +100,13 @@ export async function createWorkout(formData: FormData) {
     }
   }
 
+  // Sync goal progress (workouts, minutes, days)
+  await syncGoalProgress(user.id)
+
   // Revalidate the workouts page to show new data
   revalidatePath('/workouts')
+  revalidatePath('/goals')
+  revalidatePath('/progress')
 
   return { success: true, workoutId: workout.id }
 }
@@ -254,8 +260,13 @@ export async function updateWorkout(workoutId: string, formData: FormData) {
     }
   }
 
+  // Sync goal progress (workouts, minutes, days)
+  await syncGoalProgress(user.id)
+
   revalidatePath('/workouts')
   revalidatePath(`/workouts/${workoutId}`)
+  revalidatePath('/goals')
+  revalidatePath('/progress')
   return { success: true }
 }
 
@@ -280,7 +291,12 @@ export async function deleteWorkout(workoutId: string) {
     return { error: error.message }
   }
 
+  // Sync goal progress (workouts, minutes, days)
+  await syncGoalProgress(user.id)
+
   revalidatePath('/workouts')
+  revalidatePath('/goals')
+  revalidatePath('/progress')
   return { success: true }
 }
 

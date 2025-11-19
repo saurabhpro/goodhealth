@@ -1,11 +1,15 @@
 /**
  * Unit tests for progress calculation logic
+ *
+ * NOTE: These tests use the old progress calculation logic (current/target * 100).
+ * For bidirectional progress tracking (increase/decrease goals), see:
+ * __tests__/lib/goals/progress.test.ts
  */
 
 import { createMockGoal, createMockWorkout } from '../../utils/mocks'
 
 describe('Progress Calculations', () => {
-  describe('Goal progress percentage', () => {
+  describe('Goal progress percentage (Legacy - for goals starting from 0)', () => {
     it('should calculate correct percentage for partial progress', () => {
       const goal = createMockGoal({ current_value: 50, target_value: 100 })
       const percentage = Math.min((goal.current_value / goal.target_value) * 100, 100)

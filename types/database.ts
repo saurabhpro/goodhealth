@@ -161,6 +161,7 @@ export interface Database {
           description: string | null
           target_value: number
           current_value: number
+          initial_value: number
           unit: string
           target_date: string | null
           achieved: boolean
@@ -173,6 +174,7 @@ export interface Database {
           title: string
           description?: string | null
           target_value: number
+          initial_value?: number
           current_value?: number
           unit: string
           target_date?: string | null
@@ -187,6 +189,7 @@ export interface Database {
           description?: string | null
           target_value?: number
           current_value?: number
+          initial_value?: number
           unit?: string
           target_date?: string | null
           achieved?: boolean
