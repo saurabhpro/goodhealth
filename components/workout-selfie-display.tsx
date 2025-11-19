@@ -184,9 +184,11 @@ export function WorkoutSelfieDisplay({ workoutId }: WorkoutSelfieDisplayProps) {
                 src={selfie.signedUrl}
                 alt={selfie.caption || 'Workout selfie'}
                 width={1200}
-                height={600}
+                height={900}
                 className="w-full h-auto max-h-[600px] object-contain"
-                unoptimized
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
+                quality={90}
+                loading="lazy"
               />
             </div>
           ) : (

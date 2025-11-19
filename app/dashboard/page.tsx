@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -6,6 +7,7 @@ import { getUser } from '@/lib/auth/actions'
 import { getWorkouts } from '@/lib/workouts/actions'
 import { getGoals } from '@/lib/goals/actions'
 import { redirect } from 'next/navigation'
+import { Camera } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -169,45 +171,78 @@ export default async function DashboardPage() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {workouts.slice(0, 5).map((workout) => (
-              <Link href={`/workouts/${workout.id}`} key={workout.id}>
-                <Card className="cursor-pointer hover:border-primary transition-colors">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{workout.name}</CardTitle>
-                        <CardDescription className="mt-1">
-                          {new Date(workout.date).toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                        </CardDescription>
+            {workouts.slice(0, 5).map((workout) => {
+              const selfie = workout.workout_selfies?.[0]
+
+              return (
+                <Link href={`/workouts/${workout.id}`} key={workout.id}>
+                  <Card className="cursor-pointer hover:border-primary transition-colors overflow-hidden">
+                    <div className="flex">
+                      {/* Selfie thumbnail on the left */}
+                      {selfie?.signedUrl && (
+                        <div className="relative w-24 h-24 flex-shrink-0 bg-muted">
+                          <Image
+                            src={selfie.signedUrl}
+                            alt={selfie.caption || 'Workout selfie'}
+                            width={96}
+                            height={96}
+                            className="object-cover w-full h-full"
+                            sizes="96px"
+                            quality={80}
+                          />
+                        </div>
+                      )}
+
+                      {/* Content on the right */}
+                      <div className="flex-1 flex flex-col">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <CardTitle className="text-lg">{workout.name}</CardTitle>
+                              <CardDescription className="mt-1">
+                                {new Date(workout.date).toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </CardDescription>
+                            </div>
+                            <Badge variant="secondary" className="flex-shrink-0">
+                              {workout.exercises?.length || 0} exercises
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        {(workout.duration_minutes || workout.description || selfie) && (
+                          <CardContent className="pt-0">
+                            <div className="flex gap-3 text-sm text-muted-foreground items-center flex-wrap">
+                              {workout.duration_minutes && (
+                                <span>{workout.duration_minutes} min</span>
+                              )}
+                              {workout.description && (
+                                <>
+                                  {workout.duration_minutes && <span>•</span>}
+                                  <span className="truncate">{workout.description}</span>
+                                </>
+                              )}
+                              {selfie && !workout.description && (
+                                <>
+                                  {workout.duration_minutes && <span>•</span>}
+                                  <div className="flex items-center gap-1">
+                                    <Camera className="h-3 w-3" />
+                                    <span>Photo</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </CardContent>
+                        )}
                       </div>
-                      <Badge variant="secondary">
-                        {workout.exercises?.length || 0} exercises
-                      </Badge>
                     </div>
-                  </CardHeader>
-                  {(workout.duration_minutes || workout.description) && (
-                    <CardContent className="pt-0">
-                      <div className="flex gap-4 text-sm text-muted-foreground">
-                        {workout.duration_minutes && (
-                          <span>{workout.duration_minutes} min</span>
-                        )}
-                        {workout.description && (
-                          <>
-                            {workout.duration_minutes && <span>•</span>}
-                            <span className="truncate">{workout.description}</span>
-                          </>
-                        )}
-                      </div>
-                    </CardContent>
-                  )}
-                </Card>
-              </Link>
-            ))}
+                  </Card>
+                </Link>
+              )
+            })}
           </div>
         )}
       </div>

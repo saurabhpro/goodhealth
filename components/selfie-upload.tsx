@@ -147,10 +147,11 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
                     src={previewUrl}
                     alt="Preview"
                     width={600}
-                    height={192}
+                    height={400}
                     className="w-full h-48 object-cover rounded-lg"
                     unoptimized
-                    priority
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    quality={85}
                   />
                 )}
                 <button
@@ -227,10 +228,11 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
                 src={previewUrl}
                 alt="Preview"
                 width={800}
-                height={256}
+                height={600}
                 className="w-full h-64 object-cover rounded-lg"
                 unoptimized
-                priority
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 60vw"
+                quality={85}
               />
             )}
             <button

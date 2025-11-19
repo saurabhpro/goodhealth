@@ -1,10 +1,12 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
 import { getWorkouts } from '@/lib/workouts/actions'
 import { redirect } from 'next/navigation'
+import { Camera } from 'lucide-react'
 
 // Force dynamic rendering to prevent caching issues
 export const dynamic = 'force-dynamic'
@@ -51,32 +53,65 @@ export default async function WorkoutsPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {workouts.map((workout) => (
-            <Link href={`/workouts/${workout.id}`} key={workout.id}>
-              <Card className="cursor-pointer hover:border-primary transition-colors">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle>{workout.name}</CardTitle>
-                      <CardDescription>{workout.description || 'No description'}</CardDescription>
-                    </div>
-                    <Badge>{new Date(workout.date).toLocaleDateString()}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
-                    {workout.duration_minutes && (
-                      <>
-                        <span>{workout.duration_minutes} minutes</span>
-                        <span>•</span>
-                      </>
+          {workouts.map((workout) => {
+            const selfie = workout.workout_selfies?.[0]
+
+            return (
+              <Link href={`/workouts/${workout.id}`} key={workout.id}>
+                <Card className="cursor-pointer hover:border-primary transition-colors overflow-hidden">
+                  <div className="flex">
+                    {/* Selfie thumbnail on the left */}
+                    {selfie?.signedUrl && (
+                      <div className="relative w-32 h-32 flex-shrink-0 bg-muted">
+                        <Image
+                          src={selfie.signedUrl}
+                          alt={selfie.caption || 'Workout selfie'}
+                          width={128}
+                          height={128}
+                          className="object-cover w-full h-full"
+                          sizes="128px"
+                          quality={80}
+                        />
+                      </div>
                     )}
-                    <span>{workout.exercises?.length || 0} exercises</span>
+
+                    {/* Content on the right */}
+                    <div className="flex-1 flex flex-col">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <CardTitle>{workout.name}</CardTitle>
+                            <CardDescription>{workout.description || 'No description'}</CardDescription>
+                          </div>
+                          <Badge className="flex-shrink-0">{new Date(workout.date).toLocaleDateString()}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex gap-4 text-sm text-muted-foreground items-center flex-wrap">
+                          {workout.duration_minutes && (
+                            <>
+                              <span>{workout.duration_minutes} minutes</span>
+                              <span>•</span>
+                            </>
+                          )}
+                          <span>{workout.exercises?.length || 0} exercises</span>
+                          {selfie && (
+                            <>
+                              <span>•</span>
+                              <div className="flex items-center gap-1">
+                                <Camera className="h-3 w-3" />
+                                <span>Photo</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </CardContent>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                </Card>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

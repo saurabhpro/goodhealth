@@ -123,7 +123,13 @@ export async function getWorkouts() {
     .from('workouts')
     .select(`
       *,
-      exercises (*)
+      exercises (*),
+      workout_selfies (
+        id,
+        file_path,
+        caption,
+        taken_at
+      )
     `)
     .eq('user_id', user.id)
     .order('date', { ascending: false })
@@ -135,7 +141,28 @@ export async function getWorkouts() {
 
   console.log('Fetched workouts:', workouts?.length || 0)
 
-  return { workouts: workouts || [] }
+  // Add signed URLs for selfies
+  const workoutsWithSelfies = await Promise.all(
+    (workouts || []).map(async (workout) => {
+      if (workout.workout_selfies && workout.workout_selfies.length > 0) {
+        const selfie = workout.workout_selfies[0]
+        const { data: signedData } = await supabase.storage
+          .from('workout-selfies')
+          .createSignedUrl(selfie.file_path, 3600) // 1 hour expiry
+
+        return {
+          ...workout,
+          workout_selfies: [{
+            ...selfie,
+            signedUrl: signedData?.signedUrl
+          }]
+        }
+      }
+      return workout
+    })
+  )
+
+  return { workouts: workoutsWithSelfies }
 }
 
 export async function updateWorkout(workoutId: string, formData: FormData) {
