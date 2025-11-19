@@ -62,13 +62,13 @@ export default async function WorkoutsPage() {
                   <div className="flex">
                     {/* Selfie thumbnail on the left */}
                     {selfie?.signedUrl && (
-                      <div className="relative w-32 h-32 flex-shrink-0 bg-muted">
+                      <div className="relative w-32 h-32 flex-shrink-0 bg-muted p-2">
                         <Image
                           src={selfie.signedUrl}
                           alt={selfie.caption || 'Workout selfie'}
                           width={128}
                           height={128}
-                          className="object-cover w-full h-full"
+                          className="object-cover w-full h-full rounded-md"
                           sizes="128px"
                           quality={80}
                         />

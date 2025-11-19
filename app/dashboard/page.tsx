@@ -180,13 +180,13 @@ export default async function DashboardPage() {
                     <div className="flex">
                       {/* Selfie thumbnail on the left */}
                       {selfie?.signedUrl && (
-                        <div className="relative w-24 h-24 flex-shrink-0 bg-muted">
+                        <div className="relative w-24 h-24 flex-shrink-0 bg-muted p-2">
                           <Image
                             src={selfie.signedUrl}
                             alt={selfie.caption || 'Workout selfie'}
                             width={96}
                             height={96}
-                            className="object-cover w-full h-full"
+                            className="object-cover w-full h-full rounded-md"
                             sizes="96px"
                             quality={80}
                           />
