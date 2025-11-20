@@ -233,6 +233,119 @@ export interface Database {
           taken_at?: string
         }
       }
+      workout_plans: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          goal_id: string | null
+          goal_type: 'weight_loss' | 'muscle_building' | 'endurance' | 'general_fitness'
+          weeks_duration: number
+          workouts_per_week: number
+          avg_workout_duration: number | null
+          status: 'draft' | 'active' | 'completed' | 'archived'
+          started_at: string | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          goal_id?: string | null
+          goal_type: 'weight_loss' | 'muscle_building' | 'endurance' | 'general_fitness'
+          weeks_duration?: number
+          workouts_per_week?: number
+          avg_workout_duration?: number | null
+          status?: 'draft' | 'active' | 'completed' | 'archived'
+          started_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          goal_id?: string | null
+          goal_type?: 'weight_loss' | 'muscle_building' | 'endurance' | 'general_fitness'
+          weeks_duration?: number
+          workouts_per_week?: number
+          avg_workout_duration?: number | null
+          status?: 'draft' | 'active' | 'completed' | 'archived'
+          started_at?: string | null
+          completed_at?: string | null
+          updated_at?: string
+        }
+      }
+      workout_plan_sessions: {
+        Row: {
+          id: string
+          plan_id: string
+          week_number: number
+          day_of_week: number
+          day_name: string
+          session_order: number
+          workout_template_id: string | null
+          workout_name: string
+          workout_type: 'strength' | 'cardio' | 'rest' | 'active_recovery' | 'mixed'
+          estimated_duration: number | null
+          exercises: Json
+          muscle_groups: string[]
+          intensity_level: 'low' | 'moderate' | 'high' | 'max' | null
+          status: 'scheduled' | 'completed' | 'skipped' | 'modified'
+          completed_workout_id: string | null
+          completed_at: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          week_number: number
+          day_of_week: number
+          day_name: string
+          session_order?: number
+          workout_template_id?: string | null
+          workout_name: string
+          workout_type: 'strength' | 'cardio' | 'rest' | 'active_recovery' | 'mixed'
+          estimated_duration?: number | null
+          exercises?: Json
+          muscle_groups?: string[]
+          intensity_level?: 'low' | 'moderate' | 'high' | 'max' | null
+          status?: 'scheduled' | 'completed' | 'skipped' | 'modified'
+          completed_workout_id?: string | null
+          completed_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          week_number?: number
+          day_of_week?: number
+          day_name?: string
+          session_order?: number
+          workout_template_id?: string | null
+          workout_name?: string
+          workout_type?: 'strength' | 'cardio' | 'rest' | 'active_recovery' | 'mixed'
+          estimated_duration?: number | null
+          exercises?: Json
+          muscle_groups?: string[]
+          intensity_level?: 'low' | 'moderate' | 'high' | 'max' | null
+          status?: 'scheduled' | 'completed' | 'skipped' | 'modified'
+          completed_workout_id?: string | null
+          completed_at?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+      }
       body_measurements: {
         Row: {
           id: string
