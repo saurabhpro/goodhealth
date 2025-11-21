@@ -78,7 +78,7 @@ SELECT
   target_muscle_groups,
   times_used,
   last_used_at,
-  tags,
+  '{}' as tags, -- Default empty array for tags (column doesn't exist in source)
   is_active,
   created_at,
   updated_at
