@@ -34,6 +34,7 @@ export default function NewWorkoutPlanPage() {
   const [weeksDuration, setWeeksDuration] = useState(4)
   const [workoutsPerWeek, setWorkoutsPerWeek] = useState(4)
   const [avgDuration, setAvgDuration] = useState(60)
+  const [startDate, setStartDate] = useState<string>('')
 
   useEffect(() => {
     fetchGoals()
@@ -91,6 +92,7 @@ export default function NewWorkoutPlanPage() {
           weeksDuration,
           workoutsPerWeek,
           avgDuration,
+          startDate: startDate || null,
         }),
       })
 
@@ -394,6 +396,22 @@ export default function NewWorkoutPlanPage() {
 
               <Separator />
 
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date (Optional)</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+                <p className="text-xs text-muted-foreground">
+                  When do you want to start this plan? Leave empty to schedule it later.
+                </p>
+              </div>
+
+              <Separator />
+
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="weeks">Duration (weeks)</Label>
@@ -520,6 +538,20 @@ export default function NewWorkoutPlanPage() {
                     </div>
                   </>
                 )}
+
+                <Separator />
+
+                <div>
+                  <h3 className="text-sm font-semibold mb-1">Start Date</h3>
+                  <p className="text-muted-foreground">
+                    {startDate ? new Date(startDate).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    }) : 'Not scheduled yet (can be set later)'}
+                  </p>
+                </div>
 
                 <Separator />
 

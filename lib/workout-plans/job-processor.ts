@@ -16,6 +16,7 @@ export interface JobRequest {
   weeksDuration: number
   workoutsPerWeek: number
   avgDuration: number
+  startDate?: string | null
 }
 
 /**
@@ -166,6 +167,7 @@ export async function processWorkoutPlanJob(jobId: string) {
         avg_workout_duration: requestData.avgDuration || 60,
         goal_type: goalType,
         status: 'draft',
+        start_date: requestData.startDate || null,
       })
       .select()
       .single()
@@ -183,19 +185,36 @@ export async function processWorkoutPlanJob(jobId: string) {
     }
 
     // Create workout sessions from AI-generated schedule
-    const sessions = result.plan.weeklySchedule.map((workout: WeeklyWorkout) => ({
-      plan_id: workoutPlan.id,
-      week_number: workout.week,
-      day_of_week: workout.day,
-      day_name: workout.dayName,
-      workout_name: workout.workoutType,
-      workout_type: 'mixed',
-      notes: workout.notes || `${workout.workoutType} workout for week ${workout.week}`,
-      exercises: workout.exercises,
-      estimated_duration: workout.duration,
-      intensity_level: workout.intensity === 'low' ? 'low' : workout.intensity === 'high' ? 'high' : 'moderate',
-      status: 'scheduled',
-    }))
+    const sessions = result.plan.weeklySchedule.map((workout: WeeklyWorkout) => {
+      // Calculate actual_date if start_date is provided
+      let actualDate: string | null = null
+      if (requestData.startDate) {
+        actualDate = calculateActualDate(requestData.startDate, workout.week, workout.day)
+      }
+
+      // Determine intensity level
+      let intensityLevel: 'low' | 'moderate' | 'high' = 'moderate'
+      if (workout.intensity === 'low') {
+        intensityLevel = 'low'
+      } else if (workout.intensity === 'high') {
+        intensityLevel = 'high'
+      }
+
+      return {
+        plan_id: workoutPlan.id,
+        week_number: workout.week,
+        day_of_week: workout.day,
+        day_name: workout.dayName,
+        actual_date: actualDate,
+        workout_name: workout.workoutType,
+        workout_type: 'mixed',
+        notes: workout.notes || `${workout.workoutType} workout for week ${workout.week}`,
+        exercises: workout.exercises,
+        estimated_duration: workout.duration,
+        intensity_level: intensityLevel,
+        status: 'scheduled',
+      }
+    })
 
     const { error: sessionsError } = await supabase
       .from('workout_plan_sessions')
@@ -227,6 +246,39 @@ export async function processWorkoutPlanJob(jobId: string) {
       })
       .eq('id', jobId)
   }
+}
+
+/**
+ * Calculate the actual calendar date for a workout session
+ * @param startDateStr - ISO date string for plan start date (YYYY-MM-DD)
+ * @param weekNumber - Week number (1-based)
+ * @param dayOfWeek - Day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
+ * @returns ISO date string (YYYY-MM-DD)
+ */
+function calculateActualDate(startDateStr: string, weekNumber: number, dayOfWeek: number): string {
+  const startDate = new Date(startDateStr)
+
+  // Get the day of week of the start date (0=Sunday, 6=Saturday)
+  const startDayOfWeek = startDate.getDay()
+
+  // Calculate days offset from start date
+  // First, calculate how many days until the target day of week in week 1
+  let daysOffset = dayOfWeek - startDayOfWeek
+
+  // If the target day is before the start day in the same week, it means it's in the next week
+  if (daysOffset < 0) {
+    daysOffset += 7
+  }
+
+  // Add weeks offset (week 1 = 0 additional weeks, week 2 = 7 days, etc.)
+  daysOffset += (weekNumber - 1) * 7
+
+  // Calculate the actual date
+  const actualDate = new Date(startDate)
+  actualDate.setDate(startDate.getDate() + daysOffset)
+
+  // Return as ISO date string (YYYY-MM-DD)
+  return actualDate.toISOString().split('T')[0]
 }
 
 function getGoalTypeFromGoal(goal: Goal): string {
