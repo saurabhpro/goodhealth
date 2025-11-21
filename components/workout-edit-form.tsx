@@ -48,7 +48,7 @@ export function WorkoutEditForm({ workout, exercises: initialExercises }: Workou
     initialExercises.length > 0
       ? initialExercises.map(ex => ({
           name: ex.name,
-          type: ex.exercise_type,
+          type: (ex.exercise_type || 'strength') as ExerciseType,
           // Strength fields
           sets: ex.sets?.toString() || '',
           reps: ex.reps?.toString() || '',

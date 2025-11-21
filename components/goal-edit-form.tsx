@@ -91,7 +91,7 @@ export function GoalEditForm({ goal }: GoalEditFormProps) {
               name="current_value"
               type="number"
               step="0.01"
-              defaultValue={goal.current_value}
+              defaultValue={goal.current_value ?? undefined}
               placeholder="0"
               required
               disabled={loading}
