@@ -3,27 +3,24 @@
  * Tests that soft-deleted plans don't block new draft creation
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-
 // Mock Supabase client
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(),
+}))
+
 const mockSupabaseClient = {
-  from: vi.fn(),
+  from: jest.fn(),
   auth: {
-    getUser: vi.fn(),
+    getUser: jest.fn(),
   },
 }
-
-// Mock the createClient function
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(() => mockSupabaseClient),
-}))
 
 describe('Workout Plan Draft Enforcement', () => {
   const mockUserId = 'test-user-123'
   const mockGoalId = 'test-goal-456'
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
 
     // Mock authenticated user
     mockSupabaseClient.auth.getUser.mockResolvedValue({
@@ -43,10 +40,10 @@ describe('Workout Plan Draft Enforcement', () => {
       }
 
       // Mock query chain
-      const selectMock = vi.fn().mockReturnThis()
-      const eqMock = vi.fn().mockReturnThis()
-      const inMock = vi.fn().mockReturnThis()
-      const isMock = vi.fn().mockResolvedValue({
+      const selectMock = jest.fn().mockReturnThis()
+      const eqMock = jest.fn().mockReturnThis()
+      const inMock = jest.fn().mockReturnThis()
+      const isMock = jest.fn().mockResolvedValue({
         data: [], // No active drafts (soft-deleted one filtered out)
         error: null,
       })
@@ -93,10 +90,10 @@ describe('Workout Plan Draft Enforcement', () => {
         deleted_at: null, // NOT deleted
       }
 
-      const selectMock = vi.fn().mockReturnThis()
-      const eqMock = vi.fn().mockReturnThis()
-      const inMock = vi.fn().mockReturnThis()
-      const isMock = vi.fn().mockResolvedValue({
+      const selectMock = jest.fn().mockReturnThis()
+      const eqMock = jest.fn().mockReturnThis()
+      const inMock = jest.fn().mockReturnThis()
+      const isMock = jest.fn().mockResolvedValue({
         data: [activeDraft], // Found active draft
         error: null,
       })
@@ -136,10 +133,10 @@ describe('Workout Plan Draft Enforcement', () => {
 
     it('should allow creating draft after soft-deleting previous active plan', async () => {
       // Setup: User soft-deleted their active plan
-      const selectMock = vi.fn().mockReturnThis()
-      const eqMock = vi.fn().mockReturnThis()
-      const inMock = vi.fn().mockReturnThis()
-      const isMock = vi.fn().mockResolvedValue({
+      const selectMock = jest.fn().mockReturnThis()
+      const eqMock = jest.fn().mockReturnThis()
+      const inMock = jest.fn().mockReturnThis()
+      const isMock = jest.fn().mockResolvedValue({
         data: [], // No active plans (soft-deleted)
         error: null,
       })
@@ -178,9 +175,9 @@ describe('Workout Plan Draft Enforcement', () => {
 
   describe('Query filter validation', () => {
     it('should always include deleted_at IS NULL filter in plan queries', () => {
-      const selectMock = vi.fn().mockReturnThis()
-      const eqMock = vi.fn().mockReturnThis()
-      const isMock = vi.fn().mockResolvedValue({ data: [], error: null })
+      const selectMock = jest.fn().mockReturnThis()
+      const eqMock = jest.fn().mockReturnThis()
+      const isMock = jest.fn().mockResolvedValue({ data: [], error: null })
 
       mockSupabaseClient.from.mockReturnValue({
         select: selectMock,
@@ -216,9 +213,9 @@ describe('Workout Plan Draft Enforcement', () => {
       ]
 
       tables.forEach((table) => {
-        const selectMock = vi.fn().mockReturnThis()
-        const eqMock = vi.fn().mockReturnThis()
-        const isMock = vi.fn().mockResolvedValue({ data: [], error: null })
+        const selectMock = jest.fn().mockReturnThis()
+        const eqMock = jest.fn().mockReturnThis()
+        const isMock = jest.fn().mockResolvedValue({ data: [], error: null })
 
         mockSupabaseClient.from.mockReturnValue({
           select: selectMock,
@@ -246,10 +243,10 @@ describe('Workout Plan Draft Enforcement', () => {
 
   describe('Edge cases', () => {
     it('should handle multiple soft-deleted drafts correctly', async () => {
-      const selectMock = vi.fn().mockReturnThis()
-      const eqMock = vi.fn().mockReturnThis()
-      const inMock = vi.fn().mockReturnThis()
-      const isMock = vi.fn().mockResolvedValue({
+      const selectMock = jest.fn().mockReturnThis()
+      const eqMock = jest.fn().mockReturnThis()
+      const inMock = jest.fn().mockReturnThis()
+      const isMock = jest.fn().mockResolvedValue({
         data: [], // All filtered out by deleted_at check
         error: null,
       })
@@ -285,9 +282,9 @@ describe('Workout Plan Draft Enforcement', () => {
 
     it('should not allow creating draft if active plan exists (even different goal)', async () => {
       // This tests the business rule in activateWorkoutPlan
-      const selectMock = vi.fn().mockReturnThis()
-      const eqMock = vi.fn().mockReturnThis()
-      const isMock = vi.fn().mockResolvedValue({
+      const selectMock = jest.fn().mockReturnThis()
+      const eqMock = jest.fn().mockReturnThis()
+      const isMock = jest.fn().mockResolvedValue({
         data: [{ id: 'other-active-plan' }],
         error: null,
       })

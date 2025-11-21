@@ -212,6 +212,7 @@ describe('User Preferences Actions', () => {
       const mockQuery = {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
         order: jest.fn().mockResolvedValue({ data: mockTemplates, error: null }),
       }
 
@@ -239,6 +240,7 @@ describe('User Preferences Actions', () => {
       const mockQuery = {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
         single: jest.fn().mockResolvedValue({ data: mockTemplate, error: null }),
       }
 

@@ -146,9 +146,11 @@ describe('Workout Plan Actions', () => {
       mockSupabase.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({
-              data: mockPlans,
-              error: null,
+            is: jest.fn().mockReturnValue({
+              order: jest.fn().mockResolvedValue({
+                data: mockPlans,
+                error: null,
+              }),
             }),
           }),
         }),
@@ -179,9 +181,11 @@ describe('Workout Plan Actions', () => {
       mockSupabase.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Database error' },
+            is: jest.fn().mockReturnValue({
+              order: jest.fn().mockResolvedValue({
+                data: null,
+                error: { message: 'Database error' },
+              }),
             }),
           }),
         }),
@@ -214,9 +218,11 @@ describe('Workout Plan Actions', () => {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({
-                data: mockPlan,
-                error: null,
+              is: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: mockPlan,
+                  error: null,
+                }),
               }),
             }),
           }),
@@ -248,9 +254,11 @@ describe('Workout Plan Actions', () => {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({
-                data: null,
-                error: { message: 'Not found' },
+              is: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'Not found' },
+                }),
               }),
             }),
           }),
@@ -321,10 +329,12 @@ describe('Workout Plan Actions', () => {
       })
 
       mockSupabase.from.mockReturnValue({
-        delete: jest.fn().mockReturnValue({
+        update: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
-              error: null,
+            eq: jest.fn().mockReturnValue({
+              is: jest.fn().mockResolvedValue({
+                error: null,
+              }),
             }),
           }),
         }),
@@ -352,10 +362,12 @@ describe('Workout Plan Actions', () => {
       })
 
       mockSupabase.from.mockReturnValue({
-        delete: jest.fn().mockReturnValue({
+        update: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
-              error: { message: 'Delete failed' },
+            eq: jest.fn().mockReturnValue({
+              is: jest.fn().mockResolvedValue({
+                error: { message: 'Delete failed' },
+              }),
             }),
           }),
         }),
@@ -386,9 +398,11 @@ describe('Workout Plan Actions', () => {
           const selectMock = jest.fn()
           selectMock.mockReturnValue({
             eq: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({
-                data: [], // No active plans
-                error: null,
+              eq: jest.fn().mockReturnValue({
+                is: jest.fn().mockResolvedValue({
+                  data: [], // No active plans
+                  error: null,
+                }),
               }),
             }),
           })
@@ -429,9 +443,11 @@ describe('Workout Plan Actions', () => {
       mockSupabase.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
-              data: [{ id: 'other-plan' }], // Another plan is active
-              error: null,
+            eq: jest.fn().mockReturnValue({
+              is: jest.fn().mockResolvedValue({
+                data: [{ id: 'other-plan' }], // Another plan is active
+                error: null,
+              }),
             }),
           }),
         }),

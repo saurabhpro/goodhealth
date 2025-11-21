@@ -62,9 +62,11 @@ describe('Workout Plan Session Actions', () => {
       const planVerifyMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { id: 'plan-123' },
-              error: null,
+            is: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { id: 'plan-123' },
+                error: null,
+              }),
             }),
           }),
         }),
@@ -133,9 +135,11 @@ describe('Workout Plan Session Actions', () => {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({
-                data: null, // Plan not found
-                error: null,
+              is: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: null, // Plan not found
+                  error: null,
+                }),
               }),
             }),
           }),
@@ -173,9 +177,11 @@ describe('Workout Plan Session Actions', () => {
       const planVerifyMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { id: 'plan-123' },
-              error: null,
+            is: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { id: 'plan-123' },
+                error: null,
+              }),
             }),
           }),
         }),
@@ -185,10 +191,12 @@ describe('Workout Plan Session Actions', () => {
       const sessionsSelectMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            order: jest.fn().mockReturnValue({
-              order: jest.fn().mockResolvedValue({
-                data: mockSessions,
-                error: null,
+            is: jest.fn().mockReturnValue({
+              order: jest.fn().mockReturnValue({
+                order: jest.fn().mockResolvedValue({
+                  data: mockSessions,
+                  error: null,
+                }),
               }),
             }),
           }),
@@ -232,9 +240,11 @@ describe('Workout Plan Session Actions', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 eq: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({
-                    data: { id: 'plan-123' },
-                    error: null,
+                  is: jest.fn().mockReturnValue({
+                    single: jest.fn().mockResolvedValue({
+                      data: { id: 'plan-123' },
+                      error: null,
+                    }),
                   }),
                 }),
               }),
@@ -246,10 +256,12 @@ describe('Workout Plan Session Actions', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 eq: jest.fn().mockReturnValue({
-                  order: jest.fn().mockReturnValue({
-                    order: jest.fn().mockResolvedValue({
-                      data: [],
-                      error: null,
+                  is: jest.fn().mockReturnValue({
+                    order: jest.fn().mockReturnValue({
+                      order: jest.fn().mockResolvedValue({
+                        data: [],
+                        error: null,
+                      }),
                     }),
                   }),
                 }),
@@ -280,12 +292,14 @@ describe('Workout Plan Session Actions', () => {
       // Mock session verification
       const sessionVerifyMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: {
-              plan_id: 'plan-123',
-              workout_plans: { user_id: 'user-123' },
-            },
-            error: null,
+          is: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: {
+                plan_id: 'plan-123',
+                workout_plans: { user_id: 'user-123' },
+              },
+              error: null,
+            }),
           }),
         }),
       })
@@ -340,12 +354,14 @@ describe('Workout Plan Session Actions', () => {
       mockSupabase.from.mockReturnValue({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: {
-                plan_id: 'plan-123',
-                workout_plans: { user_id: 'other-user' }, // Different user
-              },
-              error: null,
+            is: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: {
+                  plan_id: 'plan-123',
+                  workout_plans: { user_id: 'other-user' }, // Different user
+                },
+                error: null,
+              }),
             }),
           }),
         }),
@@ -373,12 +389,14 @@ describe('Workout Plan Session Actions', () => {
       // Mock session verification
       const sessionVerifyMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: {
-              plan_id: 'plan-123',
-              workout_plans: { user_id: 'user-123' },
-            },
-            error: null,
+          is: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: {
+                plan_id: 'plan-123',
+                workout_plans: { user_id: 'user-123' },
+              },
+              error: null,
+            }),
           }),
         }),
       })
@@ -437,12 +455,14 @@ describe('Workout Plan Session Actions', () => {
       // Mock session verification
       const sessionVerifyMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: {
-              plan_id: 'plan-123',
-              workout_plans: { user_id: 'user-123' },
-            },
-            error: null,
+          is: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: {
+                plan_id: 'plan-123',
+                workout_plans: { user_id: 'user-123' },
+              },
+              error: null,
+            }),
           }),
         }),
       })
@@ -496,12 +516,14 @@ describe('Workout Plan Session Actions', () => {
       // Mock session verification
       const sessionVerifyMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: {
-              plan_id: 'plan-123',
-              workout_plans: { user_id: 'user-123' },
-            },
-            error: null,
+          is: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: {
+                plan_id: 'plan-123',
+                workout_plans: { user_id: 'user-123' },
+              },
+              error: null,
+            }),
           }),
         }),
       })
@@ -546,12 +568,14 @@ describe('Workout Plan Session Actions', () => {
       // Mock session verification
       const sessionVerifyMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: {
-              plan_id: 'plan-123',
-              workout_plans: { user_id: 'user-123' },
-            },
-            error: null,
+          is: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: {
+                plan_id: 'plan-123',
+                workout_plans: { user_id: 'user-123' },
+              },
+              error: null,
+            }),
           }),
         }),
       })
@@ -597,9 +621,11 @@ describe('Workout Plan Session Actions', () => {
       const planVerifyMock = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { id: 'plan-123' },
-              error: null,
+            is: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { id: 'plan-123' },
+                error: null,
+              }),
             }),
           }),
         }),
@@ -607,9 +633,11 @@ describe('Workout Plan Session Actions', () => {
 
       // Mock sessions fetch
       const sessionsSelectMock = jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          data: mockSessions,
-          error: null,
+        eq: jest.fn().mockReturnValue({
+          is: jest.fn().mockResolvedValue({
+            data: mockSessions,
+            error: null,
+          }),
         }),
       })
 
@@ -656,9 +684,11 @@ describe('Workout Plan Session Actions', () => {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
                 eq: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({
-                    data: { id: 'plan-123' },
-                    error: null,
+                  is: jest.fn().mockReturnValue({
+                    single: jest.fn().mockResolvedValue({
+                      data: { id: 'plan-123' },
+                      error: null,
+                    }),
                   }),
                 }),
               }),
@@ -668,9 +698,11 @@ describe('Workout Plan Session Actions', () => {
         if (table === 'workout_plan_sessions') {
           return {
             select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({
-                data: [],
-                error: null,
+              eq: jest.fn().mockReturnValue({
+                is: jest.fn().mockResolvedValue({
+                  data: [],
+                  error: null,
+                }),
               }),
             }),
           }
@@ -694,9 +726,11 @@ describe('Workout Plan Session Actions', () => {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({
-                data: null, // Plan not found
-                error: null,
+              is: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: null, // Plan not found
+                  error: null,
+                }),
               }),
             }),
           }),
