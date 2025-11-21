@@ -67,13 +67,13 @@ export default function WorkoutPlansPage() {
   function getStatusBadge(status: string) {
     switch (status) {
       case 'active':
-        return <Badge variant="default">Active</Badge>
+        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
       case 'completed':
-        return <Badge variant="secondary">Completed</Badge>
+        return <Badge className="bg-blue-500 hover:bg-blue-600 text-white">Completed</Badge>
       case 'draft':
-        return <Badge variant="outline">Draft</Badge>
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">Draft</Badge>
       case 'archived':
-        return <Badge variant="outline">Archived</Badge>
+        return <Badge className="bg-gray-500 hover:bg-gray-600 text-white">Archived</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
     }

@@ -285,13 +285,16 @@ export default function WorkoutPlanPage() {
                 {plan.workouts_per_week} workouts/week
               </Badge>
               <Badge
-                variant={
-                  plan.status === 'active' ? 'default' :
-                  plan.status === 'completed' ? 'secondary' :
-                  'outline'
+                className={
+                  plan.status === 'active' ? 'bg-green-500 hover:bg-green-600 text-white' :
+                  plan.status === 'completed' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
+                  plan.status === 'draft' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' :
+                  plan.status === 'archived' ? 'bg-gray-500 hover:bg-gray-600 text-white' :
+                  ''
                 }
+                variant={plan.status === 'active' || plan.status === 'completed' || plan.status === 'draft' || plan.status === 'archived' ? undefined : 'outline'}
               >
-                {plan.status}
+                {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
               </Badge>
             </div>
 
