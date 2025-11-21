@@ -1,219 +1,269 @@
 # Database Migrations
 
-This directory contains all Supabase database migrations in chronological order.
+This directory contains the consolidated Supabase database migration for the GoodHealth app.
 
-## Migration Order
+## 🚀 Quick Start
 
-Run these migrations in order in the Supabase SQL Editor:
+Use the consolidated migration script to set up your complete database in one step:
 
-### 1. Initial Schema (`001_initial_schema.sql`)
-**Purpose:** Creates the base database structure
-- ✅ Creates `profiles` table (user information)
-- ✅ Creates `workouts` table (workout sessions)
-- ✅ Creates `exercises` table (individual exercises)
-- ✅ Creates `workout_templates` table (reusable templates)
-- ✅ Creates `goals` table (fitness goals)
-- ✅ Sets up Row Level Security (RLS) policies
-- ✅ Creates triggers and functions
+### Run `000_consolidated_schema.sql`
 
-**Run this first** before using the application.
+This single file contains the **complete, production-ready database schema** with all features.
 
-### 2. Add Effort Level (`002_add_effort_level.sql`)
-**Purpose:** Adds effort level tracking to workouts
-- ✅ Adds `effort_level` column to `workouts` table
-- ✅ Adds constraint for values 1-6
-- ✅ Adds column comment with level descriptions
-
-**Run after:** 001_initial_schema.sql
-
-### 3. Add Exercise Types (`003_add_exercise_types.sql`)
-**Purpose:** Enables smart exercise inputs (cardio/strength/functional)
-- ✅ Makes `sets` column nullable in `exercises` table
-- ✅ Adds `exercise_type` column with enum constraint
-- ✅ Adds cardio-specific fields:
-  - `duration_minutes`
-  - `distance` and `distance_unit`
-  - `speed`
-  - `calories`
-  - `resistance_level`
-  - `incline`
-
-**Run after:** 002_add_effort_level.sql
-
-### 10. Add User Workout Preferences (`010_add_user_workout_preferences.sql`)
-**Purpose:** Adds user workout preferences and custom templates for personalized planning
-- ✅ Creates `user_workout_preferences` table (exercise preferences, equipment, scheduling)
-- ✅ Creates `user_workout_templates` table (user-created custom templates)
-- ✅ Adds gym locations support (integrates with issue #17)
-- ✅ Sets up RLS policies for both tables
-- ✅ Creates indexes for query performance
-- ✅ Adds triggers for updated_at timestamps
-
-**Run after:** 009_add_public_workout_templates.sql
-
-**Related to:** Issue #43 (AI-powered personalized workout planner), Issue #17 (Gym location management)
+**What's included:**
+- ✅ All 11 tables with complete schema
+- ✅ Soft delete support (`deleted_at` columns)
+- ✅ Performance-optimized RLS policies
+- ✅ All indexes and constraints
+- ✅ Triggers and helper functions
+- ✅ Storage policies for workout photos
+- ✅ 10 research-backed public workout templates (pre-seeded)
+- ✅ Custom types and enums
 
 ---
 
-## How to Run Migrations
+## 📋 How to Deploy
 
-### In Supabase Dashboard
+### Option A: Supabase Dashboard (Recommended)
 
 1. Go to your Supabase project
-2. Navigate to **SQL Editor** in the left sidebar
+2. Navigate to **SQL Editor**
 3. Click **New Query**
-4. Copy the contents of the migration file
-5. Paste into the editor
-6. Click **Run** or press `Ctrl/Cmd + Enter`
-7. Verify success (green checkmark)
-8. Repeat for next migration
+4. Copy the contents of `000_consolidated_schema.sql`
+5. Paste and click **Run** (or press `Ctrl/Cmd + Enter`)
+6. ✅ Done! Your database is fully configured
 
-### Using Supabase CLI (Alternative)
+### Option B: Supabase CLI
 
 ```bash
 # Connect to your project
 supabase link --project-ref your-project-ref
 
-# Run migrations
-supabase db push
+# Run the consolidated migration
+supabase db execute < migrations/000_consolidated_schema.sql
 ```
+
+### Post-Setup: Create Storage Bucket
+
+**Manual step required:**
+1. Go to **Storage** in Supabase dashboard
+2. Click **New bucket**
+3. Name: `workout-selfies`
+4. Set to **Private** (RLS policies already configured in migration)
+5. Click **Create**
 
 ---
 
-## Verify Migrations
+## 📊 Database Schema
 
-After running all migrations, verify in Supabase:
+After deployment, you'll have these tables:
 
-### Check Tables Exist
-Go to **Table Editor** and verify:
+### Core User Data
+- **`profiles`** - User profiles (name, bio, fitness level, medical info, demographics)
+- **`goals`** - Fitness goals with progress tracking (initial → current → target values)
+
+### Workout Tracking
+- **`workouts`** - Workout sessions with effort level (1-6 scale)
+- **`exercises`** - Individual exercises (strength/cardio/functional with specific metrics)
+- **`workout_selfies`** - Workout photos (max 1 per workout)
+- **`body_measurements`** - Body metrics (30+ measurements: weight, body fat, circumferences, etc.)
+
+### Workout Planning
+- **`workout_templates`** - Reusable templates (system + user-created)
+  - 10 pre-seeded public templates (StrongLifts 5x5, PPL split, HIIT, etc.)
+  - User custom templates with tags, difficulty, equipment requirements
+- **`workout_plans`** - AI-generated workout plans (draft/active/completed/archived)
+- **`workout_plan_sessions`** - Individual sessions within plans (scheduled/completed/skipped)
+
+### AI & Personalization
+- **`user_workout_preferences`** - User preferences (equipment, gym access, scheduling, exercise preferences)
+- **`workout_plan_generation_jobs`** - AI generation job tracking (pending/processing/completed/failed)
+
+---
+
+## ✅ Verify Deployment
+
+After running the migration, verify everything is set up correctly:
+
+### 1. Check Tables
+Go to **Table Editor** and verify all 11 tables exist:
 - ✅ profiles
+- ✅ goals
 - ✅ workouts
 - ✅ exercises
+- ✅ workout_selfies
+- ✅ body_measurements
 - ✅ workout_templates
-- ✅ goals
 - ✅ workout_plans
 - ✅ workout_plan_sessions
 - ✅ user_workout_preferences
-- ✅ user_workout_templates
+- ✅ workout_plan_generation_jobs
 
-### Check RLS Policies
+### 2. Check RLS Policies
 Go to **Authentication** → **Policies** and verify policies exist for all tables.
 
-### Test in SQL Editor
+### 3. Check Public Templates
+Run in SQL Editor:
 ```sql
--- Check workouts table has effort_level
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_name = 'workouts';
+-- Should return 10 public templates
+SELECT id, name, workout_type, difficulty_level
+FROM workout_templates
+WHERE is_public = TRUE
+ORDER BY name;
+```
 
--- Check exercises table has exercise_type
-SELECT column_name, data_type
+### 4. Verify Soft Delete Support
+Run in SQL Editor:
+```sql
+-- Should show deleted_at column for 8 tables
+SELECT table_name, column_name
 FROM information_schema.columns
-WHERE table_name = 'exercises';
+WHERE column_name = 'deleted_at'
+  AND table_schema = 'public'
+ORDER BY table_name;
 ```
 
 ---
 
-## Migration Best Practices
+## 🛠️ Schema Design Details
 
-### Before Running
-- ✅ Backup your database (if production)
-- ✅ Test migrations in a development environment first
-- ✅ Review the SQL code to understand changes
+### Key Features
 
-### When Running
-- ✅ Run migrations in order (001, 002, 003, etc.)
-- ✅ Don't skip migrations
-- ✅ Check for errors after each migration
-- ✅ Verify data integrity
+#### 1. Soft Deletes
+All major tables include `deleted_at TIMESTAMPTZ`:
+- `NULL` = active record
+- Set to `NOW()` when "deleted"
+- Enables data recovery and audit trails
 
-### After Running
-- ✅ Test application functionality
-- ✅ Verify RLS policies work correctly
-- ✅ Check that existing data is intact
+**Important:** Always filter active records in queries:
+```sql
+SELECT * FROM workouts WHERE deleted_at IS NULL;
+```
+
+#### 2. Performance-Optimized RLS
+All RLS policies use the `(SELECT auth.uid())` pattern for better performance:
+```sql
+-- ✅ Optimized (evaluated once per query)
+USING ((SELECT auth.uid()) = user_id)
+
+-- ❌ Not optimized (evaluated per row)
+USING (auth.uid() = user_id)
+```
+
+Reference: [Supabase RLS Performance Guide](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select)
+
+#### 3. Unified Template System
+Single `workout_templates` table handles both:
+- **System templates:** `is_public = TRUE`, `user_id = NULL`
+- **User templates:** `is_public = FALSE`, `user_id` set
+
+#### 4. Flexible Scheduling
+`workout_plan_sessions.day_of_week` represents the **day of the week** (0=Sunday, 6=Saturday), NOT the sequence number. This enables flexible scheduling and rest day management.
 
 ---
 
-## Creating New Migrations
+## 🎯 Pre-Seeded Workout Templates
 
-When adding new database changes:
+The database comes with 10 research-backed workout templates:
 
-1. **Create a new file** with the next number:
-   ```
-   004_your_migration_name.sql
-   ```
+### Strength Training
+1. **StrongLifts 5x5 - Workout A** (Intermediate) - Squat, Bench Press, Barbell Row
+2. **StrongLifts 5x5 - Workout B** (Intermediate) - Squat, Overhead Press, Deadlift
+3. **PPL - Push Day** (Intermediate) - Chest, Shoulders, Triceps
+4. **PPL - Pull Day** (Intermediate) - Back, Biceps, Rear Delts
+5. **PPL - Leg Day** (Intermediate) - Quads, Hamstrings, Glutes, Calves
 
-2. **Include comments** explaining the purpose:
+### Cardio & HIIT
+6. **HIIT Circuit - Fat Burner** (Beginner) - Bodyweight circuit
+7. **HIIT Cardio - Running Intervals** (Intermediate) - Sprint intervals
+
+### Beginner & Functional
+8. **Full Body Beginner** (Beginner) - Basic compound movements
+9. **Metabolic Conditioning** (Advanced) - High-intensity circuit
+10. **Core Strength & Stability** (Intermediate) - Core training
+
+---
+
+## 🐛 Troubleshooting
+
+### "Relation already exists" Error
+You're running the migration on a database that already has tables. Either drop the existing schema or manually remove conflicting tables first.
+
+### Storage Bucket Not Found
+Create the `workout-selfies` bucket manually in the Storage section (see Post-Setup instructions above).
+
+### RLS Policy Blocks Queries
+Ensure you're authenticated (`SELECT auth.uid()` should return a UUID) and querying your own data.
+
+### No Public Templates
+Re-run just the INSERT section from the migration file (search for "SEED DATA: Public Workout Templates").
+
+### Soft Delete Confusion
+Always add `WHERE deleted_at IS NULL` filter to show only active records.
+
+---
+
+## 🔄 Adding New Changes
+
+When you need to make schema changes:
+
+1. **Create a new migration file:** `001_add_feature_name.sql`
+
+2. **Write safe migration SQL:**
    ```sql
-   -- Migration: Add workout notes
-   -- Date: 2024-XX-XX
-   -- Description: Adds notes field to workouts table
+   -- Migration: Add workout notes field
+   -- Date: 2025-11-XX
 
-   ALTER TABLE workouts ADD COLUMN notes TEXT;
+   BEGIN;
+   ALTER TABLE IF EXISTS workouts ADD COLUMN IF NOT EXISTS notes TEXT;
+   COMMIT;
    ```
 
-3. **Update this README** with the new migration details
+3. **Update consolidated schema:** After testing, update `000_consolidated_schema.sql` to include your changes
 
-4. **Test thoroughly** before applying to production
+4. **Test thoroughly** in development before production
 
 ---
 
-## Rollback (If Needed)
+## 🔙 Rollback
 
-If a migration causes issues, you may need to rollback:
+If you need to rollback:
+
+### Using Supabase Backups
+1. Go to **Database** → **Backups**
+2. Select a backup from before the migration
+3. Click **Restore**
 
 ### Manual Rollback
-Create a rollback script that reverses the changes:
-
-```sql
--- Rollback for 003_add_exercise_types.sql
-ALTER TABLE exercises DROP COLUMN IF EXISTS exercise_type;
-ALTER TABLE exercises DROP COLUMN IF EXISTS duration_minutes;
--- ... etc
-```
-
-### Using Supabase Dashboard
-1. Go to **Database** → **Backups**
-2. Restore from a backup before the migration
+Create a rollback SQL file to reverse changes. Always test in development first.
 
 ---
 
-## Current Schema Version
+## 📈 Schema Version
 
-**Latest Migration:** `013_add_raw_response_to_jobs.sql`
+**Version:** 2.0.0 (Consolidated)
 
-**Schema Version:** 1.13.0
+**Last Updated:** November 21, 2025
 
-**Last Updated:** January 21, 2025
-
-### Recent Migrations (PR #48):
-- 011_add_workout_plan_jobs.sql - Async AI job processing
-- 012_add_user_profile_fields.sql - Profile personalization (age, gender, height, etc.)
-- 013_add_raw_response_to_jobs.sql - AI request/response debugging data
-
----
-
-## Troubleshooting
-
-### Migration Fails with "Already Exists" Error
-- The migration was already run previously
-- Skip to the next migration
-
-### RLS Policy Errors
-- Ensure you're logged in as a user when testing
-- Check policies in **Authentication** → **Policies**
-- Verify user_id matches in your data
-
-### Column Already Exists
-- Check if a previous migration added it
-- You can safely skip that part of the migration
+**Features:**
+- Complete workout tracking system
+- AI-powered workout plan generation
+- Body measurement tracking
+- Photo storage integration
+- Soft delete support
+- Performance-optimized RLS policies
+- Pre-seeded workout template library
 
 ---
 
-## Support
+## 📚 Resources
 
-For migration issues:
-- Check Supabase logs in the dashboard
-- Review the SQL error message carefully
-- See [Supabase Docs](https://supabase.com/docs/guides/database)
-- Open an issue in the project repository
+- [Supabase Database Documentation](https://supabase.com/docs/guides/database)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Supabase RLS Guide](https://supabase.com/docs/guides/database/postgres/row-level-security)
+
+---
+
+## 💬 Support
+
+For migration issues, check Supabase logs, review error messages, and open an issue with full details if needed
