@@ -630,6 +630,11 @@ See `DEPLOYMENT.md` for complete deployment guide.
 2. **NEVER disable lint checks** - Always run linting before building
 3. **ALWAYS run build before committing** - Ensure `npm run build` passes before any commit
 4. **Run tests before committing** - Verify all tests pass with `npm test`
+5. **Before pushing, check if a GitHub issue and PR should be created**:
+   - For new features or significant changes, create a GitHub issue first
+   - Then create a feature branch and pull request
+   - Link the PR to the issue with "Fixes #issue-number"
+   - If working directly on main, evaluate if the change warrants a PR workflow
 
 ### Code Quality Standards
 1. Use TypeScript strictly (no `any` types)
