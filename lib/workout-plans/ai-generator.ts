@@ -299,7 +299,11 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
 8. Be concise - quality over quantity
 
 **Output Format (STRICT JSON):**
-⚠️ REMINDER: For the "day" field, spread workouts across the week with rest days. For 4 workouts/week, use days 1,3,5,6 NOT 1,2,3,4!
+⚠️ **CRITICAL - "day" field definition**:
+- The "day" field is NOT a sequence number (don't use 1,2,3,4)
+- The "day" field is the DAY OF THE WEEK (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday)
+- For 4 workouts/week, use: day=1 (Monday), day=3 (Wednesday), day=5 (Friday), day=6 (Saturday)
+- DO NOT use day=1,2,3,4 - this means Monday/Tuesday/Wednesday/Thursday with NO REST!
 
 \`\`\`json
 {
@@ -309,20 +313,40 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
       "day": 1,
       "dayName": "Monday",
       "workoutType": "Upper Body Strength",
-      "exercises": [
-        {
-          "name": "Bench Press",
-          "sets": 4,
-          "reps": 10,
-          "weight": 60,
-          "weightUnit": "kg",
-          "restSeconds": 90,
-          "notes": "Focus on controlled descent"
-        }
-      ],
+      "exercises": [...],
       "duration": 60,
       "intensity": "medium",
-      "notes": "Week 1 introduction - focus on form"
+      "notes": "Week 1 - focus on form"
+    },
+    {
+      "week": 1,
+      "day": 3,
+      "dayName": "Wednesday",
+      "workoutType": "Lower Body",
+      "exercises": [...],
+      "duration": 60,
+      "intensity": "medium",
+      "notes": "Rest day Tuesday between workouts"
+    },
+    {
+      "week": 1,
+      "day": 5,
+      "dayName": "Friday",
+      "workoutType": "Upper Body",
+      "exercises": [...],
+      "duration": 60,
+      "intensity": "medium",
+      "notes": "Rest day Thursday between workouts"
+    },
+    {
+      "week": 1,
+      "day": 6,
+      "dayName": "Saturday",
+      "workoutType": "Cardio/Active Recovery",
+      "exercises": [...],
+      "duration": 45,
+      "intensity": "low",
+      "notes": "Light session - rest Sunday"
     }
   ],
   "rationale": "Explain why this plan suits the user's goal and fitness level...",
