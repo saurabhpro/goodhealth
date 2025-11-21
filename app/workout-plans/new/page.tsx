@@ -24,6 +24,8 @@ export default function NewWorkoutPlanPage() {
   const [loading, setLoading] = useState(false)
   const [goalsLoading, setGoalsLoading] = useState(true)
   const [goals, setGoals] = useState<Goal[]>([])
+  const [generatingJobId, setGeneratingJobId] = useState<string | null>(null)
+  const [generatingStatus, setGeneratingStatus] = useState('')
 
   // Form state
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null)
@@ -35,6 +37,7 @@ export default function NewWorkoutPlanPage() {
 
   useEffect(() => {
     fetchGoals()
+    fetchPlans()
   }, [])
 
   async function fetchGoals() {
@@ -51,10 +54,32 @@ export default function NewWorkoutPlanPage() {
     }
   }
 
+  async function fetchPlans() {
+    try {
+      const response = await fetch('/api/workout-plans')
+      if (response.ok) {
+        const data = await response.json()
+        // Store active/draft plans by goal_id for checking
+        const plansByGoal: Record<string, { id: string; status: string; goal_id: string }> = {}
+        data.forEach((plan: { id: string; status: string; goal_id: string }) => {
+          if (plan.status === 'active' || plan.status === 'draft') {
+            plansByGoal[plan.goal_id] = plan
+          }
+        })
+        // You can use this to disable goals
+        // For now, we'll just check in handleGenerate
+      }
+    } catch (error) {
+      console.error('Failed to load plans')
+    }
+  }
+
   async function handleGenerate() {
     if (!selectedGoal) return
 
     setLoading(true)
+    setGeneratingStatus('Preparing your workout plan...')
+
     try {
       const response = await fetch('/api/workout-plans/generate', {
         method: 'POST',
@@ -71,21 +96,93 @@ export default function NewWorkoutPlanPage() {
 
       if (response.ok) {
         const data = await response.json()
-        toast.success('Workout plan generated!', {
-          description: `Created a ${weeksDuration}-week plan with ${data.summary.totalWorkouts} workouts`
+        setGeneratingJobId(data.jobId)
+        setGeneratingStatus('🍳 Cooking your workout plan...')
+
+        toast.success('Plan generation started!', {
+          description: 'You can navigate away - we\'ll notify you when it\'s ready'
         })
-        router.push(`/workout-plans/${data.planId}`)
+
+        // Start polling for job status
+        pollJobStatus(data.jobId)
+      } else if (response.status === 409) {
+        // Conflict - plan already exists
+        const error = await response.json()
+        toast.error('Plan Already Exists', {
+          description: error.error || 'This goal already has an active plan',
+          duration: 6000,
+          action: error.existingPlanId ? {
+            label: 'View Plan',
+            onClick: () => router.push(`/workout-plans/${error.existingPlanId}`)
+          } : undefined
+        })
+        setLoading(false)
       } else {
         const error = await response.json()
         toast.error('Failed to generate plan', {
           description: error.error || 'Please try again'
         })
+        setLoading(false)
       }
     } catch (error) {
       toast.error('Failed to generate plan')
-    } finally {
       setLoading(false)
     }
+  }
+
+  async function pollJobStatus(jobId: string) {
+    const pollInterval = 3000 // Poll every 3 seconds
+    const maxAttempts = 60 // Max 3 minutes (60 * 3s)
+    let attempts = 0
+
+    const poll = async () => {
+      attempts++
+
+      try {
+        const response = await fetch(`/api/workout-plans/jobs/${jobId}`)
+
+        if (response.ok) {
+          const data = await response.json()
+
+          if (data.status === 'completed' && data.planId) {
+            setGeneratingStatus('✨ Plan ready!')
+            toast.success('Workout plan generated!', {
+              description: 'Your personalized workout plan is ready'
+            })
+            setTimeout(() => {
+              router.push(`/workout-plans/${data.planId}`)
+            }, 1000)
+            return
+          } else if (data.status === 'failed') {
+            setGeneratingStatus('Failed to generate plan')
+            toast.error('Generation failed', {
+              description: data.errorMessage || 'Please try again'
+            })
+            setLoading(false)
+            return
+          } else if (data.status === 'processing') {
+            setGeneratingStatus('🍳 Cooking your workout plan... (almost done!)')
+          }
+        }
+
+        // Continue polling if still pending/processing and not maxed out
+        if (attempts < maxAttempts) {
+          setTimeout(poll, pollInterval)
+        } else {
+          toast.error('Generation is taking longer than expected', {
+            description: 'Please check back in a few minutes'
+          })
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('Error polling job status:', error)
+        if (attempts < maxAttempts) {
+          setTimeout(poll, pollInterval)
+        }
+      }
+    }
+
+    poll()
   }
 
   const stepProgress = currentStep === 'goal' ? 33 : currentStep === 'configure' ? 66 : 100
@@ -473,8 +570,9 @@ export default function NewWorkoutPlanPage() {
             <Button
               onClick={handleGenerate}
               disabled={loading}
+              className="min-w-[200px]"
             >
-              {loading ? 'Generating...' : 'Generate Plan'}
+              {loading ? generatingStatus || 'Generating...' : 'Generate Plan'}
             </Button>
           </div>
         </div>

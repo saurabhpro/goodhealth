@@ -126,7 +126,12 @@ Edit `.env.local` and add your Supabase credentials:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Optional: For AI-powered workout plan generation
+GEMINI_API_KEY=your_google_gemini_api_key
 ```
+
+**Note**: The `GEMINI_API_KEY` is optional. If not provided, AI-powered workout plan generation will not be available, but template-based plans will still work. Get your free API key at [aistudio.google.com](https://aistudio.google.com/app/apikey).
 
 ### 4. Run the Development Server
 
@@ -385,6 +390,14 @@ View the OpenAPI specification for the REST API:
 - ✅ Codecov integration for coverage tracking
 - ✅ Vercel deployment ready
 
+### In Progress 🚧
+- [ ] **AI-powered workout plan generation** - Using Google Gemini 2.5 Pro
+  - ✅ Cost analysis complete
+  - ✅ AI service integration
+  - ✅ API endpoint created
+  - ✅ UI integration (existing UI works)
+  - ⏳ Testing and debugging
+
 ### Planned 📋
 - [ ] Workout templates
 - [ ] Profile/settings persistence
@@ -392,7 +405,6 @@ View the OpenAPI specification for the REST API:
 - [ ] Personal records (PRs) tracking
 - [ ] Social features (sharing workouts)
 - [ ] Export data functionality (CSV/JSON)
-- [ ] AI-powered workout recommendations
 - [ ] Nutrition tracking integration
 - [ ] Integration with fitness wearables
 - [ ] Apple Health integration (iOS companion app with HealthKit)

@@ -159,6 +159,8 @@ export async function getWorkouts() {
       )
     `)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('date', { ascending: false })
 
   if (error) {
@@ -238,15 +240,16 @@ export async function updateWorkout(workoutId: string, formData: FormData) {
     return { error: `Failed to update workout: ${workoutError.message}` }
   }
 
-  // Delete existing exercises
+  // Soft delete existing exercises (will be replaced with new ones)
   const { error: deleteError } = await supabase
     .from('exercises')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('workout_id', workoutId)
+    .is('deleted_at', null) // Only soft delete active exercises
 
   if (deleteError) {
-    console.error('Exercise delete error:', deleteError)
-    return { error: `Failed to delete old exercises: ${deleteError.message}` }
+    console.error('Exercise soft delete error:', deleteError)
+    return { error: `Failed to archive old exercises: ${deleteError.message}` }
   }
 
   // Insert updated exercises
@@ -302,11 +305,13 @@ export async function deleteWorkout(workoutId: string) {
     return { error: 'Not authenticated' }
   }
 
+  // Soft delete: set deleted_at instead of hard delete
   const { error } = await supabase
     .from('workouts')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', workoutId)
     .eq('user_id', user.id)
+    .is('deleted_at', null) // Only delete if not already deleted
 
   if (error) {
     return { error: error.message }
@@ -338,18 +343,21 @@ export async function deleteExercise(exerciseId: string, workoutId: string) {
     .select('id')
     .eq('id', workoutId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (workoutError || !workout) {
     return { error: 'Workout not found or unauthorized' }
   }
 
-  // Delete the exercise
+  // Soft delete: set deleted_at instead of hard delete
   const { error } = await supabase
     .from('exercises')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', exerciseId)
     .eq('workout_id', workoutId)
+    .is('deleted_at', null) // Only delete if not already deleted
 
   if (error) {
     return { error: error.message }

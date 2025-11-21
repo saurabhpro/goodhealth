@@ -74,6 +74,8 @@ export async function getGoals() {
     .from('goals')
     .select('*')
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -103,6 +105,8 @@ export async function updateGoal(goalId: string, formData: FormData) {
     .select('initial_value')
     .eq('id', goalId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!existingGoal) {
@@ -166,6 +170,8 @@ export async function updateGoalProgress(goalId: string, currentValue: number) {
     .from('goals')
     .select('initial_value, target_value')
     .eq('id', goalId)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   const achieved = goal
@@ -205,11 +211,13 @@ export async function deleteGoal(goalId: string) {
     return { error: 'Not authenticated' }
   }
 
+  // Soft delete: set deleted_at instead of hard delete
   const { error } = await supabase
     .from('goals')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', goalId)
     .eq('user_id', user.id)
+    .is('deleted_at', null) // Only delete if not already deleted
 
   if (error) {
     return { error: error.message }

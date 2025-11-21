@@ -24,6 +24,8 @@ export async function createPlanSession(data: InsertWorkoutPlanSession) {
     .select('id')
     .eq('id', data.plan_id)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!plan) {
@@ -65,6 +67,8 @@ export async function getWeekSessions(planId: string, weekNumber: number) {
     .select('id')
     .eq('id', planId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!plan) {
@@ -76,6 +80,8 @@ export async function getWeekSessions(planId: string, weekNumber: number) {
     .select('*')
     .eq('plan_id', planId)
     .eq('week_number', weekNumber)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('day_of_week', { ascending: true })
     .order('session_order', { ascending: true })
 
@@ -106,6 +112,8 @@ export async function updatePlanSession(sessionId: string, data: UpdateWorkoutPl
     .from('workout_plan_sessions')
     .select('plan_id, workout_plans!inner(user_id)')
     .eq('id', sessionId)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!session || (session.workout_plans as unknown as { user_id: string }).user_id !== user.id) {
@@ -150,6 +158,8 @@ export async function completePlanSession(sessionId: string, workoutId: string, 
     .from('workout_plan_sessions')
     .select('plan_id, workout_plans!inner(user_id)')
     .eq('id', sessionId)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!session || (session.workout_plans as unknown as { user_id: string }).user_id !== user.id) {
@@ -197,6 +207,8 @@ export async function skipPlanSession(sessionId: string, reason?: string) {
     .from('workout_plan_sessions')
     .select('plan_id, workout_plans!inner(user_id)')
     .eq('id', sessionId)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!session || (session.workout_plans as unknown as { user_id: string }).user_id !== user.id) {
@@ -242,6 +254,8 @@ export async function deletePlanSession(sessionId: string) {
     .from('workout_plan_sessions')
     .select('plan_id, workout_plans!inner(user_id)')
     .eq('id', sessionId)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!session || (session.workout_plans as unknown as { user_id: string }).user_id !== user.id) {
@@ -284,6 +298,8 @@ export async function getPlanStats(planId: string) {
     .select('id')
     .eq('id', planId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!plan) {
@@ -294,6 +310,8 @@ export async function getPlanStats(planId: string) {
     .from('workout_plan_sessions')
     .select('status, workout_type')
     .eq('plan_id', planId)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
 
   if (error) {
     console.error('Error fetching plan stats:', error)

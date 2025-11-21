@@ -63,6 +63,8 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
     `)
     .eq('id', id)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (error || !workout) {

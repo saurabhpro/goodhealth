@@ -37,6 +37,8 @@ export async function syncGoalProgress(userId: string) {
     .from('goals')
     .select('*')
     .eq('user_id', userId)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
 
   if (goalsError || !goals || goals.length === 0) {
     return { success: true, updated: 0 }
@@ -56,6 +58,8 @@ export async function syncGoalProgress(userId: string) {
           .from('workouts')
           .select('id')
           .eq('user_id', userId)
+          // Exclude soft-deleted records
+          .is('deleted_at', null)
 
         newCurrentValue = workouts?.length || 0
         break
@@ -67,6 +71,8 @@ export async function syncGoalProgress(userId: string) {
           .from('workouts')
           .select('duration_minutes')
           .eq('user_id', userId)
+          // Exclude soft-deleted records
+          .is('deleted_at', null)
 
         newCurrentValue = workouts?.reduce(
           (sum, w) => sum + (w.duration_minutes || 0),
@@ -81,6 +87,8 @@ export async function syncGoalProgress(userId: string) {
           .from('workouts')
           .select('date')
           .eq('user_id', userId)
+          // Exclude soft-deleted records
+          .is('deleted_at', null)
 
         const uniqueDays = new Set(workouts?.map((w) => w.date) || [])
         newCurrentValue = uniqueDays.size
@@ -99,6 +107,8 @@ export async function syncGoalProgress(userId: string) {
             .select('weight, weight_unit')
             .eq('user_id', userId)
             .not('weight', 'is', null)
+            // Exclude soft-deleted records
+            .is('deleted_at', null)
             .order('measured_at', { ascending: false })
             .limit(1)
 
@@ -132,6 +142,8 @@ export async function syncGoalProgress(userId: string) {
               .select('id')
               .eq('user_id', userId)
               .in('id', workoutIds)
+              // Exclude soft-deleted records
+              .is('deleted_at', null)
 
             const validWorkoutIds = new Set(userWorkouts?.map(w => w.id) || [])
             const validExercises = exercises.filter(e => validWorkoutIds.has(e.workout_id))
@@ -176,6 +188,8 @@ export async function syncGoalProgress(userId: string) {
               .select('id')
               .eq('user_id', userId)
               .in('id', workoutIds)
+              // Exclude soft-deleted records
+              .is('deleted_at', null)
 
             const validWorkoutIds = new Set(userWorkouts?.map(w => w.id) || [])
             const validExercises = exercises.filter(e => validWorkoutIds.has(e.workout_id))
@@ -213,6 +227,8 @@ export async function syncGoalProgress(userId: string) {
             .select('id')
             .eq('user_id', userId)
             .in('id', workoutIds)
+            // Exclude soft-deleted records
+            .is('deleted_at', null)
 
           const validWorkoutIds = new Set(userWorkouts?.map(w => w.id) || [])
           const validExercises = exercises.filter(e => validWorkoutIds.has(e.workout_id))

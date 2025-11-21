@@ -8,7 +8,6 @@ export type Goal = Database['public']['Tables']['goals']['Row']
 export type WorkoutPlan = Database['public']['Tables']['workout_plans']['Row']
 export type WorkoutPlanSession = Database['public']['Tables']['workout_plan_sessions']['Row']
 export type UserWorkoutPreferences = Database['public']['Tables']['user_workout_preferences']['Row']
-export type UserWorkoutTemplate = Database['public']['Tables']['user_workout_templates']['Row']
 
 export type InsertProfile = Database['public']['Tables']['profiles']['Insert']
 export type InsertWorkout = Database['public']['Tables']['workouts']['Insert']
@@ -18,7 +17,6 @@ export type InsertGoal = Database['public']['Tables']['goals']['Insert']
 export type InsertWorkoutPlan = Database['public']['Tables']['workout_plans']['Insert']
 export type InsertWorkoutPlanSession = Database['public']['Tables']['workout_plan_sessions']['Insert']
 export type InsertUserWorkoutPreferences = Database['public']['Tables']['user_workout_preferences']['Insert']
-export type InsertUserWorkoutTemplate = Database['public']['Tables']['user_workout_templates']['Insert']
 
 export type UpdateProfile = Database['public']['Tables']['profiles']['Update']
 export type UpdateWorkout = Database['public']['Tables']['workouts']['Update']
@@ -28,7 +26,14 @@ export type UpdateGoal = Database['public']['Tables']['goals']['Update']
 export type UpdateWorkoutPlan = Database['public']['Tables']['workout_plans']['Update']
 export type UpdateWorkoutPlanSession = Database['public']['Tables']['workout_plan_sessions']['Update']
 export type UpdateUserWorkoutPreferences = Database['public']['Tables']['user_workout_preferences']['Update']
-export type UpdateUserWorkoutTemplate = Database['public']['Tables']['user_workout_templates']['Update']
+
+// Legacy type aliases for backward compatibility (will be removed after full migration)
+/** @deprecated Use WorkoutTemplate instead - user_workout_templates table has been consolidated */
+export type UserWorkoutTemplate = WorkoutTemplate
+/** @deprecated Use InsertWorkoutTemplate instead - user_workout_templates table has been consolidated */
+export type InsertUserWorkoutTemplate = InsertWorkoutTemplate
+/** @deprecated Use UpdateWorkoutTemplate instead - user_workout_templates table has been consolidated */
+export type UpdateUserWorkoutTemplate = UpdateWorkoutTemplate
 
 export interface WorkoutWithExercises extends Workout {
   exercises: Exercise[]

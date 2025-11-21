@@ -28,13 +28,14 @@ const createMockTemplate = (id: string, type: 'cardio' | 'strength'): WorkoutTem
   name: `${type} Template ${id}`,
   description: `A ${type} workout`,
   estimated_duration: 60,
-  exercises: type === 'cardio'
+  exercises: (type === 'cardio'
     ? [{ exercise_type: 'cardio' as const, name: 'Running', duration: 1800, sets: null, reps: null, weight: null }]
-    : [{ exercise_type: 'strength' as const, name: 'Bench Press', sets: 3, reps: 10, weight: 60 }],
+    : [{ exercise_type: 'strength' as const, name: 'Bench Press', sets: 3, reps: 10, weight: 60 }]) as unknown as WorkoutTemplate['exercises'],
   is_public: false,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-})
+  deleted_at: null,
+} as WorkoutTemplate)
 
 describe('Schedule Generator', () => {
   describe('distributeRestDays', () => {
@@ -211,13 +212,17 @@ describe('Schedule Generator', () => {
 
     it('should calculate estimated weekly volume', () => {
       const goalAnalysis = createMockGoalAnalysis(4)
+      // Provide multiple strength templates to ensure they're selected
       const templates = [
         createMockTemplate('t1', 'strength'),
-        createMockTemplate('t2', 'cardio'),
+        createMockTemplate('t2', 'strength'),
+        createMockTemplate('t3', 'strength'),
+        createMockTemplate('t4', 'cardio'),
       ]
 
       const plan = generateMultiWeekPlan(1, goalAnalysis, templates)
 
+      // With strength workouts having sets/reps/weight, volume should be > 0
       expect(plan[0].estimatedWeeklyVolume).toBeGreaterThan(0)
     })
   })

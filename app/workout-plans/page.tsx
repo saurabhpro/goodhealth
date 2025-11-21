@@ -69,13 +69,13 @@ export default function WorkoutPlansPage() {
   function getStatusBadge(status: string) {
     switch (status) {
       case 'active':
-        return <Badge variant="default">Active</Badge>
+        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
       case 'completed':
-        return <Badge variant="secondary">Completed</Badge>
+        return <Badge className="bg-blue-500 hover:bg-blue-600 text-white">Completed</Badge>
       case 'draft':
-        return <Badge variant="outline">Draft</Badge>
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">Draft</Badge>
       case 'archived':
-        return <Badge variant="outline">Archived</Badge>
+        return <Badge className="bg-gray-500 hover:bg-gray-600 text-white">Archived</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
     }
@@ -202,12 +202,22 @@ export default function WorkoutPlansPage() {
                     </div>
                   )}
 
-                  {plan.started_at && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Started</p>
-                      <p className="text-sm font-medium">
-                        {new Date(plan.started_at).toLocaleDateString()}
-                      </p>
+                  {plan.started_at && (plan.status === 'active' || plan.status === 'completed') && (
+                    <div className="space-y-1">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Started</p>
+                        <p className="text-sm font-medium">
+                          {new Date(plan.started_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Ends</p>
+                        <p className="text-sm font-medium">
+                          {new Date(
+                            new Date(plan.started_at).getTime() + (plan.weeks_duration * 7 * 24 * 60 * 60 * 1000)
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -230,7 +240,12 @@ export default function WorkoutPlansPage() {
                         router.push(`/workout-plans/${plan.id}`)
                       }}
                     >
-                      {plan.status === 'active' ? (
+                      {plan.status === 'draft' ? (
+                        <>
+                          <Play className="mr-2 h-4 w-4" />
+                          Start Plan
+                        </>
+                      ) : plan.status === 'active' ? (
                         <>
                           <Play className="mr-2 h-4 w-4" />
                           Continue

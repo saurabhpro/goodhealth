@@ -1,13 +1,11 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { getUser } from '@/lib/auth/actions'
-import { getWorkouts } from '@/lib/workouts/actions'
-import { getGoals } from '@/lib/goals/actions'
-import { getWorkoutPlans } from '@/lib/workout-plans/actions'
-import { redirect } from 'next/navigation'
 import {
   Plus,
   Dumbbell,
@@ -19,20 +17,55 @@ import {
   Camera
 } from 'lucide-react'
 import { MotivationalQuote } from '@/components/motivational-quote'
+import { SessionDetailModal } from '@/components/workout-plans/session-detail-modal'
+import type { Workout, Goal, WorkoutPlan, WorkoutPlanSession } from '@/types'
 
-export const dynamic = 'force-dynamic'
+export default function DashboardPage() {
+  const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [goals, setGoals] = useState<Goal[]>([])
+  const [plans, setPlans] = useState<WorkoutPlan[]>([])
+  const [weekSessions, setWeekSessions] = useState<WorkoutPlanSession[]>([])
+  const [currentWeek, setCurrentWeek] = useState<number>(1)
+  const [selectedSession, setSelectedSession] = useState<WorkoutPlanSession | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-export default async function DashboardPage() {
-  const user = await getUser()
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-  if (!user) {
-    redirect('/login')
+  async function fetchData() {
+    try {
+      const [workoutsRes, goalsRes, plansRes, sessionsRes] = await Promise.all([
+        fetch('/api/workouts'),
+        fetch('/api/goals'),
+        fetch('/api/workout-plans'),
+        fetch('/api/workout-plans/sessions/current-week')
+      ])
+
+      if (workoutsRes.ok) {
+        const data = await workoutsRes.json()
+        setWorkouts(data)
+      }
+      if (goalsRes.ok) {
+        const data = await goalsRes.json()
+        setGoals(data)
+      }
+      if (plansRes.ok) {
+        const data = await plansRes.json()
+        setPlans(data)
+      }
+      if (sessionsRes.ok) {
+        const data = await sessionsRes.json()
+        setWeekSessions(data.sessions || [])
+        setCurrentWeek(data.currentWeek || 1)
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
-
-  // Fetch data
-  const { workouts } = await getWorkouts()
-  const { goals } = await getGoals()
-  const { plans } = await getWorkoutPlans()
 
   // Find active workout plan
   const activePlan = plans.find(p => p.status === 'active' || p.status === 'draft')
@@ -40,7 +73,10 @@ export default async function DashboardPage() {
   // Calculate statistics
   const totalWorkouts = workouts.length
   const activeGoals = goals.filter(g => !g.achieved).length
-  const totalExercises = workouts.reduce((sum, w) => sum + (w.exercises?.length || 0), 0)
+  const totalExercises = workouts.reduce((sum, w) => {
+    const workout = w as typeof w & { exercises?: unknown[] }
+    return sum + (workout.exercises?.length || 0)
+  }, 0)
 
   // Calculate workout streak
   const calculateStreak = () => {
@@ -71,6 +107,16 @@ export default async function DashboardPage() {
   }
 
   const currentStreak = calculateStreak()
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <div className="text-muted-foreground">Loading dashboard...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
@@ -147,7 +193,10 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg sm:text-xl">Current Plan</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">
+                  {activePlan.name}
+                  {currentWeek && <span className="text-sm font-normal text-muted-foreground ml-2">Week {currentWeek}</span>}
+                </CardTitle>
               </div>
               <Badge variant={activePlan.status === 'active' ? 'default' : 'secondary'}>
                 {activePlan.status}
@@ -155,25 +204,67 @@ export default async function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div>
-              <h3 className="font-semibold text-base sm:text-lg">{activePlan.name}</h3>
-              {activePlan.description && (
-                <p className="text-sm text-muted-foreground mt-1">{activePlan.description}</p>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-3 text-sm">
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>{activePlan.weeks_duration} weeks</span>
+            {weekSessions && weekSessions.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((dayName, dayIndex) => {
+                  const session = weekSessions.find(s => s.day_of_week === dayIndex + 1)
+                  const isRestDay = !session || session.workout_type === 'rest'
+                  const isCompleted = session?.status === 'completed'
+
+                  return (
+                    <div
+                      key={dayName}
+                      className={`p-3 rounded-lg border transition-all ${
+                        isCompleted
+                          ? 'bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700'
+                          : isRestDay
+                          ? 'bg-muted/30 border-muted'
+                          : 'bg-primary/5 border-primary/30 hover:border-primary/50 cursor-pointer'
+                      }`}
+                      onClick={() => {
+                        if (!isRestDay && session) {
+                          setSelectedSession(session)
+                          setModalOpen(true)
+                        }
+                      }}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-muted-foreground truncate">
+                            {dayName.slice(0, 3)}
+                          </p>
+                          {isCompleted && (
+                            <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-green-600 text-white">
+                              ✓
+                            </Badge>
+                          )}
+                        </div>
+                        {isRestDay ? (
+                          <p className="text-xs text-muted-foreground">Rest</p>
+                        ) : (
+                          <>
+                            <p className="text-xs font-medium line-clamp-2 leading-tight">
+                              {session.workout_name}
+                            </p>
+                            {session.estimated_duration && (
+                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <Clock className="h-2.5 w-2.5" />
+                                <span>{session.estimated_duration}m</span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Dumbbell className="h-4 w-4" />
-                <span>{activePlan.workouts_per_week} workouts/week</span>
-              </div>
-            </div>
-            <Button variant="outline" className="w-full" asChild>
+            ) : (
+              <p className="text-sm text-muted-foreground">No workouts scheduled for this week</p>
+            )}
+            <Button variant="outline" className="w-full mt-3" asChild>
               <Link href={`/workout-plans/${activePlan.id}`}>
-                View Plan Details
+                View Full Plan
               </Link>
             </Button>
           </CardContent>
@@ -224,7 +315,11 @@ export default async function DashboardPage() {
         ) : (
           <div className="space-y-2 sm:space-y-3">
             {workouts.slice(0, 5).map((workout) => {
-              const selfie = workout.workout_selfies?.[0]
+              const workoutWithExtras = workout as typeof workout & {
+                workout_selfies?: { signedUrl?: string; caption?: string | null }[]
+                exercises?: unknown[]
+              }
+              const selfie = workoutWithExtras.workout_selfies?.[0]
 
               return (
                 <Link href={`/workouts/${workout.id}`} key={workout.id}>
@@ -260,7 +355,7 @@ export default async function DashboardPage() {
                               </p>
                             </div>
                             <Badge variant="secondary" className="text-xs flex-shrink-0">
-                              {workout.exercises?.length || 0}
+                              {workoutWithExtras.exercises?.length || 0}
                             </Badge>
                           </div>
                           {workout.duration_minutes && (
@@ -285,6 +380,16 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Session Detail Modal */}
+      {selectedSession && (
+        <SessionDetailModal
+          session={selectedSession}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          onUpdate={fetchData}
+        />
+      )}
     </div>
   )
 }

@@ -107,6 +107,8 @@ export async function getMeasurements(limit?: number) {
     .from('body_measurements')
     .select('*')
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('measured_at', { ascending: false })
 
   if (limit) {
@@ -138,6 +140,8 @@ export async function getLatestMeasurement() {
     .from('body_measurements')
     .select('*')
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('measured_at', { ascending: false })
     .limit(1)
     .single()
@@ -244,11 +248,13 @@ export async function deleteMeasurement(measurementId: string) {
     return { error: 'Not authenticated' }
   }
 
+  // Soft delete: set deleted_at instead of hard delete
   const { error } = await supabase
     .from('body_measurements')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', measurementId)
     .eq('user_id', user.id)
+    .is('deleted_at', null) // Only delete if not already deleted
 
   if (error) {
     return { error: error.message }

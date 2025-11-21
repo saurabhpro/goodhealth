@@ -55,6 +55,8 @@ export async function uploadWorkoutSelfie(
     .select('id')
     .eq('id', workoutId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (workoutError || !workout) {
@@ -67,6 +69,8 @@ export async function uploadWorkoutSelfie(
     .select('id, file_path')
     .eq('workout_id', workoutId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
 
   if (checkError) {
     console.error('Error checking existing selfies:', checkError)
@@ -76,13 +80,13 @@ export async function uploadWorkoutSelfie(
   // If a selfie already exists, delete it first (replace old with new)
   if (existingSelfies && existingSelfies.length > 0) {
     for (const existingSelfie of existingSelfies) {
-      // Delete from storage
-      await supabase.storage.from(BUCKET_NAME).remove([existingSelfie.file_path])
-      // Delete from database
+      // Keep file in storage but soft delete from database (for recovery)
+      // Soft delete from database
       await supabase
         .from('workout_selfies')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', existingSelfie.id)
+        .is('deleted_at', null)
     }
   }
 
@@ -156,6 +160,8 @@ export async function getWorkoutSelfies(workoutId: string) {
     .select('*')
     .eq('workout_id', workoutId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('taken_at', { ascending: false })
     .limit(1) // Only get the most recent one
 
@@ -215,28 +221,22 @@ export async function deleteWorkoutSelfie(selfieId: string) {
     .select('file_path, workout_id')
     .eq('id', selfieId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (fetchError || !selfie) {
     return { error: 'Selfie not found or access denied' }
   }
 
-  // Delete from storage
-  const { error: storageError } = await supabase.storage
-    .from(BUCKET_NAME)
-    .remove([selfie.file_path])
-
-  if (storageError) {
-    console.error('Storage deletion error:', storageError)
-    // Continue anyway to delete database record
-  }
-
-  // Delete from database
+  // Keep file in storage for potential recovery, only soft delete from database
+  // Soft delete from database
   const { error: dbError } = await supabase
     .from('workout_selfies')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', selfieId)
     .eq('user_id', user.id)
+    .is('deleted_at', null) // Only delete if not already deleted
 
   if (dbError) {
     return { error: dbError.message }
@@ -305,6 +305,8 @@ export async function getRecentSelfies(limit: number = 10) {
       )
     `)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('taken_at', { ascending: false })
     .limit(limit)
 
