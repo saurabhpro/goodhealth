@@ -391,7 +391,7 @@ View the OpenAPI specification for the REST API:
 - ✅ Vercel deployment ready
 
 ### In Progress 🚧
-- [ ] **AI-powered workout plan generation** - Using Google Gemini 2.5 Flash
+- [ ] **AI-powered workout plan generation** - Using Google Gemini 2.5 Pro
   - ✅ Cost analysis complete
   - ✅ AI service integration
   - ✅ API endpoint created

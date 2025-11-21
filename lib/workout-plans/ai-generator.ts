@@ -1,5 +1,5 @@
 /**
- * AI-Powered Workout Plan Generator using Google Gemini 2.5 Flash
+ * AI-Powered Workout Plan Generator using Google Gemini 2.5 Pro
  * Generates personalized workout plans based on user preferences, history, and goals
  */
 
@@ -61,7 +61,7 @@ export interface ExerciseDetail {
 }
 
 /**
- * Generate a workout plan using Gemini 2.5 Flash
+ * Generate a workout plan using Gemini 2.5 Pro
  */
 export async function generateWorkoutPlanWithAI(
   request: AIGenerationRequest
@@ -78,9 +78,9 @@ export async function generateWorkoutPlanWithAI(
     // Build the prompt
     const prompt = buildPrompt(request)
 
-    // Call Gemini 2.5 Flash
+    // Call Gemini 2.5 Pro
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash', // Using Gemini 2.5 Flash - best free tier option
+      model: 'gemini-2.5-pro', // Using Gemini 2.5 Pro - most capable model
     })
 
     const result = await model.generateContent({
