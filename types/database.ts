@@ -227,25 +227,46 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          date_of_birth: string | null
           email: string
+          fitness_goals: string[] | null
+          fitness_level: string | null
           full_name: string | null
+          gender: string | null
+          height_cm: number | null
           id: string
+          injuries: string | null
+          medical_conditions: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email: string
+          fitness_goals?: string[] | null
+          fitness_level?: string | null
           full_name?: string | null
+          gender?: string | null
+          height_cm?: number | null
           id: string
+          injuries?: string | null
+          medical_conditions?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string
+          fitness_goals?: string[] | null
+          fitness_level?: string | null
           full_name?: string | null
+          gender?: string | null
+          height_cm?: number | null
           id?: string
+          injuries?: string | null
+          medical_conditions?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -378,6 +399,54 @@ export type Database = {
           workout_type?: string | null
         }
         Relationships: []
+      }
+      workout_plan_generation_jobs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          plan_id: string | null
+          request_data: Json
+          status: Database["public"]["Enums"]["workout_plan_job_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          plan_id?: string | null
+          request_data: Json
+          status?: Database["public"]["Enums"]["workout_plan_job_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          plan_id?: string | null
+          request_data?: Json
+          status?: Database["public"]["Enums"]["workout_plan_job_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_plan_generation_jobs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_plan_generation_jobs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workout_plan_sessions: {
         Row: {
@@ -650,7 +719,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      workout_plan_job_status: "pending" | "processing" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -777,6 +846,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      workout_plan_job_status: ["pending", "processing", "completed", "failed"],
+    },
   },
 } as const

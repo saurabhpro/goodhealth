@@ -16,11 +16,29 @@ import type {
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
+export interface UserProfile {
+  dateOfBirth?: string
+  gender?: string
+  heightCm?: number
+  fitnessLevel?: string
+  medicalConditions?: string
+  injuries?: string
+}
+
+export interface LatestMeasurements {
+  weight?: number
+  bodyFatPercentage?: number
+  muscleMass?: number
+  measurementDate?: string
+}
+
 export interface AIGenerationRequest {
   goal: Goal
   preferences?: UserWorkoutPreferences
   workoutHistory?: Workout[]
   userTemplates?: UserWorkoutTemplate[]
+  userProfile?: UserProfile
+  latestMeasurements?: LatestMeasurements
   planConfig: {
     weeksCount: number
     workoutsPerWeek: number
@@ -129,7 +147,7 @@ export async function generateWorkoutPlanWithAI(
  * Build the prompt for Gemini
  */
 function buildPrompt(request: AIGenerationRequest): string {
-  const { goal, preferences, workoutHistory, userTemplates, planConfig } = request
+  const { goal, preferences, workoutHistory, userTemplates, userProfile, latestMeasurements, planConfig } = request
 
   let prompt = `You are an expert fitness coach and workout planner. Generate a personalized workout plan based on the following information.
 
@@ -145,6 +163,57 @@ function buildPrompt(request: AIGenerationRequest): string {
 - **Workouts per Week**: ${planConfig.workoutsPerWeek}
 - **Average Session Duration**: ${planConfig.avgDuration} minutes
 `
+
+  // Add user profile information
+  if (userProfile) {
+    prompt += `\n## User Profile\n`
+
+    if (userProfile.dateOfBirth) {
+      const age = calculateAge(userProfile.dateOfBirth)
+      prompt += `- **Age**: ${age} years\n`
+    }
+
+    if (userProfile.gender) {
+      prompt += `- **Gender**: ${userProfile.gender}\n`
+    }
+
+    if (userProfile.heightCm) {
+      prompt += `- **Height**: ${userProfile.heightCm} cm\n`
+    }
+
+    if (userProfile.fitnessLevel) {
+      prompt += `- **Fitness Level**: ${userProfile.fitnessLevel}\n`
+    }
+
+    if (userProfile.medicalConditions) {
+      prompt += `- **Medical Conditions**: ${userProfile.medicalConditions}\n`
+    }
+
+    if (userProfile.injuries) {
+      prompt += `- **Injuries/Limitations**: ${userProfile.injuries}\n`
+    }
+  }
+
+  // Add latest measurements
+  if (latestMeasurements && latestMeasurements.weight) {
+    prompt += `\n## Current Body Metrics (as of ${latestMeasurements.measurementDate ? new Date(latestMeasurements.measurementDate).toLocaleDateString() : 'latest'})\n`
+    prompt += `- **Weight**: ${latestMeasurements.weight} kg\n`
+
+    if (latestMeasurements.bodyFatPercentage) {
+      prompt += `- **Body Fat**: ${latestMeasurements.bodyFatPercentage}%\n`
+    }
+
+    if (latestMeasurements.muscleMass) {
+      prompt += `- **Muscle Mass**: ${latestMeasurements.muscleMass} kg\n`
+    }
+
+    // Calculate BMI if we have height
+    if (userProfile?.heightCm && latestMeasurements.weight) {
+      const heightM = userProfile.heightCm / 100
+      const bmi = latestMeasurements.weight / (heightM * heightM)
+      prompt += `- **BMI**: ${bmi.toFixed(1)}\n`
+    }
+  }
 
   // Add user preferences if available
   if (preferences) {
@@ -172,12 +241,26 @@ function buildPrompt(request: AIGenerationRequest): string {
     }
   }
 
-  // Add workout history context
+  // Add workout history with exercise-specific weights
   if (workoutHistory && workoutHistory.length > 0) {
+    const exerciseStats = analyzeExerciseHistory(workoutHistory)
+
     prompt += `
-## Recent Workout History
-User has completed ${workoutHistory.length} workouts recently. Latest workouts show focus on: ${extractWorkoutPatterns(workoutHistory)}
+## Recent Workout History (Last 30 Days)
+User has completed ${workoutHistory.length} workout(s) in the past 30 days.
 `
+
+    if (exerciseStats.size > 0) {
+      prompt += `\n### Exercise Performance Data (Use these as baseline for recommendations):\n`
+      exerciseStats.forEach((stats, exerciseName) => {
+        prompt += `- **${exerciseName}**: Max weight ${stats.maxWeight} ${stats.weightUnit}, Average ${stats.avgWeight.toFixed(1)} ${stats.weightUnit} (${stats.totalSets} sets performed)\n`
+      })
+
+      prompt += `\n**IMPORTANT**: When prescribing weights for exercises the user has done before, use their historical data as a baseline. You can recommend:\n`
+      prompt += `- Same weight for maintenance or if focusing on form/endurance\n`
+      prompt += `- 5-10% more for progressive overload and strength gains\n`
+      prompt += `- Slightly less if increasing volume (sets/reps) significantly\n`
+    }
   }
 
   // Add user templates if available
@@ -245,12 +328,82 @@ Generate a safe and effective workout plan. Return ONLY the JSON object, no addi
 }
 
 /**
- * Extract workout patterns from history
+ * Calculate age from date of birth
  */
-function extractWorkoutPatterns(workouts: Workout[]): string {
-  const recentWorkouts = workouts.slice(0, 5)
-  const workoutNames = recentWorkouts.map(w => w.name).join(', ')
-  return workoutNames || 'varied training'
+function calculateAge(dateOfBirth: string): number {
+  const today = new Date()
+  const birthDate = new Date(dateOfBirth)
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+
+  return age
+}
+
+/**
+ * Analyze exercise history to extract performance data
+ */
+function analyzeExerciseHistory(workouts: Workout[]): Map<string, {
+  maxWeight: number
+  avgWeight: number
+  weightUnit: string
+  totalSets: number
+}> {
+  const exerciseMap = new Map<string, {
+    weights: number[]
+    weightUnit: string
+    sets: number
+  }>()
+
+  // Aggregate exercise data from all workouts
+  workouts.forEach(workout => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const workoutData = workout as any
+    if (workoutData.exercises && Array.isArray(workoutData.exercises)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      workoutData.exercises.forEach((exercise: any) => {
+        if (exercise.name && exercise.weight && exercise.weight > 0) {
+          const name = exercise.name.toLowerCase().trim()
+
+          if (!exerciseMap.has(name)) {
+            exerciseMap.set(name, {
+              weights: [],
+              weightUnit: exercise.weight_unit || 'kg',
+              sets: 0
+            })
+          }
+
+          const data = exerciseMap.get(name)!
+          data.weights.push(exercise.weight)
+          data.sets += exercise.sets || 1
+        }
+      })
+    }
+  })
+
+  // Calculate stats for each exercise
+  const stats = new Map<string, {
+    maxWeight: number
+    avgWeight: number
+    weightUnit: string
+    totalSets: number
+  }>()
+
+  exerciseMap.forEach((data, name) => {
+    if (data.weights.length > 0) {
+      stats.set(name, {
+        maxWeight: Math.max(...data.weights),
+        avgWeight: data.weights.reduce((a, b) => a + b, 0) / data.weights.length,
+        weightUnit: data.weightUnit,
+        totalSets: data.sets
+      })
+    }
+  })
+
+  return stats
 }
 
 /**

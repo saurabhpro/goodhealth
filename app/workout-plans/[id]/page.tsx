@@ -20,10 +20,22 @@ import {
   X,
   Clock,
   Target,
-  Dumbbell
+  Dumbbell,
+  Archive
 } from 'lucide-react'
 import type { WorkoutPlan, WorkoutPlanSession } from '@/types'
 import { SessionDetailModal } from '@/components/workout-plans/session-detail-modal'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -78,6 +90,49 @@ export default function WorkoutPlanPage() {
     } catch (error) {
       toast.error('Failed to load schedule')
     }
+  }
+
+  async function handleActivate() {
+    try {
+      const response = await fetch(`/api/workout-plans/${planId}/activate`, {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        toast.success('Plan activated successfully! Let\'s start your fitness journey! 💪')
+        fetchPlan() // Refresh to show updated status
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to activate plan')
+      }
+    } catch (error) {
+      toast.error('Failed to activate plan')
+    }
+  }
+
+  async function handleDeactivate() {
+    try {
+      const response = await fetch(`/api/workout-plans/${planId}/deactivate`, {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        toast.success('Plan archived successfully')
+        router.push('/workout-plans')
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to archive plan')
+      }
+    } catch (error) {
+      toast.error('Failed to archive plan')
+    }
+  }
+
+  function calculateEndDate(startDate: string, weeks: number): Date {
+    const start = new Date(startDate)
+    const end = new Date(start)
+    end.setDate(start.getDate() + (weeks * 7))
+    return end
   }
 
   function getSessionForDay(dayOfWeek: number): WorkoutPlanSession | null {
@@ -149,10 +204,41 @@ export default function WorkoutPlanPage() {
           </Link>
 
           <div className="flex items-start justify-between mb-4">
-            <div>
+            <div className="flex-1 mr-4">
               <h1 className="text-3xl font-bold mb-2">{plan.name}</h1>
               {plan.description && (
-                <p className="text-muted-foreground">{plan.description}</p>
+                <div className="text-muted-foreground prose prose-sm max-w-none">
+                  {plan.description.split('\n').map((line, i) => {
+                    // Handle bold sections like **Progression Strategy:**
+                    if (line.includes('**')) {
+                      const parts = line.split('**')
+                      return (
+                        <p key={i} className="mb-2">
+                          {parts.map((part, j) =>
+                            j % 2 === 1 ? (
+                              <strong key={j} className="font-semibold text-foreground">{part}</strong>
+                            ) : (
+                              <span key={j}>{part}</span>
+                            )
+                          )}
+                        </p>
+                      )
+                    }
+                    // Handle bullet points
+                    if (line.trim().startsWith('•')) {
+                      return (
+                        <li key={i} className="ml-4 mb-1">
+                          {line.trim().substring(1).trim()}
+                        </li>
+                      )
+                    }
+                    // Regular paragraphs
+                    if (line.trim()) {
+                      return <p key={i} className="mb-2">{line}</p>
+                    }
+                    return null
+                  })}
+                </div>
               )}
             </div>
             <div className="flex gap-2">
@@ -162,29 +248,100 @@ export default function WorkoutPlanPage() {
                   Progress
                 </Button>
               </Link>
-              <Button variant="outline" size="sm">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
+              {(plan.status === 'active' || plan.status === 'draft') && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Archive className="mr-2 h-4 w-4" />
+                      Archive
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Archive this plan?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will archive the plan and allow you to create a new one for the same goal.
+                        Your progress and workout history will be preserved.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeactivate}>
+                        Archive Plan
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           </div>
 
-          <div className="flex gap-4 flex-wrap">
-            <Badge variant="outline">
-              {plan.weeks_duration} {plan.weeks_duration === 1 ? 'week' : 'weeks'}
-            </Badge>
-            <Badge variant="outline">
-              {plan.workouts_per_week} workouts/week
-            </Badge>
-            <Badge
-              variant={
-                plan.status === 'active' ? 'default' :
-                plan.status === 'completed' ? 'secondary' :
-                'outline'
-              }
-            >
-              {plan.status}
-            </Badge>
+          <div className="space-y-3">
+            <div className="flex gap-4 flex-wrap">
+              <Badge variant="outline">
+                {plan.weeks_duration} {plan.weeks_duration === 1 ? 'week' : 'weeks'}
+              </Badge>
+              <Badge variant="outline">
+                {plan.workouts_per_week} workouts/week
+              </Badge>
+              <Badge
+                variant={
+                  plan.status === 'active' ? 'default' :
+                  plan.status === 'completed' ? 'secondary' :
+                  'outline'
+                }
+              >
+                {plan.status}
+              </Badge>
+            </div>
+
+            {/* Timeline - Show start and end dates for active plans */}
+            {plan.started_at && (plan.status === 'active' || plan.status === 'completed') && (
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Start:</span>
+                  <span className="font-medium">
+                    {new Date(plan.started_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">End:</span>
+                  <span className="font-medium">
+                    {calculateEndDate(plan.started_at, plan.weeks_duration).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Activate button for draft plans */}
+            {plan.status === 'draft' && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="w-full sm:w-auto" size="lg">
+                    <Play className="mr-2 h-5 w-5" />
+                    Start This Plan
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Ready to start your workout plan?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Activating this plan will set today as your start date. The plan will run for{' '}
+                      {plan.weeks_duration} weeks with {plan.workouts_per_week} workouts per week.
+                      You can track your progress and mark sessions as completed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Not Yet</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleActivate}>
+                      Let&apos;s Go! 💪
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
 

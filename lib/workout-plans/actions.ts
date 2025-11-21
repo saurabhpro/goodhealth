@@ -246,3 +246,91 @@ export async function completeWorkoutPlan(planId: string) {
   revalidatePath(`/workout-plans/${planId}`)
   return { success: true, plan }
 }
+
+/**
+ * Deactivate/Archive a workout plan
+ */
+export async function deactivateWorkoutPlan(planId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { data: plan, error } = await supabase
+    .from('workout_plans')
+    .update({
+      status: 'archived',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', planId)
+    .eq('user_id', user.id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error deactivating workout plan:', error)
+    return { error: `Failed to deactivate workout plan: ${error.message}` }
+  }
+
+  revalidatePath('/workout-plans')
+  revalidatePath(`/workout-plans/${planId}`)
+  revalidatePath('/dashboard')
+  return { success: true, plan }
+}
+
+/**
+ * Get current week's sessions for active workout plan
+ * Calculates the current week based on started_at date
+ */
+export async function getCurrentWeekSessions() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { sessions: [] }
+  }
+
+  // Find active plan
+  const { data: activePlan } = await supabase
+    .from('workout_plans')
+    .select('id, started_at, weeks_duration')
+    .eq('user_id', user.id)
+    .or('status.eq.active,status.eq.draft')
+    .single()
+
+  if (!activePlan) {
+    return { sessions: [] }
+  }
+
+  // Calculate current week (default to week 1 if not started)
+  let currentWeek = 1
+  if (activePlan.started_at) {
+    const startDate = new Date(activePlan.started_at)
+    const today = new Date()
+    const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    currentWeek = Math.min(Math.floor(daysSinceStart / 7) + 1, activePlan.weeks_duration)
+  }
+
+  // Fetch sessions for current week
+  const { data: sessions, error } = await supabase
+    .from('workout_plan_sessions')
+    .select('*')
+    .eq('plan_id', activePlan.id)
+    .eq('week_number', currentWeek)
+    .order('day_of_week', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching week sessions:', error)
+    return { sessions: [] }
+  }
+
+  return { sessions: sessions || [], currentWeek }
+}

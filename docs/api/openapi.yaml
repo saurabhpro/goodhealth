@@ -28,6 +28,8 @@ servers:
 tags:
   - name: Goals
     description: User fitness goals management
+  - name: Profile
+    description: User profile and personalization settings
   - name: Workout Plans
     description: AI-generated workout plan management
   - name: Workout Templates
@@ -591,6 +593,92 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /profile:
+    get:
+      tags:
+        - Profile
+      summary: Get user profile
+      description: Retrieves the authenticated user's profile including personalization fields
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags:
+        - Profile
+      summary: Update user profile
+      description: Updates user profile with personalization fields used for AI workout plan generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                  example: "John Doe"
+                date_of_birth:
+                  type: string
+                  format: date
+                  example: "1990-01-15"
+                  description: Used for age calculation (must be 13-120 years old)
+                gender:
+                  type: string
+                  enum: [male, female, other, prefer_not_to_say]
+                  example: "male"
+                height_cm:
+                  type: number
+                  format: float
+                  minimum: 50
+                  maximum: 300
+                  example: 175.5
+                  description: Height in centimeters (for BMI calculation)
+                fitness_level:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                  example: "intermediate"
+                fitness_goals:
+                  type: array
+                  items:
+                    type: string
+                  example: ["weight_loss", "muscle_gain"]
+                medical_conditions:
+                  type: string
+                  nullable: true
+                  example: "Asthma, controlled with medication"
+                  description: Medical conditions AI should consider for safety
+                injuries:
+                  type: string
+                  nullable: true
+                  example: "Previous right knee injury - avoid deep squats"
+                  description: Injuries to avoid aggravating during workouts
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /workout-templates:
     get:
       tags:
@@ -694,6 +782,70 @@ components:
           nullable: true
         achieved:
           type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: User ID (linked to auth.users)
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        full_name:
+          type: string
+          nullable: true
+          example: "John Doe"
+        avatar_url:
+          type: string
+          nullable: true
+          example: "https://example.com/avatar.jpg"
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          example: "1990-01-15"
+          description: Used for age-based recommendations
+        gender:
+          type: string
+          enum: [male, female, other, prefer_not_to_say]
+          nullable: true
+          example: "male"
+        height_cm:
+          type: number
+          format: float
+          nullable: true
+          example: 175.5
+          description: Height in centimeters for BMI calculation
+        fitness_level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          nullable: true
+          example: "intermediate"
+        fitness_goals:
+          type: array
+          items:
+            type: string
+          nullable: true
+          example: ["weight_loss", "muscle_gain"]
+        medical_conditions:
+          type: string
+          nullable: true
+          example: "Asthma, controlled with medication"
+          description: Medical conditions for AI safety considerations
+        injuries:
+          type: string
+          nullable: true
+          example: "Previous right knee injury"
+          description: Past or current injuries to avoid aggravating
         created_at:
           type: string
           format: date-time
