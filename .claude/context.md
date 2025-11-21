@@ -645,10 +645,13 @@ See `DEPLOYMENT.md` for complete deployment guide.
 6. Add comments for complex logic only
 
 ### Testing Requirements
-1. Write unit tests for new business logic
-2. Ensure all tests pass before committing
-3. Update existing tests when modifying functionality
-4. Run `npm test` to verify all tests pass
+1. **Write unit tests for new business logic** - Every new feature must have tests
+2. **Add tests for new components** - UI components should have basic rendering tests
+3. **Test new utility functions** - All helper/utility functions must be tested
+4. **Ensure all tests pass before committing** - Zero tolerance for failing tests
+5. **Update existing tests when modifying functionality** - Keep tests in sync with code
+6. **Run `npm test` to verify all tests pass** - Before every commit
+7. **Maintain or improve test coverage** - Don't reduce overall test coverage percentage
 
 ### API & Documentation
 1. Update OpenAPI spec when adding/modifying API endpoints
