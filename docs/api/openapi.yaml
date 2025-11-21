@@ -10,7 +10,7 @@ info:
 
     ## Base URL
     - Development: `http://localhost:3000/api`
-    - Production: `https://your-domain.com/api`
+    - Production: `https://goodhealth-three.vercel.app/api`
 
   version: 1.0.0
   contact:
@@ -22,7 +22,7 @@ info:
 servers:
   - url: http://localhost:3000/api
     description: Development server
-  - url: https://your-domain.com/api
+  - url: https://goodhealth-three.vercel.app/api
     description: Production server
 
 tags:

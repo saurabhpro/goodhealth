@@ -46,7 +46,7 @@ Authorization: Bearer <your-supabase-session-token>
 
 ### Base URLs
 - **Development**: `http://localhost:3000/api`
-- **Production**: `https://your-domain.com/api`
+- **Production**: `https://goodhealth-three.vercel.app/api`
 
 ### Key Endpoints
 
