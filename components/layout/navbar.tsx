@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUser } from '@/lib/auth/hooks'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { AccentThemeSelector } from '@/components/accent-theme-selector'
 import { Menu, Dumbbell, Activity, CalendarDays, Ruler, TrendingUp, Target } from 'lucide-react'
 
 export function Navbar() {
@@ -92,9 +93,10 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Right side: Theme Toggle, User Menu, Mobile Menu */}
+          {/* Right side: Theme Toggle, Accent Theme, User Menu, Mobile Menu */}
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <AccentThemeSelector />
 
             {loading || signingOut ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />

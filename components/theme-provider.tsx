@@ -3,11 +3,14 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 
 type Theme = 'light' | 'dark' | 'system'
+type AccentTheme = 'default' | 'blue' | 'gray'
 
 interface ThemeContextType {
   theme: Theme
   setTheme: (theme: Theme) => void
   resolvedTheme: 'light' | 'dark'
+  accentTheme: AccentTheme
+  setAccentTheme: (accent: AccentTheme) => void
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
@@ -31,6 +34,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return stored || 'system'
   })
 
+  // Initialize accent theme from localStorage or default to 'default'
+  const [accentTheme, setAccentThemeState] = useState<AccentTheme>(() => {
+    if (!isClient) return 'default'
+    const stored = globalThis.localStorage.getItem('accentTheme') as AccentTheme | null
+    return stored || 'default'
+  })
+
   // Calculate resolved theme
   const resolvedTheme: 'light' | 'dark' = useMemo(() => {
     if (!isClient) return 'light'
@@ -40,7 +50,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return theme
   }, [theme, isClient])
 
-  // Apply theme to document
+  // Apply theme and accent to document
   useEffect(() => {
     if (!isClient) return
 
@@ -48,15 +58,24 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.classList.remove('light', 'dark')
     root.classList.add(resolvedTheme)
 
-    // Update meta theme-color
+    // Apply accent theme
+    root.classList.remove('accent-blue', 'accent-gray')
+    if (accentTheme !== 'default') {
+      root.classList.add(`accent-${accentTheme}`)
+    }
+
+    // Update meta theme-color based on accent
     const metaThemeColor = globalThis.document.querySelector('meta[name="theme-color"]')
     if (metaThemeColor) {
-      metaThemeColor.setAttribute(
-        'content',
-        resolvedTheme === 'dark' ? '#000000' : '#ffffff'
-      )
+      let color = resolvedTheme === 'dark' ? '#000000' : '#ffffff'
+      if (accentTheme === 'blue') {
+        color = resolvedTheme === 'dark' ? '#1a1f2e' : '#f5f7ff'
+      } else if (accentTheme === 'gray') {
+        color = resolvedTheme === 'dark' ? '#1c1d20' : '#f7f8f9'
+      }
+      metaThemeColor.setAttribute('content', color)
     }
-  }, [resolvedTheme, isClient])
+  }, [resolvedTheme, accentTheme, isClient])
 
   // Listen for system theme changes
   useEffect(() => {
@@ -80,9 +99,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
   }
 
+  const setAccentTheme = (newAccent: AccentTheme) => {
+    setAccentThemeState(newAccent)
+    if (globalThis.localStorage !== undefined) {
+      globalThis.localStorage.setItem('accentTheme', newAccent)
+    }
+  }
+
   const value = useMemo(
-    () => ({ theme, setTheme, resolvedTheme }),
-    [theme, resolvedTheme]
+    () => ({ theme, setTheme, resolvedTheme, accentTheme, setAccentTheme }),
+    [theme, resolvedTheme, accentTheme]
   )
 
   return (
