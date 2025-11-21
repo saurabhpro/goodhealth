@@ -14,7 +14,9 @@ import {
   Dumbbell,
   BarChart3,
   Trash2,
-  Play
+  Play,
+  Settings,
+  BookTemplate
 } from 'lucide-react'
 import type { WorkoutPlan } from '@/types'
 
@@ -104,6 +106,33 @@ export default function WorkoutPlansPage() {
             Create Plan
           </Button>
         </Link>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/workout-plans/preferences')}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Workout Preferences
+            </CardTitle>
+            <CardDescription>
+              Customize your workout experience and set your fitness goals
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/workout-plans/templates')}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookTemplate className="h-5 w-5" />
+              My Templates
+            </CardTitle>
+            <CardDescription>
+              Create and manage your custom workout templates
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </div>
 
       {plans.length === 0 ? (
