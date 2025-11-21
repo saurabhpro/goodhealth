@@ -77,7 +77,7 @@ export async function processWorkoutPlanJob(jobId: string) {
       .from('body_measurements')
       .select('*')
       .eq('user_id', userId)
-      .order('measurement_date', { ascending: false })
+      .order('measured_at', { ascending: false })
       .limit(1)
       .single()
 
@@ -106,8 +106,8 @@ export async function processWorkoutPlanJob(jobId: string) {
       .eq('user_id', userId)
       .eq('is_active', true)
 
-    // Generate workout plan with AI
-    const result = await generateWorkoutPlanWithAI({
+    // Build AI request with all personalization data
+    const aiRequest = {
       goal: goal as Goal,
       preferences: preferences as UserWorkoutPreferences | undefined,
       workoutHistory: (workoutHistory as Workout[]) || [],
@@ -124,14 +124,17 @@ export async function processWorkoutPlanJob(jobId: string) {
         weight: latestMeasurement.weight,
         bodyFatPercentage: latestMeasurement.body_fat_percentage,
         muscleMass: latestMeasurement.muscle_mass,
-        measurementDate: latestMeasurement.measurement_date,
+        measurementDate: latestMeasurement.measured_at,
       } : undefined,
       planConfig: {
         weeksCount: requestData.weeksDuration,
         workoutsPerWeek: requestData.workoutsPerWeek,
         avgDuration: requestData.avgDuration || 60,
       },
-    })
+    }
+
+    // Generate workout plan with AI
+    const result = await generateWorkoutPlanWithAI(aiRequest)
 
     if (!result.success || !result.plan) {
       await supabase
@@ -203,12 +206,14 @@ export async function processWorkoutPlanJob(jobId: string) {
       // Note: Plan is already created, so we mark as completed with a warning
     }
 
-    // Mark job as completed
+    // Mark job as completed with AI request/response for debugging
     await supabase
       .from('workout_plan_generation_jobs')
       .update({
         status: 'completed',
-        plan_id: workoutPlan.id
+        plan_id: workoutPlan.id,
+        ai_request_data: aiRequest,
+        ai_response_data: result.plan
       })
       .eq('id', jobId)
 
