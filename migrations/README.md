@@ -40,6 +40,19 @@ Run these migrations in order in the Supabase SQL Editor:
 
 **Run after:** 002_add_effort_level.sql
 
+### 10. Add User Workout Preferences (`010_add_user_workout_preferences.sql`)
+**Purpose:** Adds user workout preferences and custom templates for personalized planning
+- ✅ Creates `user_workout_preferences` table (exercise preferences, equipment, scheduling)
+- ✅ Creates `user_workout_templates` table (user-created custom templates)
+- ✅ Adds gym locations support (integrates with issue #17)
+- ✅ Sets up RLS policies for both tables
+- ✅ Creates indexes for query performance
+- ✅ Adds triggers for updated_at timestamps
+
+**Run after:** 009_add_public_workout_templates.sql
+
+**Related to:** Issue #43 (AI-powered personalized workout planner), Issue #17 (Gym location management)
+
 ---
 
 ## How to Run Migrations
@@ -78,6 +91,10 @@ Go to **Table Editor** and verify:
 - ✅ exercises
 - ✅ workout_templates
 - ✅ goals
+- ✅ workout_plans
+- ✅ workout_plan_sessions
+- ✅ user_workout_preferences
+- ✅ user_workout_templates
 
 ### Check RLS Policies
 Go to **Authentication** → **Policies** and verify policies exist for all tables.
@@ -163,9 +180,9 @@ ALTER TABLE exercises DROP COLUMN IF EXISTS duration_minutes;
 
 ## Current Schema Version
 
-**Latest Migration:** `009_add_public_workout_templates.sql`
+**Latest Migration:** `010_add_user_workout_preferences.sql`
 
-**Schema Version:** 1.9.0
+**Schema Version:** 1.10.0
 
 **Last Updated:** January 21, 2025
 
