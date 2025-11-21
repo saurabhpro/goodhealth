@@ -180,11 +180,16 @@ ALTER TABLE exercises DROP COLUMN IF EXISTS duration_minutes;
 
 ## Current Schema Version
 
-**Latest Migration:** `010_add_user_workout_preferences.sql`
+**Latest Migration:** `013_add_raw_response_to_jobs.sql`
 
-**Schema Version:** 1.10.0
+**Schema Version:** 1.13.0
 
 **Last Updated:** January 21, 2025
+
+### Recent Migrations (PR #48):
+- 011_add_workout_plan_jobs.sql - Async AI job processing
+- 012_add_user_profile_fields.sql - Profile personalization (age, gender, height, etc.)
+- 013_add_raw_response_to_jobs.sql - AI request/response debugging data
 
 ---
 
