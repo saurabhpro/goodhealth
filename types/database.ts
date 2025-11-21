@@ -671,32 +671,62 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          difficulty_level: string | null
+          equipment_needed: string[] | null
+          estimated_duration: number | null
           exercises: Json
           id: string
+          intensity_level: string | null
+          is_active: boolean | null
           is_public: boolean
+          last_used_at: string | null
           name: string
+          tags: string[] | null
+          target_muscle_groups: string[] | null
+          times_used: number | null
           updated_at: string
           user_id: string | null
+          workout_type: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
+          difficulty_level?: string | null
+          equipment_needed?: string[] | null
+          estimated_duration?: number | null
           exercises?: Json
           id?: string
+          intensity_level?: string | null
+          is_active?: boolean | null
           is_public?: boolean
+          last_used_at?: string | null
           name: string
+          tags?: string[] | null
+          target_muscle_groups?: string[] | null
+          times_used?: number | null
           updated_at?: string
           user_id?: string | null
+          workout_type?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
+          difficulty_level?: string | null
+          equipment_needed?: string[] | null
+          estimated_duration?: number | null
           exercises?: Json
           id?: string
+          intensity_level?: string | null
+          is_active?: boolean | null
           is_public?: boolean
+          last_used_at?: string | null
           name?: string
+          tags?: string[] | null
+          target_muscle_groups?: string[] | null
+          times_used?: number | null
           updated_at?: string
           user_id?: string | null
+          workout_type?: string | null
         }
         Relationships: []
       }
