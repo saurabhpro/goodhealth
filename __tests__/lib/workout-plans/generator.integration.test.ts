@@ -117,19 +117,21 @@ describe('Workout Plan Generator - Integration', () => {
       error: null,
     })
 
-    // Mock goal fetch
-    const goalSelect = jest.fn().mockReturnThis()
-    goalSelect.eq = jest.fn().mockReturnThis()
-    goalSelect.single = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
+    // Mock goal fetch with two .eq() calls
+    const goalSingle = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
+    const goalEq2 = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
+    const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
 
     // Mock templates fetch
     const templateSelect = jest.fn().mockReturnThis()
-    templateSelect.eq = jest.fn().mockResolvedValue({ data: mockTemplates, error: null })
+    templateSelect.or = jest.fn().mockResolvedValue({ data: mockTemplates, error: null })
 
     // Mock workouts fetch
     const workoutSelect = jest.fn().mockReturnThis()
     workoutSelect.eq = jest.fn().mockReturnThis()
-    workoutSelect.gte = jest.fn().mockResolvedValue({ data: [], error: null })
+    workoutSelect.order = jest.fn().mockReturnThis()
+    workoutSelect.limit = jest.fn().mockResolvedValue({ data: [], error: null })
 
     // Mock plan insert
     const planInsert = jest.fn().mockReturnThis()
@@ -224,12 +226,13 @@ describe('Workout Plan Generator - Integration', () => {
       error: null,
     })
 
-    const goalSelect = jest.fn().mockReturnThis()
-    goalSelect.eq = jest.fn().mockReturnThis()
-    goalSelect.single = jest.fn().mockResolvedValue({
+    const goalSingle = jest.fn().mockResolvedValue({
       data: null,
       error: { message: 'Goal not found' },
     })
+    const goalEq2 = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
+    const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
 
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'goals') {
@@ -253,12 +256,18 @@ describe('Workout Plan Generator - Integration', () => {
       error: null,
     })
 
-    const goalSelect = jest.fn().mockReturnThis()
-    goalSelect.eq = jest.fn().mockReturnThis()
-    goalSelect.single = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
+    const goalSingle = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
+    const goalEq2 = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
+    const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
 
     const templateSelect = jest.fn().mockReturnThis()
-    templateSelect.eq = jest.fn().mockResolvedValue({ data: [], error: null })
+    templateSelect.or = jest.fn().mockResolvedValue({ data: [], error: null })
+
+    const workoutSelect = jest.fn().mockReturnThis()
+    workoutSelect.eq = jest.fn().mockReturnThis()
+    workoutSelect.order = jest.fn().mockReturnThis()
+    workoutSelect.limit = jest.fn().mockResolvedValue({ data: [], error: null })
 
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'goals') {
@@ -266,6 +275,9 @@ describe('Workout Plan Generator - Integration', () => {
       }
       if (table === 'workout_templates') {
         return { select: templateSelect }
+      }
+      if (table === 'workouts') {
+        return { select: workoutSelect }
       }
       return { select: jest.fn().mockReturnThis() }
     })
@@ -306,16 +318,18 @@ describe('Workout Plan Generator - Integration', () => {
       error: null,
     })
 
-    const goalSelect = jest.fn().mockReturnThis()
-    goalSelect.eq = jest.fn().mockReturnThis()
-    goalSelect.single = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
+    const goalSingle = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
+    const goalEq2 = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
+    const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
 
     const templateSelect = jest.fn().mockReturnThis()
-    templateSelect.eq = jest.fn().mockResolvedValue({ data: mockTemplates, error: null })
+    templateSelect.or = jest.fn().mockResolvedValue({ data: mockTemplates, error: null })
 
     const workoutSelect = jest.fn().mockReturnThis()
     workoutSelect.eq = jest.fn().mockReturnThis()
-    workoutSelect.gte = jest.fn().mockResolvedValue({ data: [], error: null })
+    workoutSelect.order = jest.fn().mockReturnThis()
+    workoutSelect.limit = jest.fn().mockResolvedValue({ data: [], error: null })
 
     const planInsert = jest.fn().mockReturnThis()
     planInsert.select = jest.fn().mockReturnThis()
@@ -333,15 +347,14 @@ describe('Workout Plan Generator - Integration', () => {
       error: null,
     })
 
-    const sessionsInsert = jest.fn().mockReturnThis()
-    sessionsInsert.select = jest.fn().mockResolvedValue({ data: [], error: null })
+    const sessionsInsert = jest.fn().mockResolvedValue({ data: null, error: null })
 
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'goals') return { select: goalSelect }
       if (table === 'workout_templates') return { select: templateSelect }
       if (table === 'workouts') return { select: workoutSelect }
       if (table === 'workout_plans') return { insert: planInsert }
-      if (table === 'workout_plan_sessions') return { insert: sessionsInsert, select: jest.fn().mockReturnThis() }
+      if (table === 'workout_plan_sessions') return { insert: sessionsInsert }
       return { select: jest.fn().mockReturnThis() }
     })
 

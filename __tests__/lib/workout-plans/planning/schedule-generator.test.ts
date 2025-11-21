@@ -91,7 +91,7 @@ describe('Schedule Generator', () => {
         createMockTemplate('t3', 'strength'),
       ]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 4)
+      const plan = generateMultiWeekPlan(4, goalAnalysis, templates)
 
       expect(plan).toHaveLength(4)
       expect(plan[0].week).toBe(1)
@@ -107,7 +107,7 @@ describe('Schedule Generator', () => {
         createMockTemplate('t4', 'cardio'),
       ]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 2)
+      const plan = generateMultiWeekPlan(2, goalAnalysis, templates)
 
       for (const week of plan) {
         const workoutSessions = week.sessions.filter(s => s.workout_type !== 'rest')
@@ -122,7 +122,7 @@ describe('Schedule Generator', () => {
         createMockTemplate('t2', 'strength'),
       ]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 1)
+      const plan = generateMultiWeekPlan(1, goalAnalysis, templates)
 
       // Should have 7 days (4 workout + 3 rest)
       expect(plan[0].sessions).toHaveLength(7)
@@ -139,7 +139,7 @@ describe('Schedule Generator', () => {
         createMockTemplate('t3', 'strength'),
       ]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 1)
+      const plan = generateMultiWeekPlan(1, goalAnalysis, templates)
 
       const daysOfWeek = plan[0].sessions.map(s => s.day_of_week)
       const uniqueDays = new Set(daysOfWeek)
@@ -156,7 +156,7 @@ describe('Schedule Generator', () => {
         createMockTemplate('t4', 'cardio'),
       ]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 1)
+      const plan = generateMultiWeekPlan(1, goalAnalysis, templates)
 
       const workoutSessions = plan[0].sessions.filter(s => s.workout_type !== 'rest')
       const templateIds = workoutSessions.map(s => s.workout_template_id)
@@ -170,7 +170,7 @@ describe('Schedule Generator', () => {
       const goalAnalysis = createMockGoalAnalysis(4)
       const templates = [createMockTemplate('t1', 'strength')]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 1)
+      const plan = generateMultiWeekPlan(1, goalAnalysis, templates)
 
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -183,7 +183,7 @@ describe('Schedule Generator', () => {
       const goalAnalysis = createMockGoalAnalysis(5)
       const templates = [createMockTemplate('t1', 'strength')]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 2)
+      const plan = generateMultiWeekPlan(2, goalAnalysis, templates)
 
       expect(plan).toHaveLength(2)
 
@@ -197,7 +197,7 @@ describe('Schedule Generator', () => {
       const goalAnalysis = createMockGoalAnalysis(4)
       const templates = [createMockTemplate('t1', 'strength')]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 5)
+      const plan = generateMultiWeekPlan(5, goalAnalysis, templates)
 
       for (let i = 0; i < plan.length; i++) {
         expect(plan[i].week).toBe(i + 1)
@@ -216,7 +216,7 @@ describe('Schedule Generator', () => {
         createMockTemplate('t2', 'cardio'),
       ]
 
-      const plan = generateMultiWeekPlan(goalAnalysis, templates, 1)
+      const plan = generateMultiWeekPlan(1, goalAnalysis, templates)
 
       expect(plan[0].estimatedWeeklyVolume).toBeGreaterThan(0)
     })
