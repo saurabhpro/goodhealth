@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,9 +31,13 @@ interface Exercise {
   incline?: string
 }
 
-export default function NewWorkoutPage() {
+function NewWorkoutForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const sessionId = searchParams.get('sessionId')
+
   const [loading, setLoading] = useState(false)
+  const [loadingTemplate, setLoadingTemplate] = useState(!!sessionId)
   const [error, setError] = useState<string | null>(null)
   const [effortLevel, setEffortLevel] = useState(3) // Default to Moderate
   const [exercises, setExercises] = useState<Exercise[]>([
@@ -41,6 +45,91 @@ export default function NewWorkoutPage() {
   ])
   const [createdWorkoutId, setCreatedWorkoutId] = useState<string | null>(null)
   const [showSelfieUpload, setShowSelfieUpload] = useState(false)
+  const [sessionDetails, setSessionDetails] = useState<{
+    session: { workout_name?: string; [key: string]: unknown };
+    template: { [key: string]: unknown } | null
+  } | null>(null)
+  const [defaultWorkoutName, setDefaultWorkoutName] = useState('')
+
+  // Fetch session details and pre-populate exercises if sessionId is present
+  useEffect(() => {
+    if (!sessionId) {
+      console.log('No sessionId found in URL')
+      return
+    }
+
+    console.log('Fetching session details for sessionId:', sessionId)
+
+    const fetchSessionDetails = async () => {
+      try {
+        setLoadingTemplate(true)
+        const url = `/api/workout-plans/sessions/${sessionId}/details`
+        console.log('Fetching from:', url)
+        const response = await fetch(url)
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch session details')
+        }
+
+        const data = await response.json()
+        console.log('Session details received:', data)
+        setSessionDetails(data)
+
+        // Set default workout name from session
+        if (data.session?.workout_name) {
+          console.log('Setting workout name:', data.session.workout_name)
+          setDefaultWorkoutName(data.session.workout_name)
+        }
+
+        // Pre-populate exercises from template
+        if (data.exercises && data.exercises.length > 0) {
+          console.log('Pre-populating exercises:', data.exercises)
+          const mappedExercises = data.exercises.map((ex: {
+            name?: string;
+            type?: string;
+            sets?: number;
+            reps?: number;
+            weight?: number;
+            duration?: number;
+            distance?: number;
+            speed?: number;
+            calories?: number;
+            resistance?: number;
+            incline?: number;
+          }) => ({
+            name: ex.name || '',
+            type: ex.type || 'strength',
+            sets: ex.sets?.toString() || '',
+            reps: ex.reps?.toString() || '',
+            weight: ex.weight?.toString() || '',
+            duration: ex.duration?.toString() || '',
+            distance: ex.distance?.toString() || '',
+            speed: ex.speed?.toString() || '',
+            calories: ex.calories?.toString() || '',
+            resistance: ex.resistance?.toString() || '',
+            incline: ex.incline?.toString() || '',
+          }))
+          console.log('Mapped exercises:', mappedExercises)
+          setExercises(mappedExercises)
+
+          toast.success('Workout template loaded!', {
+            description: `${mappedExercises.length} exercises pre-filled from your plan`
+          })
+        } else {
+          console.log('No exercises found in session data')
+        }
+      } catch (err) {
+        console.error('Error fetching session details:', err)
+        toast.error('Failed to load workout template', {
+          description: 'You can still create the workout manually'
+        })
+      } finally {
+        setLoadingTemplate(false)
+      }
+    }
+
+    fetchSessionDetails()
+  }, [sessionId])
 
   const addExercise = () => {
     setExercises([...exercises, { name: '', type: 'strength', sets: '', reps: '', weight: '' }])
@@ -121,6 +210,11 @@ export default function NewWorkoutPage() {
     // Add effort level
     formData.append('effort_level', effortLevel.toString())
 
+    // Add session ID if present
+    if (sessionId) {
+      formData.append('session_id', sessionId)
+    }
+
     const result = await createWorkout(formData)
 
     setLoading(false)
@@ -189,9 +283,17 @@ export default function NewWorkoutPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Log New Workout</h1>
         <p className="text-muted-foreground">
-          Record your workout session and track your progress
+          {sessionId && sessionDetails
+            ? `Recording workout from your plan: ${sessionDetails.session.workout_name}`
+            : 'Record your workout session and track your progress'}
         </p>
       </div>
+
+      {loadingTemplate && (
+        <div className="mb-6 rounded-md bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800">
+          Loading workout template...
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         {error && (
@@ -211,6 +313,7 @@ export default function NewWorkoutPage() {
                 id="name"
                 name="name"
                 placeholder="e.g., Upper Body Strength"
+                defaultValue={defaultWorkoutName}
                 required
                 disabled={loading}
               />
@@ -462,5 +565,13 @@ export default function NewWorkoutPage() {
         </div>
       </form>
     </div>
+  )
+}
+
+export default function NewWorkoutPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}>
+      <NewWorkoutForm />
+    </Suspense>
   )
 }

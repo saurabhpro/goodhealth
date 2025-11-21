@@ -38,6 +38,7 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920], // Common device widths
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384], // Icon and thumbnail sizes
     minimumCacheTTL: 3600, // Cache optimized images for 1 hour
+    qualities: [75, 80], // Add quality 80 to fix warning
   },
 };
 

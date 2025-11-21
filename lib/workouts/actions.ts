@@ -37,6 +37,7 @@ export async function createWorkout(formData: FormData) {
   const description = formData.get('description') as string
   const effortLevel = formData.get('effort_level') as string
   const exercisesJson = formData.get('exercises') as string
+  const sessionId = formData.get('session_id') as string | null
 
   // Parse exercises
   let exercises = []
@@ -100,6 +101,23 @@ export async function createWorkout(formData: FormData) {
     }
   }
 
+  // If this workout is linked to a plan session, update the session
+  if (sessionId) {
+    const { error: sessionUpdateError } = await supabase
+      .from('workout_plan_sessions')
+      .update({
+        status: 'completed',
+        completed_workout_id: workout.id,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', sessionId)
+
+    if (sessionUpdateError) {
+      console.error('Failed to update session status:', sessionUpdateError)
+      // Don't fail the whole operation, just log the error
+    }
+  }
+
   // Sync goal progress (workouts, minutes, days)
   await syncGoalProgress(user.id)
 
@@ -107,6 +125,9 @@ export async function createWorkout(formData: FormData) {
   revalidatePath('/workouts')
   revalidatePath('/goals')
   revalidatePath('/progress')
+  if (sessionId) {
+    revalidatePath('/workout-plans')
+  }
 
   return { success: true, workoutId: workout.id }
 }

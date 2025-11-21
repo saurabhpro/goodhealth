@@ -163,11 +163,11 @@ ALTER TABLE exercises DROP COLUMN IF EXISTS duration_minutes;
 
 ## Current Schema Version
 
-**Latest Migration:** `003_add_exercise_types.sql`
+**Latest Migration:** `009_add_public_workout_templates.sql`
 
-**Schema Version:** 1.3.0
+**Schema Version:** 1.9.0
 
-**Last Updated:** November 16, 2024
+**Last Updated:** January 21, 2025
 
 ---
 
