@@ -25,6 +25,7 @@ export function Navbar() {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Workouts', href: '/workouts' },
+    { name: 'Workout Plans', href: '/workout-plans' },
     { name: 'Measurements', href: '/measurements' },
     { name: 'Progress', href: '/progress' },
     { name: 'Goals', href: '/goals' },
