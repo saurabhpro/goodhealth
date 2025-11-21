@@ -107,6 +107,8 @@ export async function getMeasurements(limit?: number) {
     .from('body_measurements')
     .select('*')
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('measured_at', { ascending: false })
 
   if (limit) {
@@ -138,6 +140,8 @@ export async function getLatestMeasurement() {
     .from('body_measurements')
     .select('*')
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('measured_at', { ascending: false })
     .limit(1)
     .single()

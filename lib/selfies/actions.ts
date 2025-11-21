@@ -55,6 +55,8 @@ export async function uploadWorkoutSelfie(
     .select('id')
     .eq('id', workoutId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (workoutError || !workout) {
@@ -67,6 +69,8 @@ export async function uploadWorkoutSelfie(
     .select('id, file_path')
     .eq('workout_id', workoutId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
 
   if (checkError) {
     console.error('Error checking existing selfies:', checkError)
@@ -156,6 +160,8 @@ export async function getWorkoutSelfies(workoutId: string) {
     .select('*')
     .eq('workout_id', workoutId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('taken_at', { ascending: false })
     .limit(1) // Only get the most recent one
 
@@ -215,6 +221,8 @@ export async function deleteWorkoutSelfie(selfieId: string) {
     .select('file_path, workout_id')
     .eq('id', selfieId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (fetchError || !selfie) {
@@ -297,6 +305,8 @@ export async function getRecentSelfies(limit: number = 10) {
       )
     `)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('taken_at', { ascending: false })
     .limit(limit)
 

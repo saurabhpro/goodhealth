@@ -159,6 +159,8 @@ export async function getWorkouts() {
       )
     `)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('date', { ascending: false })
 
   if (error) {
@@ -341,6 +343,8 @@ export async function deleteExercise(exerciseId: string, workoutId: string) {
     .select('id')
     .eq('id', workoutId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (workoutError || !workout) {

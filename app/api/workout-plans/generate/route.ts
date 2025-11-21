@@ -29,19 +29,22 @@ export async function POST(request: NextRequest) {
       .select('id, title')
       .eq('id', goalId)
       .eq('user_id', user.id)
+      // Exclude soft-deleted records
+      .is('deleted_at', null)
       .single()
 
     if (goalError || !goal) {
       return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
     }
 
-    // Check for existing active or draft plans for this goal
+    // Check for existing active or draft plans for this goal (exclude soft-deleted)
     const { data: existingPlans } = await supabase
       .from('workout_plans')
       .select('id, status, name')
       .eq('user_id', user.id)
       .eq('goal_id', goalId)
       .in('status', ['active', 'draft'])
+      .is('deleted_at', null) // Exclude soft-deleted plans
 
     if (existingPlans && existingPlans.length > 0) {
       const existingPlan = existingPlans[0]

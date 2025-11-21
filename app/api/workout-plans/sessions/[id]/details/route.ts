@@ -29,6 +29,8 @@ export async function GET(
       plan:workout_plans(*)
     `)
     .eq('id', sessionId)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (sessionError || !session) {
@@ -54,6 +56,8 @@ export async function GET(
       .from('workout_templates')
       .select('*')
       .eq('id', session.workout_template_id)
+      // Exclude soft-deleted records
+      .is('deleted_at', null)
       .single()
 
     if (templateError) {

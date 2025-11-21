@@ -164,6 +164,8 @@ export async function getUserTemplates(options?: {
     .from('workout_templates')
     .select('*')
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   // Apply filters
@@ -208,6 +210,8 @@ export async function getUserTemplate(
     .select('*')
     .eq('id', templateId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (error) {
@@ -352,6 +356,8 @@ export async function incrementTemplateUsage(templateId: string): Promise<{
     .select('times_used')
     .eq('id', templateId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (fetchError) {

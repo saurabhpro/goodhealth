@@ -55,6 +55,7 @@ export async function getWorkoutPlans() {
     .from('workout_plans')
     .select('*, goals(*)')
     .eq('user_id', user.id)
+    .is('deleted_at', null) // Exclude soft-deleted plans
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -88,6 +89,8 @@ export async function getWorkoutPlan(planId: string) {
     `)
     .eq('id', planId)
     .eq('user_id', user.id)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (error) {
@@ -184,6 +187,8 @@ export async function activateWorkoutPlan(planId: string) {
     .select('id')
     .eq('user_id', user.id)
     .eq('status', 'active')
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
 
   if (activePlans && activePlans.length > 0) {
     return {
@@ -306,6 +311,8 @@ export async function getCurrentWeekSessions() {
     .select('id, started_at, weeks_duration')
     .eq('user_id', user.id)
     .or('status.eq.active,status.eq.draft')
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .single()
 
   if (!activePlan) {
@@ -327,6 +334,8 @@ export async function getCurrentWeekSessions() {
     .select('*')
     .eq('plan_id', activePlan.id)
     .eq('week_number', currentWeek)
+    // Exclude soft-deleted records
+    .is('deleted_at', null)
     .order('day_of_week', { ascending: true })
 
   if (error) {

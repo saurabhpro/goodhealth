@@ -21,6 +21,8 @@ export async function GET() {
       .select('id, started_at, weeks_duration')
       .eq('user_id', user.id)
       .or('status.eq.active,status.eq.draft')
+      // Exclude soft-deleted records
+      .is('deleted_at', null)
       .single()
 
     if (!activePlan) {
@@ -42,6 +44,8 @@ export async function GET() {
       .select('*')
       .eq('plan_id', activePlan.id)
       .eq('week_number', currentWeek)
+      // Exclude soft-deleted records
+      .is('deleted_at', null)
       .order('day_of_week', { ascending: true })
 
     if (error) {
