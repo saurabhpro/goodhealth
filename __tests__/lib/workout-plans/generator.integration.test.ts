@@ -154,20 +154,19 @@ describe('Workout Plan Generator - Integration', () => {
     const planInsert = jest.fn().mockReturnValue({ select: planSelect })
 
     // Mock sessions insert
-    const sessionsInsert = jest.fn().mockReturnThis()
-    sessionsInsert.select = jest.fn().mockResolvedValue({
-      data: [],
+    const sessionsInsert = jest.fn().mockResolvedValue({
+      data: null,
       error: null,
     })
 
-    // Mock sessions fetch
-    const sessionsSelect = jest.fn().mockReturnThis()
-    sessionsSelect.eq = jest.fn().mockReturnThis()
-    sessionsSelect.order = jest.fn().mockReturnThis()
-    sessionsSelect.order = jest.fn().mockResolvedValue({
+    // Mock sessions fetch with .select().eq().order().order()
+    const sessionsOrder2 = jest.fn().mockResolvedValue({
       data: [],
       error: null,
     })
+    const sessionsOrder1 = jest.fn().mockReturnValue({ order: sessionsOrder2 })
+    const sessionsEq = jest.fn().mockReturnValue({ order: sessionsOrder1 })
+    const sessionsSelect = jest.fn().mockReturnValue({ eq: sessionsEq })
 
     // Set up from() mock to return appropriate objects
     mockSupabase.from.mockImplementation((table: string) => {
@@ -349,12 +348,24 @@ describe('Workout Plan Generator - Integration', () => {
 
     const sessionsInsert = jest.fn().mockResolvedValue({ data: null, error: null })
 
+    // Mock sessions fetch with .select().eq().order().order()
+    const sessionsOrder2 = jest.fn().mockResolvedValue({
+      data: [],
+      error: null,
+    })
+    const sessionsOrder1 = jest.fn().mockReturnValue({ order: sessionsOrder2 })
+    const sessionsEq = jest.fn().mockReturnValue({ order: sessionsOrder1 })
+    const sessionsSelect = jest.fn().mockReturnValue({ eq: sessionsEq })
+
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'goals') return { select: goalSelect }
       if (table === 'workout_templates') return { select: templateSelect }
       if (table === 'workouts') return { select: workoutSelect }
       if (table === 'workout_plans') return { insert: planInsert }
-      if (table === 'workout_plan_sessions') return { insert: sessionsInsert }
+      if (table === 'workout_plan_sessions') return {
+        insert: sessionsInsert,
+        select: sessionsSelect,
+      }
       return { select: jest.fn().mockReturnThis() }
     })
 
