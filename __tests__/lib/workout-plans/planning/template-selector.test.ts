@@ -2,6 +2,8 @@
  * Unit tests for template selector
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { scoreTemplate, selectTemplates } from '@/lib/workout-plans/planning/template-selector'
 import type { WorkoutTemplate } from '@/types'
 import type { GoalAnalysis } from '@/lib/workout-plans/planning/goal-analyzer'

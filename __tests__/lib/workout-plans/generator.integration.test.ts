@@ -3,6 +3,8 @@
  * Tests the complete flow from goal to generated plan
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { generateWorkoutPlan } from '@/lib/workout-plans/generator'
 import { createClient } from '@/lib/supabase/server'
 

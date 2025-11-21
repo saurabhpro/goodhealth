@@ -2,6 +2,8 @@
  * Unit tests for progressive overload calculator
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { applyProgressiveOverload, calculateProgressionForExercise } from '@/lib/workout-plans/planning/progressive-overload'
 import type { PlanSession } from '@/lib/workout-plans/planning/schedule-generator'
 import type { GoalType } from '@/lib/workout-plans/planning'
