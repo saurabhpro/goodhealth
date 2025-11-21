@@ -30,6 +30,8 @@ tags:
     description: User fitness goals management
   - name: Profile
     description: User profile and personalization settings
+  - name: Workouts
+    description: User workout tracking and history
   - name: Workout Plans
     description: AI-generated workout plan management
   - name: Workout Templates
@@ -60,6 +62,26 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Goal'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /workouts:
+    get:
+      tags:
+        - Workouts
+      summary: Get all user workouts
+      description: Retrieves all workouts with exercises and selfies for the authenticated user
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workout'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -850,6 +872,145 @@ components:
           type: string
           format: date-time
         updated_at:
+          type: string
+          format: date-time
+
+    Workout:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Morning Chest & Triceps"
+        description:
+          type: string
+          nullable: true
+          example: "Upper body workout"
+        date:
+          type: string
+          format: date
+          example: "2025-01-21"
+        duration_minutes:
+          type: integer
+          nullable: true
+          example: 45
+        effort_level:
+          type: integer
+          minimum: 1
+          maximum: 6
+          nullable: true
+          example: 4
+          description: Effort level from 1 (very easy) to 6 (maximum)
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/Exercise'
+          description: List of exercises in this workout
+        workout_selfies:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutSelfie'
+          description: Progress photos from this workout
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workout_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Bench Press"
+        exercise_type:
+          type: string
+          enum: [cardio, strength, functional]
+          example: "strength"
+        sets:
+          type: integer
+          nullable: true
+          example: 4
+        reps:
+          type: integer
+          nullable: true
+          example: 10
+        weight:
+          type: number
+          format: float
+          nullable: true
+          example: 60.0
+        weight_unit:
+          type: string
+          enum: [kg, lbs]
+          nullable: true
+          example: "kg"
+        duration_minutes:
+          type: integer
+          nullable: true
+          example: 30
+          description: For cardio exercises
+        distance:
+          type: number
+          format: float
+          nullable: true
+          example: 5.0
+          description: Distance in km (for cardio)
+        speed:
+          type: number
+          format: float
+          nullable: true
+          description: Speed in km/h (for cardio)
+        calories:
+          type: integer
+          nullable: true
+          description: Calories burned (for cardio)
+        resistance_level:
+          type: integer
+          nullable: true
+          description: Resistance level (for cardio machines)
+        incline:
+          type: integer
+          nullable: true
+          description: Incline percentage (for treadmill)
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    WorkoutSelfie:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workout_id:
+          type: string
+          format: uuid
+        image_path:
+          type: string
+          example: "user-id/workout-id/image.jpg"
+        signedUrl:
+          type: string
+          description: Temporary signed URL for accessing the image
+        caption:
+          type: string
+          nullable: true
+        created_at:
           type: string
           format: date-time
 
