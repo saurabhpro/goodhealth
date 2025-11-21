@@ -112,13 +112,16 @@ export async function POST(request: NextRequest) {
 
     // Create workout sessions from AI-generated schedule
     const sessions = result.plan.weeklySchedule.map((workout: WeeklyWorkout) => ({
-      workout_plan_id: workoutPlan.id,
+      plan_id: workoutPlan.id,
       week_number: workout.week,
       day_of_week: workout.day,
-      name: workout.workoutType,
-      description: workout.notes || `${workout.workoutType} workout for week ${workout.week}`,
+      day_name: workout.dayName,
+      workout_name: workout.workoutType,
+      workout_type: 'mixed', // AI generates mixed workouts
+      notes: workout.notes || `${workout.workoutType} workout for week ${workout.week}`,
       exercises: workout.exercises,
       estimated_duration: workout.duration,
+      intensity_level: workout.intensity === 'low' ? 'low' : workout.intensity === 'high' ? 'high' : 'moderate',
       status: 'scheduled',
     }))
 
