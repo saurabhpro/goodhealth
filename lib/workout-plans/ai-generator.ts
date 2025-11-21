@@ -276,6 +276,8 @@ The user has ${userTemplates.length} custom workout template(s). Consider incorp
 ## Instructions
 Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.workoutsPerWeek} workouts per week.
 
+⚠️ **SCHEDULING REQUIREMENT**: For ${planConfig.workoutsPerWeek} workouts per week, you MUST spread them across different days with rest in between. DO NOT use consecutive days like 1,2,3,4 or 5,6,7. Use days like 1,3,5,6 (Mon/Wed/Fri/Sat) to allow recovery.
+
 **Important Requirements:**
 1. Respect all constraints and injuries mentioned
 2. Match the user's fitness level
@@ -297,6 +299,8 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
 8. Be concise - quality over quantity
 
 **Output Format (STRICT JSON):**
+⚠️ REMINDER: For the "day" field, spread workouts across the week with rest days. For 4 workouts/week, use days 1,3,5,6 NOT 1,2,3,4!
+
 \`\`\`json
 {
   "weeklySchedule": [
