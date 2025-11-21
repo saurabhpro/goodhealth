@@ -111,16 +111,16 @@ export async function generateWorkoutPlan(
       goalAnalysis.recommendations.avgDuration = request.avgDuration
     }
 
-    // 4. Fetch available workout templates
+    // 4. Fetch available workout templates (user's templates + public templates)
     const { data: templates, error: templatesError } = await supabase
       .from('workout_templates')
       .select('*')
-      .eq('user_id', user.id)
+      .or(`user_id.eq.${user.id},is_public.eq.true`)
 
     if (templatesError || !templates || templates.length === 0) {
       return {
         success: false,
-        error: 'No workout templates found. Please create some workout templates first.',
+        error: 'No workout templates found. Please create some workout templates first or ensure public templates are available.',
       }
     }
 

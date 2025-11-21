@@ -3,8 +3,6 @@
  * Tests the complete flow from goal to generated plan
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { generateWorkoutPlan } from '@/lib/workout-plans/generator'
 import { createClient } from '@/lib/supabase/server'
 
@@ -20,8 +18,25 @@ jest.mock('next/cache', () => ({
 
 const mockCreateClient = createClient as jest.MockedFunction<typeof createClient>
 
+// Define mock types for Supabase client
+interface MockSupabaseQuery {
+  select?: jest.Mock
+  eq?: jest.Mock
+  single?: jest.Mock
+  gte?: jest.Mock
+  order?: jest.Mock
+  insert?: jest.Mock
+}
+
+interface MockSupabaseClient {
+  auth: {
+    getUser: jest.Mock
+  }
+  from: jest.Mock<MockSupabaseQuery, [string]>
+}
+
 describe('Workout Plan Generator - Integration', () => {
-  let mockSupabase: any
+  let mockSupabase: MockSupabaseClient
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -30,10 +45,10 @@ describe('Workout Plan Generator - Integration', () => {
       auth: {
         getUser: jest.fn(),
       },
-      from: jest.fn(),
+      from: jest.fn() as jest.Mock<MockSupabaseQuery>,
     }
 
-    mockCreateClient.mockResolvedValue(mockSupabase)
+    mockCreateClient.mockResolvedValue(mockSupabase as never)
   })
 
   const mockGoal = {

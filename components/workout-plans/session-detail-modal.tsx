@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Check, X, Calendar, Clock, Target, Repeat, Weight } from 'lucide-react'
+import { Check, X, Calendar, Clock, Target, Repeat, Weight, Play } from 'lucide-react'
 import type { WorkoutPlanSession } from '@/types'
 
 interface SessionDetailModalProps {
@@ -31,8 +32,18 @@ export function SessionDetailModal({
   onOpenChange,
   onUpdate
 }: SessionDetailModalProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [notes, setNotes] = useState(session.notes || '')
+
+  function handleStartWorkout() {
+    console.log('Start Workout clicked for session:', session.id)
+    // Navigate to workout form with sessionId parameter
+    const url = `/workouts/new?sessionId=${session.id}`
+    console.log('Navigating to:', url)
+    router.push(url)
+    onOpenChange(false)
+  }
 
   async function handleComplete() {
     setLoading(true)
@@ -243,9 +254,17 @@ export function SessionDetailModal({
         {session.status === 'scheduled' && (
           <div className="flex gap-2 flex-wrap pt-4 border-t">
             <Button
-              onClick={handleComplete}
+              onClick={handleStartWorkout}
               disabled={loading}
               className="flex-1"
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Start Workout
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleComplete}
+              disabled={loading}
             >
               <Check className="mr-2 h-4 w-4" />
               Mark Complete
