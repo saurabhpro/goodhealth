@@ -14,7 +14,9 @@
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "api:docs": "swagger-ui-watcher docs/api/openapi.yaml",
+    "api:validate": "swagger-cli validate docs/api/openapi.yaml"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",

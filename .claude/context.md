@@ -621,6 +621,44 @@ See `DEPLOYMENT.md` for complete deployment guide.
 - [ ] Progress reports (weekly/monthly)
 - [ ] Custom date ranges for analytics
 
+## Development Rules & Preferences
+
+**IMPORTANT: Always follow these rules when working on this project:**
+
+### Git & Commit Rules
+1. **NEVER auto-commit** - Always ask before committing changes
+2. **NEVER disable lint checks** - Always run linting before building
+3. **ALWAYS run build before committing** - Ensure `npm run build` passes before any commit
+4. **Run tests before committing** - Verify all tests pass with `npm test`
+
+### Code Quality Standards
+1. Use TypeScript strictly (no `any` types)
+2. Follow existing patterns and conventions
+3. Add proper error handling
+4. Include loading states for async operations
+5. Show toast notifications for user actions
+6. Add comments for complex logic only
+
+### Testing Requirements
+1. Write unit tests for new business logic
+2. Ensure all tests pass before committing
+3. Update existing tests when modifying functionality
+4. Run `npm test` to verify all tests pass
+
+### API & Documentation
+1. Update OpenAPI spec when adding/modifying API endpoints
+2. Keep API documentation in sync with implementation
+3. Document breaking changes in commit messages
+
+### Image Handling & Optimization
+1. **ALWAYS optimize images** - Use Next.js Image component or proper optimization
+2. **Proper sizing** - Specify width/height to prevent layout shift
+3. **Lazy loading** - Use lazy loading for images below the fold
+4. **Format selection** - Use WebP/AVIF when possible with fallbacks
+5. **Compression** - Compress images before upload (Supabase Storage)
+6. **Responsive images** - Use srcset or Next.js Image for different screen sizes
+7. **Alt text** - Always include descriptive alt text for accessibility
+
 ## Contributing
 
 When adding features:
