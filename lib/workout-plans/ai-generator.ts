@@ -251,7 +251,10 @@ function parseAIResponse(
     const jsonRegex = /```json\s*([\s\S]*?)\s*```/
     const codeBlockRegex = /```\s*([\s\S]*?)\s*```/
     const jsonMatch = jsonRegex.exec(text) || codeBlockRegex.exec(text)
-    const jsonText = jsonMatch ? jsonMatch[1] : text
+    let jsonText = jsonMatch ? jsonMatch[1] : text
+
+    // Additional cleanup: remove any remaining backticks
+    jsonText = jsonText.trim().replace(/^`+|`+$/g, '')
 
     const parsed = JSON.parse(jsonText)
 

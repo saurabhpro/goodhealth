@@ -82,24 +82,22 @@ export async function POST(request: NextRequest) {
     const goalType = getGoalTypeFromGoal(goal as Goal)
 
     // Create the workout plan in the database
+    // Note: AI rationale and strategy are embedded in the description
+    const aiGeneratedDescription = description ||
+      `${result.plan.rationale}\n\n**Progression Strategy:**\n${result.plan.progressionStrategy}\n\n**Key Considerations:**\n${result.plan.keyConsiderations.map(c => `• ${c}`).join('\n')}`
+
     const { data: workoutPlan, error: planError } = await supabase
       .from('workout_plans')
       .insert({
         user_id: user.id,
         goal_id: goalId,
-        name: name || `${goal.title} - Workout Plan`,
-        description: description || result.plan.rationale,
+        name: name || `${goal.title} - AI Workout Plan`,
+        description: aiGeneratedDescription,
         weeks_duration: weeksDuration,
         workouts_per_week: workoutsPerWeek,
         avg_workout_duration: avgDuration || 60,
         goal_type: goalType,
         status: 'draft',
-        ai_generated: true,
-        ai_metadata: {
-          rationale: result.plan.rationale,
-          progressionStrategy: result.plan.progressionStrategy,
-          keyConsiderations: result.plan.keyConsiderations,
-        },
       })
       .select()
       .single()
