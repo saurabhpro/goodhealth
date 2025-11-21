@@ -248,13 +248,23 @@ function parseAIResponse(
 } {
   try {
     // Extract JSON from code blocks if present
-    const jsonRegex = /```json\s*([\s\S]*?)\s*```/
-    const codeBlockRegex = /```\s*([\s\S]*?)\s*```/
-    const jsonMatch = jsonRegex.exec(text) || codeBlockRegex.exec(text)
-    let jsonText = jsonMatch ? jsonMatch[1] : text
+    let jsonText = text.trim()
 
-    // Additional cleanup: remove any remaining backticks
-    jsonText = jsonText.trim().replace(/^`+|`+$/g, '')
+    // Remove markdown code blocks
+    // Pattern 1: ```json\n{...}\n```
+    // Pattern 2: ```\n{...}\n```
+    const codeBlockMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/)
+    if (codeBlockMatch) {
+      jsonText = codeBlockMatch[1].trim()
+    }
+
+    // Remove any remaining backticks at start/end
+    jsonText = jsonText.replace(/^`+|`+$/g, '').trim()
+
+    // Remove "json" word if it appears at the start
+    if (jsonText.startsWith('json')) {
+      jsonText = jsonText.substring(4).trim()
+    }
 
     const parsed = JSON.parse(jsonText)
 
