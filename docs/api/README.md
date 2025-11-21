@@ -4,11 +4,10 @@ This directory contains the OpenAPI specification for the GoodHealth REST API.
 
 ## Viewing the API Documentation
 
-### Option 1: GitHub (Recommended)
-GitHub automatically renders OpenAPI specs with a nice UI. Simply view the file on GitHub:
-- [openapi.yaml](./openapi.yaml)
+> **Note**: GitHub's built-in OpenAPI renderer can be unreliable. We recommend using one of the options below for the best experience.
 
-### Option 2: Swagger UI (Local)
+### Option 1: Swagger UI (Local) - Recommended
+This provides the best interactive experience with full request/response examples.
 Install and run Swagger UI locally:
 
 ```bash
@@ -22,18 +21,27 @@ swagger-ui-watcher docs/api/openapi.yaml
 Then open http://localhost:8000 in your browser.
 
 ### Option 3: Swagger Editor (Online)
+Great for quick viewing without installation:
 1. Go to https://editor.swagger.io
-2. File → Import File
-3. Select `docs/api/openapi.yaml`
+2. File → Import URL
+3. Paste: `https://raw.githubusercontent.com/saurabhpro/goodhealth/main/docs/api/openapi.yaml`
 
-### Option 4: Postman
+### Option 4: Redocly (Online)
+Beautiful, responsive documentation:
+- [View on Redocly](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/saurabhpro/goodhealth/main/docs/api/openapi.yaml)
+
+### Option 5: Postman
 1. Open Postman
 2. Import → Upload Files
 3. Select `docs/api/openapi.yaml`
 4. The API will be available with all endpoints ready to test
 
-### Option 5: VS Code Extension
+### Option 6: VS Code Extension
 Install the "OpenAPI (Swagger) Editor" extension in VS Code for inline documentation and validation.
+
+### Option 7: GitHub (May Not Work)
+GitHub sometimes renders OpenAPI specs, but it's unreliable:
+- [openapi.yaml](./openapi.yaml) (may show raw YAML instead of rendered docs)
 
 ## API Overview
 
