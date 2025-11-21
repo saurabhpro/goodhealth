@@ -89,15 +89,28 @@ export async function generateWorkoutPlanWithAI(
         temperature: 0.7, // Balanced creativity and consistency
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 8000, // Allow for detailed plans
+        maxOutputTokens: 16000, // Allow for detailed plans (increased from 8000)
       },
     })
 
     const response = result.response
     const text = response.text()
 
+    // Log the response for debugging
+    console.log('AI Response length:', text.length)
+    console.log('AI Response preview:', text.substring(0, 200))
+
     // Parse the AI response
     const parsedPlan = parseAIResponse(text)
+
+    // Check if we got valid data
+    if (!parsedPlan.weeklySchedule || parsedPlan.weeklySchedule.length === 0) {
+      console.error('AI returned empty weekly schedule')
+      return {
+        success: false,
+        error: 'AI did not generate any workout sessions. Please try again.',
+      }
+    }
 
     return {
       success: true,
@@ -185,10 +198,10 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
 2. Match the user's fitness level
 3. Focus on the user's goal (${goal.title})
 4. Include progressive overload across weeks
-5. Provide specific exercises with sets, reps, and weights
-6. Include rest days strategically
-7. Vary workouts to prevent monotony
-8. Consider recovery and avoid overtraining
+5. Each workout should have 4-6 exercises maximum (keep it concise)
+6. Provide specific exercises with sets, reps, and weights
+7. Include rest days strategically
+8. Be concise - quality over quantity
 
 **Output Format (STRICT JSON):**
 \`\`\`json
@@ -221,7 +234,12 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
 }
 \`\`\`
 
-Generate a comprehensive, safe, and effective workout plan. Return ONLY the JSON object, no additional text.`
+**CRITICAL:** Keep the JSON response concise:
+- 4-6 exercises per workout maximum
+- Brief notes (one sentence max)
+- Focus on quality over quantity
+
+Generate a safe and effective workout plan. Return ONLY the JSON object, no additional text or explanation.`
 
   return prompt
 }
@@ -276,6 +294,8 @@ function parseAIResponse(
     }
   } catch (error) {
     console.error('Error parsing AI response:', error)
+    console.error('Failed to parse text (first 500 chars):', text.substring(0, 500))
+    console.error('Failed to parse text (last 500 chars):', text.substring(Math.max(0, text.length - 500)))
 
     // Fallback: return a basic structure
     return {
