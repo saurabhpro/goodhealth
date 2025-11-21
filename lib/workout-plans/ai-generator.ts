@@ -283,11 +283,17 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
 4. Include progressive overload across weeks
 5. Each workout should have 4-6 exercises maximum (keep it concise)
 6. Provide specific exercises with sets, reps, and weights
-7. **Schedule workouts with balanced rest periods** - avoid back-to-back intense workouts:
-   - For ${planConfig.workoutsPerWeek} workouts/week, spread them evenly (e.g., Mon/Wed/Fri/Sat for 4 days)
-   - Allow at least 1 rest day between intense strength sessions targeting the same muscle groups
-   - Active recovery or cardio can be scheduled between strength days
-   - Consider user's preferred days if specified
+7. **CRITICAL: Schedule workouts with balanced rest periods** - NEVER schedule back-to-back intense workouts:
+   - For ${planConfig.workoutsPerWeek} workouts/week, spread them with REST DAYS in between
+   - Examples of GOOD scheduling:
+     * 3/week: day 1 (Mon), day 3 (Wed), day 5 (Fri)
+     * 4/week: day 1 (Mon), day 3 (Wed), day 5 (Fri), day 6 (Sat)
+     * 5/week: day 1 (Mon), day 2 (Tue), day 4 (Thu), day 5 (Fri), day 6 (Sat)
+   - Examples of BAD scheduling (AVOID):
+     * ❌ days 1, 2, 3, 4 consecutively
+     * ❌ days 5, 6, 7 consecutively
+   - MUST have at least 1 rest day between intense strength sessions on same muscle groups
+   - Active recovery or cardio can be on consecutive days with strength
 8. Be concise - quality over quantity
 
 **Output Format (STRICT JSON):**
