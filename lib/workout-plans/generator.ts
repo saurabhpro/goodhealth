@@ -7,7 +7,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { Goal, Workout, WorkoutTemplate } from '@/types'
+import type { Goal, Workout, WorkoutTemplate, WorkoutPlanSession } from '@/types'
 import {
   analyzeGoal,
   analyzeWorkoutHistory,
@@ -22,6 +22,8 @@ export interface GeneratePlanRequest {
   workoutsPerWeek?: number // 3-7 (optional, will be calculated from goal if not provided)
   avgDuration?: number // minutes (optional)
   startDate?: string // ISO date (optional, defaults to today)
+  name?: string // Plan name (optional, will be generated from goal if not provided)
+  description?: string // Plan description (optional)
   preferences?: {
     preferredDays?: number[] // [1,3,5] for Mon/Wed/Fri
     avoidDays?: number[]
@@ -42,7 +44,7 @@ export interface GeneratePlanResponse {
     status: string
   }
   schedule?: {
-    [key: string]: any[] // week1, week2, etc.
+    [key: string]: WorkoutPlanSession[] // week1, week2, etc.
   }
   summary?: {
     totalWorkouts: number
@@ -144,7 +146,8 @@ export async function generateWorkoutPlan(
     }
 
     // 7. Create the workout plan in database
-    const planName = `${goal.title} - ${request.weeksCount} Week Plan`
+    const planName = request.name || `${goal.title} - ${request.weeksCount} Week Plan`
+    const planDescription = request.description || `AI-generated ${request.weeksCount}-week plan for ${goal.title}`
     const startDate = request.startDate || new Date().toISOString()
 
     const { data: createdPlan, error: planError } = await supabase
@@ -152,7 +155,7 @@ export async function generateWorkoutPlan(
       .insert({
         user_id: user.id,
         name: planName,
-        description: `AI-generated ${request.weeksCount}-week plan for ${goal.title}`,
+        description: planDescription,
         goal_id: request.goalId,
         goal_type: goalAnalysis.goalType,
         weeks_duration: request.weeksCount,
@@ -224,10 +227,23 @@ export async function generateWorkoutPlan(
       }
     }
 
-    // 10. Build schedule response
-    const schedule: { [key: string]: any[] } = {}
-    for (const week of weeklySchedules) {
-      schedule[`week${week.week}`] = week.sessions
+    // 10. Build schedule response - fetch the created sessions
+    const { data: createdSessions } = await supabase
+      .from('workout_plan_sessions')
+      .select('*')
+      .eq('plan_id', createdPlan.id)
+      .order('week_number')
+      .order('day_of_week')
+
+    const schedule: { [key: string]: WorkoutPlanSession[] } = {}
+    if (createdSessions) {
+      for (const session of createdSessions) {
+        const weekKey = `week${session.week_number}`
+        if (!schedule[weekKey]) {
+          schedule[weekKey] = []
+        }
+        schedule[weekKey].push(session as WorkoutPlanSession)
+      }
     }
 
     revalidatePath('/workout-plans')

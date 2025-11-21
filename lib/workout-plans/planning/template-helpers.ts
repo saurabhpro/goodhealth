@@ -32,8 +32,10 @@ export function getTemplateMuscleGroups(template: WorkoutTemplate): string[] {
   const muscleGroups = new Set<string>()
 
   for (const exercise of exercises) {
-    if (exercise.muscle_group) {
-      muscleGroups.add(exercise.muscle_group)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const muscleGroup = (exercise as any).muscle_group
+    if (muscleGroup) {
+      muscleGroups.add(muscleGroup)
     }
   }
 
