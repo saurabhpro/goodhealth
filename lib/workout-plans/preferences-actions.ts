@@ -161,7 +161,7 @@ export async function getUserTemplates(options?: {
   }
 
   let query = supabase
-    .from('user_workout_templates')
+    .from('workout_templates')
     .select('*')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
@@ -204,7 +204,7 @@ export async function getUserTemplate(
   }
 
   const { data, error } = await supabase
-    .from('user_workout_templates')
+    .from('workout_templates')
     .select('*')
     .eq('id', templateId)
     .eq('user_id', user.id)
@@ -238,10 +238,11 @@ export async function createUserTemplate(
   }
 
   const { data, error } = await supabase
-    .from('user_workout_templates')
+    .from('workout_templates')
     .insert({
       ...template,
       user_id: user.id,
+      is_public: false, // User templates are private by default
     })
     .select()
     .single()
@@ -277,7 +278,7 @@ export async function updateUserTemplate(
   }
 
   const { data, error } = await supabase
-    .from('user_workout_templates')
+    .from('workout_templates')
     .update(updates)
     .eq('id', templateId)
     .eq('user_id', user.id)
@@ -312,7 +313,7 @@ export async function deleteUserTemplate(templateId: string): Promise<{
   }
 
   const { error } = await supabase
-    .from('user_workout_templates')
+    .from('workout_templates')
     .delete()
     .eq('id', templateId)
     .eq('user_id', user.id)
@@ -345,7 +346,7 @@ export async function incrementTemplateUsage(templateId: string): Promise<{
 
   // First get current times_used
   const { data: template, error: fetchError } = await supabase
-    .from('user_workout_templates')
+    .from('workout_templates')
     .select('times_used')
     .eq('id', templateId)
     .eq('user_id', user.id)
@@ -358,7 +359,7 @@ export async function incrementTemplateUsage(templateId: string): Promise<{
 
   // Update with incremented count and last_used_at
   const { error } = await supabase
-    .from('user_workout_templates')
+    .from('workout_templates')
     .update({
       times_used: (template.times_used || 0) + 1,
       last_used_at: new Date().toISOString(),

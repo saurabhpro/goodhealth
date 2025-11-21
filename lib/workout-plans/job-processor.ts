@@ -101,7 +101,7 @@ export async function processWorkoutPlanJob(jobId: string) {
 
     // Fetch user's custom templates (optional)
     const { data: userTemplates } = await supabase
-      .from('user_workout_templates')
+      .from('workout_templates')
       .select('*')
       .eq('user_id', userId)
       .eq('is_active', true)
