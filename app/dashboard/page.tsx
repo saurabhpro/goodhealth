@@ -1,13 +1,24 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
 import { getWorkouts } from '@/lib/workouts/actions'
 import { getGoals } from '@/lib/goals/actions'
+import { getWorkoutPlans } from '@/lib/workout-plans/actions'
 import { redirect } from 'next/navigation'
-import { Camera } from 'lucide-react'
+import {
+  Plus,
+  Dumbbell,
+  Target,
+  Flame,
+  Calendar,
+  TrendingUp,
+  Clock,
+  Camera
+} from 'lucide-react'
+import { MotivationalQuote } from '@/components/motivational-quote'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +32,10 @@ export default async function DashboardPage() {
   // Fetch data
   const { workouts } = await getWorkouts()
   const { goals } = await getGoals()
+  const { plans } = await getWorkoutPlans()
+
+  // Find active workout plan
+  const activePlan = plans.find(p => p.status === 'active' || p.status === 'draft')
 
   // Calculate statistics
   const totalWorkouts = workouts.length
@@ -57,179 +72,213 @@ export default async function DashboardPage() {
 
   const currentStreak = calculateStreak()
 
-  const stats = [
-    {
-      title: 'Total Workouts',
-      value: totalWorkouts.toString(),
-      description: 'All time workouts',
-    },
-    {
-      title: 'Active Goals',
-      value: activeGoals.toString(),
-      description: 'Goals in progress',
-    },
-    {
-      title: 'Current Streak',
-      value: currentStreak.toString(),
-      description: currentStreak === 1 ? 'Day in a row' : 'Days in a row',
-    },
-    {
-      title: 'Total Exercises',
-      value: totalExercises.toString(),
-      description: 'Exercises completed',
-    },
-  ]
-
-  const quickActions = [
-    {
-      title: 'Log Workout',
-      description: 'Record your latest workout session',
-      href: '/workouts/new',
-      variant: 'default' as const,
-    },
-    {
-      title: 'View Progress',
-      description: 'Check your fitness progress',
-      href: '/progress',
-      variant: 'outline' as const,
-    },
-    {
-      title: 'Set New Goal',
-      description: 'Create a new fitness goal',
-      href: '/goals/new',
-      variant: 'outline' as const,
-    },
-  ]
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">
-          Welcome back, {user.user_metadata?.full_name || user.email?.split('@')[0] || 'there'}!
-        </h1>
-        <p className="text-muted-foreground">
-          Here&apos;s an overview of your fitness journey
-        </p>
+    <div className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Motivational Quote */}
+      <MotivationalQuote />
+
+      {/* Compact Stats Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="hover:border-primary/50 transition-colors">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="rounded-full bg-blue-100 dark:bg-blue-900 p-2">
+                <Dumbbell className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground truncate">Workouts</p>
+                <p className="text-xl sm:text-2xl font-bold">{totalWorkouts}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:border-primary/50 transition-colors">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="rounded-full bg-green-100 dark:bg-green-900 p-2">
+                <Target className="h-4 w-4 text-green-600 dark:text-green-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground truncate">Goals</p>
+                <p className="text-xl sm:text-2xl font-bold">{activeGoals}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:border-primary/50 transition-colors">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="rounded-full bg-orange-100 dark:bg-orange-900 p-2">
+                <Flame className="h-4 w-4 text-orange-600 dark:text-orange-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground truncate">Streak</p>
+                <p className="text-xl sm:text-2xl font-bold">{currentStreak}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:border-primary/50 transition-colors">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="rounded-full bg-purple-100 dark:bg-purple-900 p-2">
+                <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground truncate">Exercises</p>
+                <p className="text-xl sm:text-2xl font-bold">{totalExercises}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="pb-2">
-              <CardDescription>{stat.title}</CardDescription>
-              <CardTitle className="text-3xl">{stat.value}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Prominent Add Workout Button */}
+      <Button
+        size="lg"
+        className="w-full sm:w-auto text-base sm:text-lg h-12 sm:h-14"
+        asChild
+      >
+        <Link href="/workouts/new">
+          <Plus className="h-5 w-5 mr-2" />
+          Log Workout
+        </Link>
+      </Button>
 
-      {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {quickActions.map((action) => (
-            <Card key={action.title}>
-              <CardHeader>
-                <CardTitle>{action.title}</CardTitle>
-                <CardDescription>{action.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant={action.variant} className="w-full" asChild>
-                  <Link href={action.href}>Get Started</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      {/* Current Workout Plan */}
+      {activePlan ? (
+        <Card className="border-primary/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg sm:text-xl">Current Plan</CardTitle>
+              </div>
+              <Badge variant={activePlan.status === 'active' ? 'default' : 'secondary'}>
+                {activePlan.status}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <h3 className="font-semibold text-base sm:text-lg">{activePlan.name}</h3>
+              {activePlan.description && (
+                <p className="text-sm text-muted-foreground mt-1">{activePlan.description}</p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-3 text-sm">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>{activePlan.weeks_duration} weeks</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Dumbbell className="h-4 w-4" />
+                <span>{activePlan.workouts_per_week} workouts/week</span>
+              </div>
+            </div>
+            <Button variant="outline" className="w-full" asChild>
+              <Link href={`/workout-plans/${activePlan.id}`}>
+                View Plan Details
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-4">
+              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground mb-4">No active workout plan</p>
+              <Button asChild>
+                <Link href="/workout-plans/new">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Workout Plan
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Recent Activity */}
+      {/* Recent Activity - Compact Design */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Recent Activity</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl sm:text-2xl font-bold">Recent Activity</h2>
           {workouts.length > 0 && (
             <Button variant="outline" size="sm" asChild>
               <Link href="/workouts">View All</Link>
             </Button>
           )}
         </div>
+
         {workouts.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center py-8 text-muted-foreground">
-                <p className="mb-4">No recent activity yet</p>
-                <Button asChild>
-                  <Link href="/workouts/new">Log Your First Workout</Link>
+              <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                <Dumbbell className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 opacity-50" />
+                <p className="mb-4 text-sm sm:text-base">No workouts yet. Start your fitness journey today!</p>
+                <Button asChild size="lg">
+                  <Link href="/workouts/new">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Log Your First Workout
+                  </Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-3">
             {workouts.slice(0, 5).map((workout) => {
               const selfie = workout.workout_selfies?.[0]
 
               return (
                 <Link href={`/workouts/${workout.id}`} key={workout.id}>
                   <Card className="cursor-pointer hover:border-primary transition-colors overflow-hidden">
-                    <div className="flex gap-3 p-3">
-                      {/* Selfie thumbnail on the left */}
+                    <div className="flex gap-2 sm:gap-3 p-2 sm:p-3">
+                      {/* Selfie thumbnail */}
                       {selfie?.signedUrl && (
-                        <div className="relative w-20 h-20 flex-shrink-0 bg-muted rounded-md overflow-hidden">
+                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-muted rounded-md overflow-hidden">
                           <Image
                             src={selfie.signedUrl}
                             alt={selfie.caption || 'Workout selfie'}
-                            width={80}
-                            height={80}
-                            className="object-cover w-full h-full"
-                            sizes="80px"
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 64px, 80px"
                             quality={80}
                           />
                         </div>
                       )}
 
-                      {/* Content on the right */}
+                      {/* Content */}
                       <div className="flex-1 flex flex-col justify-center min-w-0">
-                        <div className="space-y-1.5">
-                          <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-base font-semibold leading-none tracking-tight">{workout.name}</h3>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <h3 className="text-sm sm:text-base font-semibold leading-tight line-clamp-1">
+                                {workout.name}
+                              </h3>
+                              <p className="text-xs text-muted-foreground mt-0.5">
                                 {new Date(workout.date).toLocaleDateString('en-US', {
-                                  weekday: 'short',
                                   month: 'short',
                                   day: 'numeric',
-                                  year: 'numeric'
                                 })}
                               </p>
                             </div>
-                            <Badge variant="secondary" className="flex-shrink-0 text-xs">
-                              {workout.exercises?.length || 0} exercises
+                            <Badge variant="secondary" className="text-xs flex-shrink-0">
+                              {workout.exercises?.length || 0}
                             </Badge>
                           </div>
-                          {(workout.duration_minutes || workout.description || selfie) && (
-                            <div className="flex gap-2 text-xs text-muted-foreground items-center flex-wrap">
-                              {workout.duration_minutes && (
-                                <span>{workout.duration_minutes} min</span>
-                              )}
-                              {workout.description && (
+                          {workout.duration_minutes && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>{workout.duration_minutes} min</span>
+                              {selfie && (
                                 <>
-                                  {workout.duration_minutes && <span>•</span>}
-                                  <span className="truncate line-clamp-1">{workout.description}</span>
-                                </>
-                              )}
-                              {selfie && !workout.description && (
-                                <>
-                                  {workout.duration_minutes && <span>•</span>}
-                                  <div className="flex items-center gap-1">
-                                    <Camera className="h-3 w-3" />
-                                    <span>Photo</span>
-                                  </div>
+                                  <span>•</span>
+                                  <Camera className="h-3 w-3" />
                                 </>
                               )}
                             </div>
