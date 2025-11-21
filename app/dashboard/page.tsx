@@ -77,60 +77,52 @@ export default async function DashboardPage() {
       {/* Motivational Quote */}
       <MotivationalQuote />
 
-      {/* Compact Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      {/* Compact Stats Row - Single row on all devices */}
+      <div className="grid grid-cols-4 gap-2">
         <Card className="hover:border-primary/50 transition-colors">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="rounded-full bg-blue-100 dark:bg-blue-900 p-2">
-                <Dumbbell className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+          <CardContent className="p-2">
+            <div className="flex flex-col items-center text-center gap-1">
+              <div className="rounded-full bg-blue-100 dark:bg-blue-900 p-1.5">
+                <Dumbbell className="h-3 w-3 text-blue-600 dark:text-blue-300" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground truncate">Workouts</p>
-                <p className="text-xl sm:text-2xl font-bold">{totalWorkouts}</p>
-              </div>
+              <p className="text-[10px] text-muted-foreground truncate w-full">Workouts</p>
+              <p className="text-base font-bold">{totalWorkouts}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="hover:border-primary/50 transition-colors">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="rounded-full bg-green-100 dark:bg-green-900 p-2">
-                <Target className="h-4 w-4 text-green-600 dark:text-green-300" />
+          <CardContent className="p-2">
+            <div className="flex flex-col items-center text-center gap-1">
+              <div className="rounded-full bg-green-100 dark:bg-green-900 p-1.5">
+                <Target className="h-3 w-3 text-green-600 dark:text-green-300" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground truncate">Goals</p>
-                <p className="text-xl sm:text-2xl font-bold">{activeGoals}</p>
-              </div>
+              <p className="text-[10px] text-muted-foreground truncate w-full">Goals</p>
+              <p className="text-base font-bold">{activeGoals}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="hover:border-primary/50 transition-colors">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="rounded-full bg-orange-100 dark:bg-orange-900 p-2">
-                <Flame className="h-4 w-4 text-orange-600 dark:text-orange-300" />
+          <CardContent className="p-2">
+            <div className="flex flex-col items-center text-center gap-1">
+              <div className="rounded-full bg-orange-100 dark:bg-orange-900 p-1.5">
+                <Flame className="h-3 w-3 text-orange-600 dark:text-orange-300" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground truncate">Streak</p>
-                <p className="text-xl sm:text-2xl font-bold">{currentStreak}</p>
-              </div>
+              <p className="text-[10px] text-muted-foreground truncate w-full">Streak</p>
+              <p className="text-base font-bold">{currentStreak}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="hover:border-primary/50 transition-colors">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="rounded-full bg-purple-100 dark:bg-purple-900 p-2">
-                <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-300" />
+          <CardContent className="p-2">
+            <div className="flex flex-col items-center text-center gap-1">
+              <div className="rounded-full bg-purple-100 dark:bg-purple-900 p-1.5">
+                <TrendingUp className="h-3 w-3 text-purple-600 dark:text-purple-300" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground truncate">Exercises</p>
-                <p className="text-xl sm:text-2xl font-bold">{totalExercises}</p>
-              </div>
+              <p className="text-[10px] text-muted-foreground truncate w-full">Exercises</p>
+              <p className="text-base font-bold">{totalExercises}</p>
             </div>
           </CardContent>
         </Card>
