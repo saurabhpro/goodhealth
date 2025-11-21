@@ -205,11 +205,13 @@ export async function deleteGoal(goalId: string) {
     return { error: 'Not authenticated' }
   }
 
+  // Soft delete: set deleted_at instead of hard delete
   const { error } = await supabase
     .from('goals')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', goalId)
     .eq('user_id', user.id)
+    .is('deleted_at', null) // Only delete if not already deleted
 
   if (error) {
     return { error: error.message }

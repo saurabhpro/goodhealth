@@ -312,14 +312,16 @@ export async function deleteUserTemplate(templateId: string): Promise<{
     return { error: 'Not authenticated' }
   }
 
+  // Soft delete: set deleted_at instead of hard delete
   const { error } = await supabase
     .from('workout_templates')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', templateId)
     .eq('user_id', user.id)
+    .is('deleted_at', null) // Only delete if not already deleted
 
   if (error) {
-    console.error('Error deleting template:', error)
+    console.error('Error soft deleting template:', error)
     return { error: error.message }
   }
 

@@ -76,13 +76,13 @@ export async function uploadWorkoutSelfie(
   // If a selfie already exists, delete it first (replace old with new)
   if (existingSelfies && existingSelfies.length > 0) {
     for (const existingSelfie of existingSelfies) {
-      // Delete from storage
-      await supabase.storage.from(BUCKET_NAME).remove([existingSelfie.file_path])
-      // Delete from database
+      // Keep file in storage but soft delete from database (for recovery)
+      // Soft delete from database
       await supabase
         .from('workout_selfies')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', existingSelfie.id)
+        .is('deleted_at', null)
     }
   }
 
@@ -221,22 +221,14 @@ export async function deleteWorkoutSelfie(selfieId: string) {
     return { error: 'Selfie not found or access denied' }
   }
 
-  // Delete from storage
-  const { error: storageError } = await supabase.storage
-    .from(BUCKET_NAME)
-    .remove([selfie.file_path])
-
-  if (storageError) {
-    console.error('Storage deletion error:', storageError)
-    // Continue anyway to delete database record
-  }
-
-  // Delete from database
+  // Keep file in storage for potential recovery, only soft delete from database
+  // Soft delete from database
   const { error: dbError } = await supabase
     .from('workout_selfies')
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', selfieId)
     .eq('user_id', user.id)
+    .is('deleted_at', null) // Only delete if not already deleted
 
   if (dbError) {
     return { error: dbError.message }
