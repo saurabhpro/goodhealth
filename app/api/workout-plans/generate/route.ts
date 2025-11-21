@@ -14,13 +14,34 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json()
-    const { goalId, name, description, weeksDuration, workoutsPerWeek, avgDuration } = body
+    const { goalId, name, description, weeksDuration, workoutsPerWeek, avgDuration, startDate } = body
 
     if (!goalId || !weeksDuration || !workoutsPerWeek) {
       return NextResponse.json(
         { error: 'Missing required fields: goalId, weeksDuration, workoutsPerWeek' },
         { status: 400 }
       )
+    }
+
+    // Validate start date if provided
+    if (startDate) {
+      const parsedDate = new Date(startDate)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      if (Number.isNaN(parsedDate.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid start date format' },
+          { status: 400 }
+        )
+      }
+
+      if (parsedDate < today) {
+        return NextResponse.json(
+          { error: 'Start date cannot be in the past' },
+          { status: 400 }
+        )
+      }
     }
 
     // Verify goal exists and belongs to user
@@ -71,6 +92,7 @@ export async function POST(request: NextRequest) {
           weeksDuration,
           workoutsPerWeek,
           avgDuration: avgDuration || 60,
+          startDate: startDate || null,
         },
       })
       .select()

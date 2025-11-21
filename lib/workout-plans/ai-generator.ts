@@ -276,6 +276,8 @@ The user has ${userTemplates.length} custom workout template(s). Consider incorp
 ## Instructions
 Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.workoutsPerWeek} workouts per week.
 
+⚠️ **CRITICAL: The user can start this plan on ANY day of the week** - The "day" field represents the **DAY OF THE WEEK** (0=Sunday through 6=Saturday), NOT a sequence number. This allows the user to start the plan on any date they choose, and workouts will automatically be scheduled on the correct days of the week.
+
 ⚠️ **SCHEDULING REQUIREMENT**: For ${planConfig.workoutsPerWeek} workouts per week, you MUST spread them across different days with rest in between. DO NOT use consecutive days like 1,2,3,4 or 5,6,7. Use days like 1,3,5,6 (Mon/Wed/Fri/Sat) to allow recovery.
 
 **Important Requirements:**
@@ -300,10 +302,12 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
 
 **Output Format (STRICT JSON):**
 ⚠️ **CRITICAL - "day" field definition**:
-- The "day" field is NOT a sequence number (don't use 1,2,3,4)
-- The "day" field is the DAY OF THE WEEK (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday)
-- For 4 workouts/week, use: day=1 (Monday), day=3 (Wednesday), day=5 (Friday), day=6 (Saturday)
-- DO NOT use day=1,2,3,4 - this means Monday/Tuesday/Wednesday/Thursday with NO REST!
+- The "day" field represents the DAY OF THE WEEK: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+- This is NOT a sequence number - it's the actual day of the week the workout should occur
+- The user can start their plan on ANY date (e.g., starting on a Thursday), and workouts will automatically be scheduled on the correct days
+- For example, if you schedule a workout for day=1 (Monday) and the user starts on Thursday Dec 5, that workout will occur on Monday Dec 9
+- For 4 workouts/week, use spaced days like: day=1 (Monday), day=3 (Wednesday), day=5 (Friday), day=6 (Saturday)
+- DO NOT use consecutive days like 1,2,3,4 - ensure rest days between intense workouts
 
 \`\`\`json
 {
@@ -346,7 +350,7 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
       "exercises": [...],
       "duration": 45,
       "intensity": "low",
-      "notes": "Light session - rest Sunday"
+      "notes": "Light session - rest Sunday (day 0)"
     }
   ],
   "rationale": "Explain why this plan suits the user's goal and fitness level...",
@@ -354,6 +358,8 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
   "keyConsiderations": ["Point 1", "Point 2", "Point 3"]
 }
 \`\`\`
+
+**Remember**: day field uses 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
 
 **CRITICAL:** Keep the JSON response concise:
 - 4-6 exercises per workout maximum

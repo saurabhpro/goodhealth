@@ -110,6 +110,7 @@ CREATE TABLE public.workout_plans (
   workouts_per_week INTEGER NOT NULL CHECK (workouts_per_week BETWEEN 1 AND 7),
   avg_workout_duration INTEGER,
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'completed', 'archived')),
+  start_date DATE,
   started_at TIMESTAMPTZ,
   completed_at TIMESTAMPTZ,
   deleted_at TIMESTAMPTZ,
@@ -121,6 +122,7 @@ CREATE INDEX idx_workout_plans_user_id ON public.workout_plans(user_id);
 CREATE INDEX idx_workout_plans_status ON public.workout_plans(status);
 CREATE INDEX idx_workout_plans_goal_id ON public.workout_plans(goal_id);
 CREATE INDEX idx_workout_plans_user_status ON public.workout_plans(user_id, status);
+CREATE INDEX idx_workout_plans_start_date ON public.workout_plans(user_id, start_date) WHERE deleted_at IS NULL;
 CREATE INDEX idx_workout_plans_user_deleted ON public.workout_plans(user_id, deleted_at) WHERE deleted_at IS NULL;
 
 CREATE TRIGGER update_workout_plans_updated_at
@@ -174,6 +176,7 @@ CREATE TABLE public.workout_plan_sessions (
   day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
   day_name TEXT NOT NULL,
   session_order INTEGER NOT NULL DEFAULT 1 CHECK (session_order >= 1),
+  actual_date DATE,
   workout_template_id UUID REFERENCES public.workout_templates(id) ON DELETE SET NULL,
   workout_name TEXT NOT NULL,
   workout_type TEXT NOT NULL CHECK (workout_type IN ('strength', 'cardio', 'rest', 'active_recovery', 'mixed')),
@@ -195,6 +198,7 @@ CREATE INDEX idx_workout_plan_sessions_plan_id ON public.workout_plan_sessions(p
 CREATE INDEX idx_workout_plan_sessions_week_day ON public.workout_plan_sessions(plan_id, week_number, day_of_week);
 CREATE INDEX idx_workout_plan_sessions_status ON public.workout_plan_sessions(status);
 CREATE INDEX idx_workout_plan_sessions_template_id ON public.workout_plan_sessions(workout_template_id);
+CREATE INDEX idx_workout_plan_sessions_actual_date ON public.workout_plan_sessions(plan_id, actual_date) WHERE deleted_at IS NULL;
 CREATE INDEX idx_workout_plan_sessions_plan_deleted ON public.workout_plan_sessions(plan_id, deleted_at) WHERE deleted_at IS NULL;
 
 CREATE TRIGGER update_workout_plan_sessions_updated_at
