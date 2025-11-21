@@ -350,12 +350,19 @@ The project includes GitHub Actions workflows:
 
 ## 📚 Documentation
 
+- **[API Documentation](./docs/api/README.md)** - Complete REST API reference with OpenAPI spec
 - **[SETUP.md](./SETUP.md)** - Detailed setup instructions
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide
 - **[TESTING.md](./TESTING.md)** - Testing guide and best practices
 - **[CODECOV_SETUP.md](./CODECOV_SETUP.md)** - Codecov integration guide
 - **[SELFIES_SETUP.md](./SELFIES_SETUP.md)** - Selfie feature setup guide
 - **[.claude/context.md](./.claude/context.md)** - Full project context for development
+
+### API Reference
+View the OpenAPI specification for the REST API:
+- **[OpenAPI Spec](./docs/api/openapi.yaml)** - GitHub renders this automatically
+- Run `npm run api:docs` to view locally with Swagger UI
+- Import into Postman for testing
 
 ## 🗺️ Roadmap
 
