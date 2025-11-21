@@ -26,6 +26,8 @@ export async function POST(
       .select('id, name')
       .eq('user_id', user.id)
       .eq('status', 'active')
+      .eq('deleted_at', null)
+    
 
     if (activePlans && activePlans.length > 0) {
       // Check if it's not the current plan
