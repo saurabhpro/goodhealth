@@ -63,6 +63,7 @@ security:
 paths:
   /goals:
     get:
+      operationId: getGoals
       tags:
         - Goals
       summary: Get all user goals
@@ -83,6 +84,7 @@ paths:
 
   /workouts:
     get:
+      operationId: getWorkouts
       tags:
         - Workouts
       summary: Get all user workouts
@@ -103,6 +105,7 @@ paths:
 
   /workout-plans:
     get:
+      operationId: getWorkoutPlans
       tags:
         - Workout Plans
       summary: Get all workout plans
@@ -120,6 +123,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
 
     post:
+      operationId: createWorkoutPlan
       tags:
         - Workout Plans
       summary: Create a new workout plan
@@ -179,6 +183,7 @@ paths:
 
   /workout-plans/generate:
     post:
+      operationId: generateWorkoutPlan
       tags:
         - Workout Plans
       summary: Generate AI workout plan
@@ -353,6 +358,7 @@ paths:
 
   /workout-plans/{id}:
     get:
+      operationId: getWorkoutPlan
       tags:
         - Workout Plans
       summary: Get workout plan by ID
@@ -376,6 +382,7 @@ paths:
           $ref: "#/components/responses/NotFound"
 
     patch:
+      operationId: updateWorkoutPlan
       tags:
         - Workout Plans
       summary: Update workout plan
@@ -414,6 +421,7 @@ paths:
           $ref: "#/components/responses/NotFound"
 
     delete:
+      operationId: deleteWorkoutPlan
       tags:
         - Workout Plans
       summary: Delete workout plan
@@ -435,6 +443,7 @@ paths:
 
   /workout-plans/{id}/week/{weekNumber}:
     get:
+      operationId: getWorkoutPlanWeek
       tags:
         - Workout Plans
       summary: Get sessions for a specific week
@@ -471,6 +480,7 @@ paths:
 
   /workout-plans/sessions/{id}:
     get:
+      operationId: getWorkoutSession
       tags:
         - Workout Sessions
       summary: Get workout session by ID
@@ -494,6 +504,7 @@ paths:
           $ref: "#/components/responses/NotFound"
 
     patch:
+      operationId: updateWorkoutSession
       tags:
         - Workout Sessions
       summary: Update workout session
@@ -533,6 +544,7 @@ paths:
           $ref: "#/components/responses/NotFound"
 
     delete:
+      operationId: deleteWorkoutSession
       tags:
         - Workout Sessions
       summary: Delete workout session
@@ -553,6 +565,7 @@ paths:
 
   /workout-plans/sessions/{id}/details:
     get:
+      operationId: getWorkoutSessionDetails
       tags:
         - Workout Sessions
       summary: Get session details with template
@@ -599,6 +612,7 @@ paths:
 
   /workout-plans/sessions/{id}/complete:
     post:
+      operationId: completeWorkoutSession
       tags:
         - Workout Sessions
       summary: Mark session as complete
@@ -639,6 +653,7 @@ paths:
 
   /profile:
     get:
+      operationId: getProfile
       tags:
         - Profile
       summary: Get user profile
@@ -656,6 +671,7 @@ paths:
           $ref: "#/components/responses/InternalError"
 
     put:
+      operationId: updateProfile
       tags:
         - Profile
       summary: Update user profile
@@ -725,6 +741,7 @@ paths:
 
   /workout-templates:
     get:
+      operationId: getWorkoutTemplates
       tags:
         - Workout Templates
       summary: Get all workout templates
@@ -743,6 +760,7 @@ paths:
 
   /images/{path}:
     get:
+      operationId: getImage
       tags:
         - Images
       summary: Get optimized image
@@ -782,6 +800,7 @@ paths:
 
   /weekly-analysis/generate:
     post:
+      operationId: generateWeeklyAnalysis
       tags:
         - Weekly Analysis
       summary: Generate weekly workout analysis
@@ -815,6 +834,7 @@ paths:
 
   /weekly-analysis/latest:
     get:
+      operationId: getLatestWeeklyAnalysis
       tags:
         - Weekly Analysis
       summary: Get latest weekly analysis for current week
@@ -851,6 +871,7 @@ paths:
 
   /weekly-analysis/{id}/view:
     put:
+      operationId: markWeeklyAnalysisViewed
       tags:
         - Weekly Analysis
       summary: Mark analysis as viewed
@@ -879,6 +900,7 @@ paths:
 
   /weekly-analysis/{id}/dismiss:
     put:
+      operationId: dismissWeeklyAnalysis
       tags:
         - Weekly Analysis
       summary: Dismiss analysis notification
