@@ -26,14 +26,14 @@ import {
 import { toast } from 'sonner'
 import { Plus, ArrowLeft, MoreVertical, Edit, Trash2, Dumbbell, Clock, TrendingUp, Loader2 } from 'lucide-react'
 import { getUserTemplates, deleteUserTemplate } from '@/lib/workout-plans/preferences-actions'
-import type { UserWorkoutTemplate } from '@/types'
+import type { WorkoutTemplate } from '@/types'
 
 export default function WorkoutTemplatesPage() {
   const router = useRouter()
-  const [templates, setTemplates] = useState<UserWorkoutTemplate[]>([])
+  const [templates, setTemplates] = useState<WorkoutTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [templateToDelete, setTemplateToDelete] = useState<UserWorkoutTemplate | null>(null)
+  const [templateToDelete, setTemplateToDelete] = useState<WorkoutTemplate | null>(null)
 
   useEffect(() => {
     loadTemplates()
@@ -76,7 +76,7 @@ export default function WorkoutTemplatesPage() {
     }
   }
 
-  function confirmDelete(template: UserWorkoutTemplate) {
+  function confirmDelete(template: WorkoutTemplate) {
     setTemplateToDelete(template)
     setDeleteDialogOpen(true)
   }

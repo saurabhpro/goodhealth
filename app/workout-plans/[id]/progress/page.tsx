@@ -156,13 +156,27 @@ export default function WorkoutPlanProgressPage() {
             <p className="text-muted-foreground">{plan.name}</p>
           </div>
           <Badge
+            className={
+              plan.status === "active"
+                ? "bg-green-500 hover:bg-green-600 text-white"
+                : plan.status === "completed"
+                ? "bg-blue-500 hover:bg-blue-600 text-white"
+                : plan.status === "draft"
+                ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                : plan.status === "archived"
+                ? "bg-gray-500 hover:bg-gray-600 text-white"
+                : ""
+            }
             variant={
-              plan.status === 'active' ? 'default' :
-              plan.status === 'completed' ? 'secondary' :
-              'outline'
+              plan.status === "active" ||
+              plan.status === "completed" ||
+              plan.status === "draft" ||
+              plan.status === "archived"
+                ? undefined
+                : "outline"
             }
           >
-            {plan.status}
+            {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
           </Badge>
         </div>
       </div>
@@ -213,11 +227,9 @@ export default function WorkoutPlanProgressPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">
-              {currentStreak}
-            </div>
+            <div className="text-3xl font-bold mb-2">{currentStreak}</div>
             <p className="text-xs text-muted-foreground">
-              {currentStreak === 1 ? 'day' : 'days'} in a row
+              {currentStreak === 1 ? "day" : "days"} in a row
             </p>
           </CardContent>
         </Card>
@@ -230,9 +242,7 @@ export default function WorkoutPlanProgressPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">
-              {remainingSessions}
-            </div>
+            <div className="text-3xl font-bold mb-2">{remainingSessions}</div>
             <p className="text-xs text-muted-foreground">
               workouts to complete
             </p>
@@ -247,9 +257,7 @@ export default function WorkoutPlanProgressPage() {
             <BarChart3 className="h-5 w-5" />
             Weekly Progress
           </CardTitle>
-          <CardDescription>
-            Completion rate for each week
-          </CardDescription>
+          <CardDescription>Completion rate for each week</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -258,7 +266,8 @@ export default function WorkoutPlanProgressPage() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Week {stat.week}</span>
                   <span className="text-sm text-muted-foreground">
-                    {stat.completed}/{stat.total} ({Math.round(stat.percentage)}%)
+                    {stat.completed}/{stat.total} ({Math.round(stat.percentage)}
+                    %)
                   </span>
                 </div>
                 <Progress value={stat.percentage} className="h-2" />
@@ -275,14 +284,13 @@ export default function WorkoutPlanProgressPage() {
             <TrendingUp className="h-5 w-5" />
             Workout Type Breakdown
           </CardTitle>
-          <CardDescription>
-            Performance by workout category
-          </CardDescription>
+          <CardDescription>Performance by workout category</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {Object.entries(workoutTypes).map(([type, stats]) => {
-              const percentage = stats.total > 0 ? (stats.completed / stats.total) * 100 : 0
+              const percentage =
+                stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
 
               return (
                 <div key={type}>
@@ -291,12 +299,13 @@ export default function WorkoutPlanProgressPage() {
                       <Badge variant="outline">{type}</Badge>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {stats.completed}/{stats.total} ({Math.round(percentage)}%)
+                      {stats.completed}/{stats.total} ({Math.round(percentage)}
+                      %)
                     </span>
                   </div>
                   <Progress value={percentage} className="h-2" />
                 </div>
-              )
+              );
             })}
           </div>
         </CardContent>
@@ -307,9 +316,7 @@ export default function WorkoutPlanProgressPage() {
         <Card className="mt-8">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Your latest completed workouts
-            </CardDescription>
+            <CardDescription>Your latest completed workouts</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -325,7 +332,9 @@ export default function WorkoutPlanProgressPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-green-600">Completed</p>
+                    <p className="text-sm font-medium text-green-600">
+                      Completed
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(session.completed_at!).toLocaleDateString()}
                     </p>
@@ -337,5 +346,5 @@ export default function WorkoutPlanProgressPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }

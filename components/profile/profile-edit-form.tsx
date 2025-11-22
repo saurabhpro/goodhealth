@@ -17,7 +17,7 @@ import type { User } from '@supabase/supabase-js'
 import { getProfile, updateProfile, type ProfileData } from '@/lib/profile/actions'
 
 interface ProfileEditFormProps {
-  user: User
+  readonly user: User
 }
 
 export function ProfileEditForm({ user }: ProfileEditFormProps) {
@@ -182,7 +182,7 @@ export function ProfileEditForm({ user }: ProfileEditFormProps) {
             max="300"
             step="0.1"
             value={formData.height_cm || ''}
-            onChange={(e) => setFormData({ ...formData, height_cm: e.target.value ? parseFloat(e.target.value) : undefined })}
+            onChange={(e) => setFormData({ ...formData, height_cm: e.target.value ? Number.parseFloat(e.target.value) : undefined })}
             disabled={!editing || saving}
             placeholder="e.g., 175"
           />
@@ -241,11 +241,7 @@ export function ProfileEditForm({ user }: ProfileEditFormProps) {
       </div>
 
       <div className="flex gap-4 pt-4">
-        {!editing ? (
-          <Button onClick={() => setEditing(true)}>
-            Edit Profile
-          </Button>
-        ) : (
+        {editing ? (
           <>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? 'Saving...' : 'Save Changes'}
@@ -258,6 +254,10 @@ export function ProfileEditForm({ user }: ProfileEditFormProps) {
               Cancel
             </Button>
           </>
+        ) : (
+          <Button onClick={() => setEditing(true)}>
+            Edit Profile
+          </Button>
         )}
       </div>
     </div>

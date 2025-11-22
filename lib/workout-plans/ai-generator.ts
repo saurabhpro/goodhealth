@@ -8,7 +8,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type {
   UserWorkoutPreferences,
-  UserWorkoutTemplate,
+  WorkoutTemplate,
   Goal,
   Workout,
 } from '@/types'
@@ -36,7 +36,7 @@ export interface AIGenerationRequest {
   goal: Goal
   preferences?: UserWorkoutPreferences
   workoutHistory?: Workout[]
-  userTemplates?: UserWorkoutTemplate[]
+  userTemplates?: WorkoutTemplate[]
   userProfile?: UserProfile
   latestMeasurements?: LatestMeasurements
   planConfig: {

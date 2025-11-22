@@ -7,7 +7,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { generateWorkoutPlanWithAI, type WeeklyWorkout } from './ai-generator'
-import type { Goal, UserWorkoutPreferences, Workout, UserWorkoutTemplate } from '@/types'
+import type { Goal, UserWorkoutPreferences, Workout, WorkoutTemplate } from '@/types'
 
 export interface JobRequest {
   goalId: string
@@ -112,7 +112,7 @@ export async function processWorkoutPlanJob(jobId: string) {
       goal: goal as Goal,
       preferences: preferences as UserWorkoutPreferences | undefined,
       workoutHistory: (workoutHistory as Workout[]) || [],
-      userTemplates: (userTemplates as UserWorkoutTemplate[]) || [],
+      userTemplates: (userTemplates as WorkoutTemplate[]) || [],
       userProfile: profile ? {
         dateOfBirth: profile.date_of_birth,
         gender: profile.gender,

@@ -14,7 +14,6 @@ import {
   ChevronRight,
   Calendar,
   BarChart3,
-  Settings,
   Play,
   Check,
   X,
@@ -244,7 +243,7 @@ export default function WorkoutPlanPage() {
             <div className="flex-1 mr-4">
               <h1 className="text-3xl font-bold mb-2">{plan.name}</h1>
               {plan.description && (
-                <div className="text-muted-foreground prose prose-sm max-w-none">
+                <div className="text-muted-foreground prose prose-sm">
                   {plan.description.split('\n').map((line, i) => {
                     // Handle bold sections like **Progression Strategy:**
                     if (line.includes('**')) {
@@ -278,39 +277,6 @@ export default function WorkoutPlanPage() {
                 </div>
               )}
             </div>
-            <div className="flex gap-2">
-              <Link href={`/workout-plans/${planId}/progress`}>
-                <Button variant="outline" size="sm">
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Progress
-                </Button>
-              </Link>
-              {(plan.status === 'active' || plan.status === 'draft') && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Archive className="mr-2 h-4 w-4" />
-                      Archive
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Archive this plan?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will archive the plan and allow you to create a new one for the same goal.
-                        Your progress and workout history will be preserved.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeactivate}>
-                        Archive Plan
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
           </div>
 
           <div className="space-y-3">
@@ -333,7 +299,40 @@ export default function WorkoutPlanPage() {
               >
                 {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
               </Badge>
+               <div className="flex gap-2">
+              <Link href={`/workout-plans/${planId}/progress`}>
+                <Button variant="outline" size="sm">
+                  <BarChart3/>
+                  Progress
+                </Button>
+              </Link>
+              {(plan.status === 'active' || plan.status === 'draft') && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Archive />
+                      Archive
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Archive this plan?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will archive the plan and allow you to create a new one for the same goal.
+                        Your progress and workout history will be preserved.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeactivate}>
+                        Archive Plan
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
+          </div>
 
             {/* Timeline - Show start and end dates for active plans */}
             {plan.started_at && (plan.status === 'active' || plan.status === 'completed') && (
