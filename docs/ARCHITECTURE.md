@@ -4,7 +4,14 @@
 
 ### High-Level Architecture
 
-The application follows a modern JAMstack architecture with Next.js 16 on Vercel, Supabase for backend services, and Google Gemini for AI capabilities.
+The application follows a modern **JAMstack architecture**, a design philosophy centered around delivering web applications with superior performance, security, and scalability. The name stands for:
+- **J**avaScript: All dynamic functionality and user interaction is handled by JavaScript running in the browser (React, Next.js).
+- **A**PIs: Server-side logic is encapsulated in reusable APIs, accessed over HTTPS (Next.js API Routes, Supabase, Google Gemini).
+- **M**arkup: The user interface is pre-built into static HTML files at build time and served globally from a CDN.
+
+This approach decouples the frontend from the backend. Instead of a traditional server building pages on every request, the application is pre-built and served instantly from Vercel's global CDN. Dynamic content is then loaded as needed via API calls, resulting in a faster and more resilient user experience.
+
+The core components of this architecture are Next.js on Vercel, Supabase for backend services, and Google Gemini for AI capabilities.
 
 ```mermaid
 graph TB
@@ -14,20 +21,20 @@ graph TB
     end
 
     subgraph Vercel["Vercel Cloud Platform"]
-        NextJS["⚛️ Next.js 16 App Router<br/>React 19 + TypeScript"]
-        API["🔌 API Routes<br/>(21 REST endpoints)"]
+        NextJS["⚛️ Next.js App Router<br/>React + TypeScript"]
+        API["🔌 API Routes<br/>(22 REST endpoints)"]
         ServerActions["⚡ Server Actions<br/>(form submissions)"]
     end
 
     subgraph Supabase["Supabase Backend"]
         Auth["🔐 Supabase Auth<br/>(JWT + OAuth)"]
-        DB[("📊 PostgreSQL<br/>(11 tables)<br/>RLS enabled")]
+        DB[("📊 PostgreSQL<br/>(12 tables)<br/>RLS enabled")]
         Storage["📦 Storage Buckets<br/>(workout selfies)"]
         RLS["🛡️ Row Level Security<br/>(user_id policies)"]
     end
 
     subgraph External["External Services"]
-        Gemini["🤖 Google Gemini 2.5 Pro<br/>(AI generation)"]
+        Gemini["🤖 Google Gemini Pro<br/>(AI generation)"]
         OAuth["🔑 OAuth Providers<br/>(Google)"]
     end
 
@@ -57,40 +64,39 @@ graph TB
 ```
 
 **Flow Explanation:**
-1. **Client → Vercel**: Users access via browser or installed PWA over HTTPS
-2. **Next.js → Supabase**: Server Actions and API routes authenticate with JWT tokens
-3. **Auth → RLS**: Every database query is filtered by the authenticated user's ID
-4. **API → Storage**: Workout selfies stored in private buckets (max 5MB per file)
-5. **API → Gemini**: AI generates workout plans and weekly analysis on-demand
-6. **Auth → OAuth**: Google OAuth for seamless authentication
+
+The user journey begins in the browser or the installed Progressive Web App (PWA), where they interact with the Next.js frontend hosted on Vercel. For data-fetching, the client makes HTTPS requests to Next.js API Routes. For data mutations, such as submitting a form to log a workout, the application uses Server Actions for a seamless user experience with optimistic UI updates.
+
+Both API Routes and Server Actions act as a gateway to the Supabase backend. Every request to Supabase is authenticated using JWTs managed by Supabase Auth. Supabase's powerful Row-Level Security (RLS) policies ensure that any query to the PostgreSQL database is automatically scoped to the authenticated user's data, providing a critical layer of security and data privacy.
+
+For features requiring AI, such as generating a new workout plan or analyzing weekly progress, the API routes communicate with Google's Gemini Pro model. User-uploaded images, like workout selfies, are securely handled by Supabase Storage.
 
 ## Tech Stack
 
+This section outlines the key technologies and the rationale for their selection.
+
 ### Frontend
-- **Framework:** Next.js 16.0.3 (App Router with Turbopack)
-- **Language:** TypeScript 5
-- **UI:** React 19.2.0 + Tailwind CSS 4 + shadcn/ui (Radix UI)
-- **State:** React hooks + Zustand 5.0.8 (minimal)
-- **Forms:** React Hook Form 7.66.0 + Zod 4.1.12 validation
-- **Charts:** Recharts 3.4.1
-- **Icons:** Lucide React 0.554.0
-- **Date Utils:** date-fns 4.1.0
-- **PWA:** @ducanh2912/next-pwa 10.2.9
+- **Framework: Next.js (App Router)**: Chosen for its hybrid rendering capabilities (SSR/SSG), file-based routing, and seamless deployment on Vercel. The App Router enables a modern, component-centric architecture.
+- **Language: TypeScript**: Enforces static typing to catch errors early, improve code quality, and make the codebase more maintainable and self-documenting.
+- **UI: React + Tailwind CSS + shadcn/ui**: This combination allows for building a modern, responsive, and accessible user interface. React provides the component model, Tailwind CSS offers a utility-first styling approach, and shadcn/ui delivers unstyled, composable components built on Radix UI for maximum flexibility.
+- **State Management: Zustand**: A minimal, fast, and scalable state management solution. Its simple, hook-based API reduces boilerplate and is ideal for managing shared client-side state without the complexity of larger libraries.
+- **Forms: React Hook Form + Zod**: Provides a powerful and efficient solution for form state management and validation. React Hook Form minimizes re-renders, while Zod enables schema-based validation on both the client and server.
+- **Charts: Recharts**: A composable charting library for React, used to create the data visualizations for workout progress and body measurements.
+- **Icons: Lucide React**: A library of clean, consistent, and lightweight SVG icons that are easy to customize and tree-shake.
+- **Date Utils: date-fns**: A modern and lightweight library for date manipulation, offering a simple API and immutable functions.
+- **Notifications: Sonner**: Provides an elegant and unobtrusive way to display toast notifications for user actions like saving data or encountering an error.
+- **PWA: @ducanh2912/next-pwa**: Enables Progressive Web App capabilities, allowing users to install the application on their devices for offline access and a native-like experience.
 
 ### Backend
-- **Database:** PostgreSQL via Supabase
-- **Auth:** Supabase Auth (@supabase/ssr 0.7.0, email/OAuth)
-- **Storage:** Supabase Storage (workout selfies, max 5MB)
-- **Security:** Row-Level Security (RLS) policies on all tables
-- **API:** Next.js API routes (21 endpoints) + Server Actions
+- **Platform: Supabase (PostgreSQL)**: A Backend-as-a-Service (BaaS) platform that provides a managed PostgreSQL database, authentication, storage, and auto-generated APIs. It was chosen to accelerate development by handling backend infrastructure, allowing the team to focus on application features.
+- **Database: PostgreSQL**: A powerful, open-source object-relational database known for its reliability, data integrity, and rich feature set, including native support for JSONB and Row-Level Security.
+- **Authentication: Supabase Auth**: A complete authentication solution that handles user registration, login (email/password and OAuth), and JWT management. It integrates seamlessly with PostgreSQL's Row-Level Security.
+- **File Storage: Supabase Storage**: Used for securely storing user-uploaded files like workout selfies. Access is controlled by RLS policies, ensuring users can only access their own files.
+- **Security: Row-Level Security (RLS)**: A core security feature of PostgreSQL, leveraged via Supabase. It enforces data access policies at the database level, guaranteeing that all queries are automatically filtered by the authenticated user's ID.
+- **API Layer: Next.js API Routes & Server Actions**: Backend logic is co-located with the frontend in the Next.js application. API Routes provide traditional REST endpoints, while Server Actions handle form submissions and mutations directly from components, simplifying data flow.
 
 ### AI Services
-- **Provider:** Google Gemini 2.5 Pro (@google/generative-ai 0.24.1)
-- **Use Cases:**
-  - AI-generated workout plans
-  - Weekly workout analysis
-- **Cost:** ~$0.01 per analysis
-- **Trigger:** Manual + Auto-generation on dashboard visit
+- **Provider: Google Gemini Pro**: A powerful large language model from Google, chosen for its advanced reasoning capabilities, large context window, and cost-effectiveness. It is used to power the AI-driven features of the application, including personalized workout plan generation and weekly performance analysis.
 
 ## Key Architectural Decisions
 
@@ -101,7 +107,7 @@ See [ADRs](adr/) for detailed decision rationale:
 
 ### Entity Relationship Diagram
 
-11 tables with full Row-Level Security (RLS) policies. All tables implement soft deletes via `deleted_at` timestamp.
+12 tables with full Row-Level Security (RLS) policies. All tables implement soft deletes via `deleted_at` timestamp.
 
 ```mermaid
 erDiagram
@@ -348,7 +354,7 @@ sequenceDiagram
     participant UI as Next.js UI
     participant API as API Route
     participant DB as PostgreSQL
-    participant AI as Gemini 2.5 Pro
+    participant AI as Gemini Pro
     participant Jobs as Generation Jobs
 
     User->>UI: Click "Generate Plan"
@@ -395,7 +401,7 @@ sequenceDiagram
     participant Dashboard as Dashboard Page
     participant API as API Route
     participant DB as PostgreSQL
-    participant AI as Gemini 2.5 Pro
+    participant AI as Gemini Pro
 
     User->>Dashboard: Visit /dashboard
     Dashboard->>API: GET /api/weekly-analysis/latest
@@ -559,7 +565,7 @@ flowchart TD
    - Motivational quote
    - View/dismiss functionality
 
-### API Endpoints (21 routes)
+### API Endpoints (22 routes)
 - **Auth:** `/api/auth/callback`
 - **Workouts:** `/api/workouts` (GET, POST)
 - **Goals:** `/api/goals` (GET, POST)
@@ -573,7 +579,7 @@ flowchart TD
 ## AI Integration Details
 
 ### Workout Plan Generation (`lib/workout-plans/ai-generator.ts`)
-**Model:** Google Gemini 2.5 Pro
+**Model:** Google Gemini Pro
 **Temperature:** 0.7 (balanced creativity)
 **Max Tokens:** 16,000
 
@@ -595,7 +601,7 @@ flowchart TD
 **Output:** Structured JSON with weekly schedule, exercises (sets/reps/weights), intensity levels, rationale, progression strategy
 
 ### Weekly Analysis (`lib/weekly-analysis/ai-analyzer.ts`)
-**Model:** Google Gemini 2.5 Pro
+**Model:** Google Gemini Pro
 **Schedule:** Auto-trigger on dashboard visit if no analysis exists for current week
 
 **Data Analyzed:**
@@ -644,7 +650,7 @@ flowchart TD
 - **Turbopack** for faster development builds
 - **Image optimization** (next/image with WebP/AVIF, responsive sizes)
 - **PWA caching** with aggressive front-end nav caching
-- **React 19** with improved concurrency features
+- **React** with improved concurrency features
 
 ### Backend
 - **Database connection pooling** via Supabase
@@ -657,7 +663,7 @@ flowchart TD
 - **Async job processing** via workout_plan_generation_jobs table
 - **Auto-trigger** weekly analysis on dashboard visit (not scheduled cron)
 - **Error handling** per-user (fail gracefully with error messages)
-- **Cost optimization** (~$0.01 per analysis with Gemini 2.5 Pro)
+- **Cost optimization** (~$0.01 per analysis with Gemini Pro)
 
 ### Storage
 - **Supabase Storage** for workout selfies
@@ -675,9 +681,9 @@ flowchart TD
 - PWA configuration via @ducanh2912/next-pwa
 
 ### `package.json`
-- Node.js >= 22.0.0 required
-- Yarn >= 1.22.0
-- Scripts: `dev`, `build`, `build:skip-lint`, `test`, `lint`, `api:docs`, `api:validate`
+- **Node.js:** >=22.0.0 required
+- **Package Manager:** Yarn
+- **Scripts:** `dev`, `build`, `build:skip-lint`, `test`, `lint`, `api:docs`, `api:validate`
 
 ### `public/manifest.json`
 - App name: "GoodHealth - Gym Tracker"
@@ -688,7 +694,7 @@ flowchart TD
 ## Testing & CI/CD
 
 ### Testing
-- **Framework:** Jest 30.2.0 with jsdom environment
+- **Framework:** Jest with jsdom environment
 - **Library:** Testing Library (React, DOM, User Events)
 - **Coverage:** Tracked with Codecov
 - **Commands:**
@@ -701,7 +707,7 @@ flowchart TD
 - **Jobs:**
   1. **Test:** Lint + Jest with coverage → Codecov upload
   2. **Build:** Next.js build with Supabase env vars
-- **Node Version:** 24 (should align with package.json requirement >=22)
+- **Node Version:** >=22.0.0 (aligns with package.json requirement)
 - **Badges:** CI status, Codecov, MIT License
 
 ## Monitoring & Logging
@@ -726,7 +732,7 @@ graph TB
     end
 
     subgraph "API Layer"
-        APIRoutes["/app/api<br/>21 REST endpoints<br/>Route handlers"]
+        APIRoutes["/app/api<br/>22 REST endpoints<br/>Route handlers"]
         ServerActions["Server Actions<br/>Form submissions"]
     end
 
@@ -745,12 +751,12 @@ graph TB
     subgraph "Data Layer"
         SupabaseClient["/lib/supabase/client.ts<br/>Browser client"]
         SupabaseServer["/lib/supabase/server.ts<br/>Server client"]
-        Database[("PostgreSQL<br/>11 tables")]
+        Database[("PostgreSQL<br/>12 tables")]
         Storage[("Supabase Storage<br/>workout-selfies")]
     end
 
     subgraph "External Services"
-        Gemini["Google Gemini 2.5 Pro<br/>AI generation"]
+        Gemini["Google Gemini Pro<br/>AI generation"]
     end
 
     Pages --> Components
@@ -801,7 +807,7 @@ graph TB
 ```
 goodhealth/
 ├── app/                           # Next.js App Router (26+ routes)
-│   ├── api/                       # API Routes (21 endpoints)
+│   ├── api/                       # API Routes (22 endpoints)
 │   │   ├── auth/callback/         # OAuth callback
 │   │   ├── goals/                 # Goals CRUD
 │   │   ├── workouts/              # Workout CRUD
@@ -882,7 +888,7 @@ goodhealth/
 │   └── ...                        # Custom components
 │
 ├── migrations/                    # Database Migrations
-│   ├── 000_consolidated_schema.sql       # Base schema (11 tables)
+│   ├── 000_consolidated_schema.sql       # Base schema (12 tables)
 │   ├── 001_add_plan_start_dates.sql      # Start date fields
 │   └── 002_add_weekly_workout_analysis.sql # Weekly analysis
 │
@@ -892,14 +898,14 @@ goodhealth/
 │   ├── TESTING.md                 # Testing guide
 │   ├── DEPLOYMENT.md              # Deployment guide
 │   ├── api/                       # API Documentation
-│   │   └── openapi.yaml           # OpenAPI 3.1.0 spec
+│   │   └── openapi.yaml           # OpenAPI spec
 │   └── adr/                       # Architecture Decisions
 │       └── 001-weekly-analysis-ai-gemini.md
 │
 ├── public/                        # Static Assets
 │   ├── manifest.json              # PWA manifest
 │   ├── favicon.ico                # Favicon
-│   └── icons/                     # App icons (TODO)
+│   └── icons/                     # App icons
 │
 ├── next.config.ts                 # Next.js config (Turbopack, PWA)
 ├── tailwind.config.ts             # Tailwind CSS config
@@ -908,14 +914,14 @@ goodhealth/
 ├── package.json                   # Dependencies & scripts
 └── README.md                      # Project overview
 
-⭐ = AI-powered with Google Gemini 2.5 Pro
+⭐ = AI-powered with Google Gemini Pro
 ```
 
 ### Key Files
 
 **AI & Core Logic:**
-- `lib/workout-plans/ai-generator.ts` - Gemini workout plan generation (16K tokens, temp 0.7)
-- `lib/weekly-analysis/ai-analyzer.ts` - Gemini weekly analysis (~$0.01/analysis)
+- `lib/workout-plans/ai-generator.ts` - Gemini workout plan generation
+- `lib/weekly-analysis/ai-analyzer.ts` - Gemini weekly analysis
 - `lib/workout-plans/planning/progressive-overload.ts` - Weight progression algorithm
 - `lib/goals/sync.ts` - Goal-plan synchronization
 
@@ -929,7 +935,7 @@ goodhealth/
 - `app/dashboard/page.tsx` - Main dashboard (triggers weekly analysis)
 
 **API Documentation:**
-- `docs/api/openapi.yaml` - OpenAPI 3.1.0 specification (22 operationIds)
+- `docs/api/openapi.yaml` - OpenAPI specification (22 operationIds)
 
 **Configuration:**
 - `next.config.ts` - Turbopack, PWA, image optimization, 10MB body limit
