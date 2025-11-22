@@ -3,7 +3,7 @@
  */
 import { NextRequest } from 'next/server'
 import { GET } from '@/app/api/cron/weekly-analysis/route'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { generateWeeklyAnalysis, saveWeeklyAnalysis } from '@/lib/weekly-analysis/ai-analyzer'
 
 jest.mock('@/lib/supabase/server')
@@ -16,7 +16,7 @@ const mockSupabase = {
 describe('Weekly Analysis Cron Job', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(createClient as jest.Mock).mockResolvedValue(mockSupabase)
+    ;(createServiceClient as jest.Mock).mockReturnValue(mockSupabase)
     process.env.CRON_SECRET = 'test-secret'
   })
 

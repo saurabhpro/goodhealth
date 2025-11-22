@@ -15,10 +15,16 @@ Add in Vercel Dashboard → Settings → Environment Variables:
 ```
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
 NEXT_PUBLIC_APP_URL
 GEMINI_API_KEY
 CRON_SECRET
 ```
+
+**Required for cron jobs:**
+- `SUPABASE_SERVICE_ROLE_KEY` - Get from Supabase Dashboard → Settings → API → service_role key
+  - Used by weekly analysis cron to bypass RLS and query all users
+  - Keep this secret, never expose in client-side code
 
 Generate CRON_SECRET:
 ```bash

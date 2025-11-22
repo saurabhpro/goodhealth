@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import {
   generateWeeklyAnalysis,
   saveWeeklyAnalysis,
@@ -23,6 +23,9 @@ import { startOfWeek, endOfWeek, subWeeks, format } from 'date-fns'
  *     "schedule": "0 8 * * 1"
  *   }]
  * }
+ *
+ * IMPORTANT: Requires SUPABASE_SERVICE_ROLE_KEY environment variable
+ * to bypass RLS and query all users' data.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -34,8 +37,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Create Supabase client
-    const supabase = await createClient()
+    // Create service role client (bypasses RLS)
+    const supabase = createServiceClient()
 
     // Get last week's Monday
     const lastMonday = startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 })
