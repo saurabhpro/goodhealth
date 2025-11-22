@@ -12,7 +12,18 @@ info:
     - Development: `http://localhost:3000/api`
     - Production: `https://goodhealth-three.vercel.app/api`
 
-  version: 1.0.0
+    ## Features
+    - Workout tracking and analytics
+    - Goal setting and progress monitoring
+    - AI-powered workout plan generation
+    - Weekly analysis with AI insights
+    - Body measurements tracking
+
+    ## Session-Based Weekly Analysis
+    All weekly analysis endpoints use the authenticated user's session.
+    Analysis is generated automatically on first dashboard visit each week.
+
+  version: 2.0.0
   contact:
     name: API Support
     url: https://github.com/saurabhpro/goodhealth
@@ -44,8 +55,6 @@ tags:
     description: Image optimization and serving
   - name: Auth
     description: Authentication callbacks
-  - name: Cron
-    description: Scheduled background jobs
 
 security:
   - BearerAuth: []
@@ -799,11 +808,24 @@ paths:
     get:
       tags:
         - Weekly Analysis
-      summary: Get latest weekly analysis
-      description: Retrieve the most recent analysis for the authenticated user
+      summary: Get latest weekly analysis for current week
+      description: |
+        Retrieves the weekly analysis for the authenticated user.
+
+        **Week Detection:**
+        - Returns analysis only if it's for the current week (last Monday)
+        - Returns 404 if no analysis exists OR if analysis is from a previous week
+
+        **Auto-Generation:**
+        - When 404 is returned, the dashboard automatically triggers generation in background
+        - Analysis will be available on next visit/refresh
+
+        **Week Boundary:**
+        - Week starts on Monday
+        - Analysis is for the previous week's workouts
       responses:
         '200':
-          description: Successful response
+          description: Analysis found for current week
           content:
             application/json:
               schema:
@@ -814,7 +836,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/WeeklyAnalysis'
         '404':
-          description: No analysis found
+          description: No analysis for current week (triggers auto-generation)
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -874,48 +896,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /cron/weekly-analysis:
-    get:
-      tags:
-        - Cron
-      summary: Weekly analysis cron job
-      description: |
-        Generates weekly analysis for all eligible users.
-        Runs every Monday at 8:00 AM via Vercel Cron.
-        **Requires CRON_SECRET header for authentication.**
-      security:
-        - CronSecret: []
-      responses:
-        '200':
-          description: Cron job completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-                  results:
-                    type: object
-                    properties:
-                      total_users:
-                        type: integer
-                      successful:
-                        type: integer
-                      failed:
-                        type: integer
-                      errors:
-                        type: array
-                        items:
-                          type: string
-                  timestamp:
-                    type: string
-                    format: date-time
-        '401':
-          description: Invalid CRON_SECRET
-
 components:
   securitySchemes:
     BearerAuth:
@@ -923,11 +903,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Supabase session token
-    CronSecret:
-      type: apiKey
-      in: header
-      name: Authorization
-      description: Bearer token with CRON_SECRET value
 
   schemas:
     WeeklyAnalysis:
