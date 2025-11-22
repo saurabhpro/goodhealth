@@ -1451,50 +1451,6 @@ components:
           type: string
           format: date-time
 
-    Exercise:
-      type: object
-      properties:
-        name:
-          type: string
-          example: "Bench Press"
-        exercise_type:
-          type: string
-          enum: [strength, cardio]
-          example: "strength"
-        sets:
-          type: integer
-          nullable: true
-          example: 3
-        reps:
-          type: integer
-          nullable: true
-          example: 10
-        weight:
-          type: number
-          format: float
-          nullable: true
-          example: 60.0
-        weight_unit:
-          type: string
-          nullable: true
-          example: "kg"
-        duration:
-          type: integer
-          nullable: true
-          description: Duration in seconds (for cardio)
-        distance:
-          type: number
-          format: float
-          nullable: true
-          description: Distance (for cardio)
-        distance_unit:
-          type: string
-          nullable: true
-          example: "km"
-        notes:
-          type: string
-          nullable: true
-
   responses:
     BadRequest:
       description: Bad request - validation error
@@ -1550,10 +1506,3 @@ components:
               error:
                 type: string
                 example: "An unexpected error occurred"
-
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: Supabase session token
