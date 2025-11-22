@@ -4,7 +4,7 @@ import {
   generateWeeklyAnalysis,
   saveWeeklyAnalysis,
 } from '@/lib/weekly-analysis/ai-analyzer'
-import { startOfWeek, subWeeks } from 'date-fns'
+import { startOfWeek, endOfWeek, subWeeks, format } from 'date-fns'
 
 /**
  * GET /api/cron/weekly-analysis
@@ -34,10 +34,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Create admin Supabase client (bypasses RLS)
+    // Create Supabase client
     const supabase = await createClient()
 
-    // Get all users who have active goals or workout plans
+    // Get last week's Monday
+    const lastMonday = startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 })
+    const lastSunday = endOfWeek(lastMonday, { weekStartsOn: 1 })
+
+    // Get all users who had workouts last week OR have active goals/plans
+    const { data: usersWithWorkouts } = await supabase
+      .from('workouts')
+      .select('user_id')
+      .gte('date', format(lastMonday, 'yyyy-MM-dd'))
+      .lte('date', format(lastSunday, 'yyyy-MM-dd'))
+      .is('deleted_at', null)
+
     const { data: usersWithGoals } = await supabase
       .from('goals')
       .select('user_id')
@@ -52,6 +63,7 @@ export async function GET(request: NextRequest) {
 
     // Combine and deduplicate user IDs
     const allUserIds = new Set([
+      ...(usersWithWorkouts?.map((w) => w.user_id) || []),
       ...(usersWithGoals?.map((g) => g.user_id) || []),
       ...(usersWithPlans?.map((p) => p.user_id) || []),
     ])
@@ -62,9 +74,6 @@ export async function GET(request: NextRequest) {
       failed: 0,
       errors: [] as string[],
     }
-
-    // Get last week's Monday
-    const lastMonday = startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 })
 
     // Generate analysis for each user
     for (const userId of allUserIds) {
