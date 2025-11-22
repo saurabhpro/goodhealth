@@ -10,7 +10,7 @@ Users need personalized insights into their workout performance. Manual analysis
 
 ## Decision
 
-Use Google Gemini 2.0 Flash for AI-powered weekly workout analysis running via Vercel Cron every Monday at 8:00 AM.
+Use Google Gemini 2.5 Pro for AI-powered weekly workout analysis running via Vercel Cron every Monday at 8:00 AM.
 
 ## Rationale
 

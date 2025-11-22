@@ -37,10 +37,11 @@ Visit http://localhost:3000
 
 ## Documentation
 
+- [Setup Guide](docs/SETUP.md) - Installation and configuration
+- [Deployment](docs/DEPLOYMENT.md) - Deploy to Vercel/Netlify/Railway
 - [Architecture](docs/ARCHITECTURE.md) - System design and technical decisions
 - [ADRs](docs/adr/) - Architectural Decision Records
-- [Setup Guide](docs/SETUP.md) - Detailed installation and configuration
-- [Contributing](CONTRIBUTING.md) - Development guidelines
+- [Testing](TESTING.md) - Run and write tests
 
 ## Tech Stack
 
