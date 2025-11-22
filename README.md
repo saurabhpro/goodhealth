@@ -399,6 +399,9 @@ View the OpenAPI specification for the REST API:
   - ⏳ Testing and debugging
 
 ### Planned 📋
+- [ ] initial landing page should be attractive
+- [ ] change workout page to show ai is cooking your plan until it's generated
+- [ ] ability to move workout to different date rescheduling
 - [ ] Workout templates
 - [ ] Profile/settings persistence
 - [ ] Exercise history tracking with charts
