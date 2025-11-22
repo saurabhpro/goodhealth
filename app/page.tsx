@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { getUser } from '@/lib/auth/actions'
-import { Dumbbell, TrendingUp, Target, Users, Sparkles } from 'lucide-react'
+import { Dumbbell, TrendingUp, Target, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export default function Home() {

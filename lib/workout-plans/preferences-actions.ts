@@ -11,9 +11,9 @@ import type {
   UserWorkoutPreferences,
   InsertUserWorkoutPreferences,
   UpdateUserWorkoutPreferences,
-  UserWorkoutTemplate,
-  InsertUserWorkoutTemplate,
-  UpdateUserWorkoutTemplate,
+  WorkoutTemplate,
+  InsertWorkoutTemplate,
+  UpdateWorkoutTemplate,
 } from '@/types'
 
 // ============================================================================
@@ -147,7 +147,7 @@ export async function getUserTemplates(options?: {
   isActive?: boolean
   workoutType?: string
 }): Promise<{
-  templates?: UserWorkoutTemplate[]
+  templates?: WorkoutTemplate[]
   error?: string
 }> {
   const supabase = await createClient()
@@ -192,7 +192,7 @@ export async function getUserTemplates(options?: {
 export async function getUserTemplate(
   templateId: string
 ): Promise<{
-  template?: UserWorkoutTemplate
+  template?: WorkoutTemplate
   error?: string
 }> {
   const supabase = await createClient()
@@ -226,9 +226,9 @@ export async function getUserTemplate(
  * Create a new user template
  */
 export async function createUserTemplate(
-  template: Omit<InsertUserWorkoutTemplate, 'user_id'>
+  template: Omit<InsertWorkoutTemplate, 'user_id'>
 ): Promise<{
-  template?: UserWorkoutTemplate
+  template?: WorkoutTemplate
   error?: string
 }> {
   const supabase = await createClient()
@@ -266,9 +266,9 @@ export async function createUserTemplate(
  */
 export async function updateUserTemplate(
   templateId: string,
-  updates: UpdateUserWorkoutTemplate
+  updates: UpdateWorkoutTemplate
 ): Promise<{
-  template?: UserWorkoutTemplate
+  template?: WorkoutTemplate
   error?: string
 }> {
   const supabase = await createClient()

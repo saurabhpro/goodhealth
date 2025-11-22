@@ -242,9 +242,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg sm:text-xl">
+                <CardTitle className="text-md sm:text-xl">
                   {activePlan.name}
-                  {currentWeek && <span className="text-sm font-normal text-muted-foreground ml-2">Week {currentWeek}</span>}
+                  {!!(currentWeek) && <span className="text-sm font-normal text-muted-foreground ml-2">Week {currentWeek}</span>}
                 </CardTitle>
               </div>
               <Badge

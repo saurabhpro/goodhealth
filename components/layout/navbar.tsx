@@ -57,7 +57,7 @@ export function Navbar() {
 
       // Navigate to home page (which shows onboarding)
       // Use window.location for full page reload to ensure clean state
-      window.location.href = '/'
+      globalThis.location.href = '/'
     } catch (error) {
       console.error('Error signing out:', error)
       setSigningOut(false)

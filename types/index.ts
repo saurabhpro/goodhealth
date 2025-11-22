@@ -27,14 +27,6 @@ export type UpdateWorkoutPlan = Database['public']['Tables']['workout_plans']['U
 export type UpdateWorkoutPlanSession = Database['public']['Tables']['workout_plan_sessions']['Update']
 export type UpdateUserWorkoutPreferences = Database['public']['Tables']['user_workout_preferences']['Update']
 
-// Legacy type aliases for backward compatibility (will be removed after full migration)
-/** @deprecated Use WorkoutTemplate instead - user_workout_templates table has been consolidated */
-export type UserWorkoutTemplate = WorkoutTemplate
-/** @deprecated Use InsertWorkoutTemplate instead - user_workout_templates table has been consolidated */
-export type InsertUserWorkoutTemplate = InsertWorkoutTemplate
-/** @deprecated Use UpdateWorkoutTemplate instead - user_workout_templates table has been consolidated */
-export type UpdateUserWorkoutTemplate = UpdateWorkoutTemplate
-
 export interface WorkoutWithExercises extends Workout {
   exercises: Exercise[]
 }
@@ -75,7 +67,7 @@ export interface UserPreferencesWithDefaults extends Partial<UserWorkoutPreferen
   user_id: string
 }
 
-export interface UserWorkoutTemplateWithExercises extends UserWorkoutTemplate {
+export interface UserWorkoutTemplateWithExercises extends WorkoutTemplate {
   exerciseDetails?: Exercise[]
 }
 
@@ -86,7 +78,7 @@ export interface AIGeneratePlanRequest {
   workoutHistory: Workout[]
   weeksCount: number
   workoutsPerWeek: number
-  userTemplates?: UserWorkoutTemplate[]
+  userTemplates?: WorkoutTemplate[]
 }
 
 export interface AIGeneratedPlan {
