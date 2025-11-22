@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: GoodHealth API
   description: |
@@ -12,12 +12,24 @@ info:
     - Development: `http://localhost:3000/api`
     - Production: `https://goodhealth-three.vercel.app/api`
 
-  version: 1.0.0
+    ## Features
+    - Workout tracking and analytics
+    - Goal setting and progress monitoring
+    - AI-powered workout plan generation
+    - Weekly analysis with AI insights
+    - Body measurements tracking
+
+    ## Session-Based Weekly Analysis
+    All weekly analysis endpoints use the authenticated user's session.
+    Analysis is generated automatically on first dashboard visit each week.
+
+  version: 2.0.0
   contact:
     name: API Support
     url: https://github.com/saurabhpro/goodhealth
   license:
     name: MIT
+    url: https://opensource.org/licenses/MIT
 
 servers:
   - url: http://localhost:3000/api
@@ -44,8 +56,6 @@ tags:
     description: Image optimization and serving
   - name: Auth
     description: Authentication callbacks
-  - name: Cron
-    description: Scheduled background jobs
 
 security:
   - BearerAuth: []
@@ -53,63 +63,67 @@ security:
 paths:
   /goals:
     get:
+      operationId: getGoals
       tags:
         - Goals
       summary: Get all user goals
       description: Retrieves all goals for the authenticated user
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Goal'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
+                  $ref: "#/components/schemas/Goal"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /workouts:
     get:
+      operationId: getWorkouts
       tags:
         - Workouts
       summary: Get all user workouts
       description: Retrieves all workouts with exercises and selfies for the authenticated user
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Workout'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
+                  $ref: "#/components/schemas/Workout"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /workout-plans:
     get:
+      operationId: getWorkoutPlans
       tags:
         - Workout Plans
       summary: Get all workout plans
       description: Retrieves all workout plans for the authenticated user
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/WorkoutPlan'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                  $ref: "#/components/schemas/WorkoutPlan"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     post:
+      operationId: createWorkoutPlan
       tags:
         - Workout Plans
       summary: Create a new workout plan
@@ -130,15 +144,16 @@ paths:
                   example: "Summer Fitness Plan"
                 description:
                   type: string
-                  nullable: true
+
                   example: "12-week plan for general fitness"
                 goal_id:
                   type: string
                   format: uuid
-                  nullable: true
+
                 goal_type:
                   type: string
-                  enum: [weight_loss, muscle_building, endurance, general_fitness]
+                  enum:
+                    [weight_loss, muscle_building, endurance, general_fitness]
                   example: "general_fitness"
                 weeks_duration:
                   type: integer
@@ -152,22 +167,23 @@ paths:
                   example: 4
                 avg_workout_duration:
                   type: integer
-                  nullable: true
+
                   example: 45
       responses:
-        '201':
+        "201":
           description: Plan created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkoutPlan'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/WorkoutPlan"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /workout-plans/generate:
     post:
+      operationId: generateWorkoutPlan
       tags:
         - Workout Plans
       summary: Generate AI workout plan
@@ -204,30 +220,30 @@ paths:
                   type: integer
                   minimum: 3
                   maximum: 7
-                  nullable: true
+
                   description: Optional override for workouts per week (calculated from goal if not provided)
                   example: 5
                 avgDuration:
                   type: integer
-                  nullable: true
+
                   description: Optional override for average workout duration in minutes
                   example: 60
                 startDate:
                   type: string
                   format: date-time
-                  nullable: true
+
                   description: Optional start date (defaults to today)
                 name:
                   type: string
-                  nullable: true
+
                   description: Optional custom plan name
                 description:
                   type: string
-                  nullable: true
+
                   description: Optional custom plan description
                 preferences:
                   type: object
-                  nullable: true
+
                   properties:
                     preferredDays:
                       type: array
@@ -251,7 +267,7 @@ paths:
                       description: Specific focus areas
                       example: ["upper_body", "cardio"]
       responses:
-        '200':
+        "200":
           description: Plan generated successfully
           content:
             application/json:
@@ -274,7 +290,13 @@ paths:
                         type: string
                       goal_type:
                         type: string
-                        enum: [weight_loss, muscle_building, endurance, general_fitness]
+                        enum:
+                          [
+                            weight_loss,
+                            muscle_building,
+                            endurance,
+                            general_fitness,
+                          ]
                       weeks_duration:
                         type: integer
                       workouts_per_week:
@@ -288,7 +310,7 @@ paths:
                     additionalProperties:
                       type: array
                       items:
-                        $ref: '#/components/schemas/WorkoutPlanSession'
+                        $ref: "#/components/schemas/WorkoutPlanSession"
                     description: Weekly schedule with keys like 'week1', 'week2', etc.
                   summary:
                     type: object
@@ -305,7 +327,7 @@ paths:
                       estimatedTotalTime:
                         type: integer
                         description: Total estimated time in minutes
-        '400':
+        "400":
           description: Bad request (validation error)
           content:
             application/json:
@@ -318,9 +340,9 @@ paths:
                   error:
                     type: string
                     example: "Invalid weeks count: must be between 1 and 12"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
           description: Goal not found
           content:
             application/json:
@@ -336,6 +358,7 @@ paths:
 
   /workout-plans/{id}:
     get:
+      operationId: getWorkoutPlan
       tags:
         - Workout Plans
       summary: Get workout plan by ID
@@ -347,18 +370,19 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkoutPlanWithSessions'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/WorkoutPlanWithSessions"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     patch:
+      operationId: updateWorkoutPlan
       tags:
         - Workout Plans
       summary: Update workout plan
@@ -380,23 +404,24 @@ paths:
                   type: string
                 description:
                   type: string
-                  nullable: true
+
                 status:
                   type: string
                   enum: [draft, active, completed, archived]
       responses:
-        '200':
+        "200":
           description: Plan updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkoutPlan'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/WorkoutPlan"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     delete:
+      operationId: deleteWorkoutPlan
       tags:
         - Workout Plans
       summary: Delete workout plan
@@ -409,15 +434,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
+        "204":
           description: Plan deleted successfully
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /workout-plans/{id}/week/{weekNumber}:
     get:
+      operationId: getWorkoutPlanWeek
       tags:
         - Workout Plans
       summary: Get sessions for a specific week
@@ -437,23 +463,24 @@ paths:
             minimum: 1
           description: Week number
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/WorkoutPlanSession'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/WorkoutPlanSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /workout-plans/sessions/{id}:
     get:
+      operationId: getWorkoutSession
       tags:
         - Workout Sessions
       summary: Get workout session by ID
@@ -465,18 +492,19 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkoutPlanSession'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/WorkoutPlanSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     patch:
+      operationId: updateWorkoutSession
       tags:
         - Workout Sessions
       summary: Update workout session
@@ -499,23 +527,24 @@ paths:
                 exercises:
                   type: array
                   items:
-                    $ref: '#/components/schemas/Exercise'
+                    $ref: "#/components/schemas/Exercise"
                 notes:
                   type: string
-                  nullable: true
+
       responses:
-        '200':
+        "200":
           description: Session updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkoutPlanSession'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/WorkoutPlanSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     delete:
+      operationId: deleteWorkoutSession
       tags:
         - Workout Sessions
       summary: Delete workout session
@@ -527,15 +556,16 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
+        "204":
           description: Session deleted successfully
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /workout-plans/sessions/{id}/details:
     get:
+      operationId: getWorkoutSessionDetails
       tags:
         - Workout Sessions
       summary: Get session details with template
@@ -554,7 +584,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
@@ -562,25 +592,27 @@ paths:
                 type: object
                 properties:
                   session:
-                    $ref: '#/components/schemas/WorkoutPlanSessionWithPlan'
+                    $ref: "#/components/schemas/WorkoutPlanSessionWithPlan"
                   template:
-                    allOf:
-                      - $ref: '#/components/schemas/WorkoutTemplate'
-                      - nullable: true
+                    oneOf:
+                      - $ref: "#/components/schemas/WorkoutTemplate"
+                      - type: "null"
+                    description: Template details if session is based on a template (null otherwise)
                   exercises:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Exercise'
+                      $ref: "#/components/schemas/Exercise"
                     description: Exercises from session or template (prioritizes session)
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /workout-plans/sessions/{id}/complete:
     post:
+      operationId: completeWorkoutSession
       tags:
         - Workout Sessions
       summary: Mark session as complete
@@ -608,36 +640,38 @@ paths:
                   format: uuid
                   description: ID of the completed workout
       responses:
-        '200':
+        "200":
           description: Session marked as complete
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkoutPlanSession'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/WorkoutPlanSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /profile:
     get:
+      operationId: getProfile
       tags:
         - Profile
       summary: Get user profile
       description: Retrieves the authenticated user's profile including personalization fields
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Profile'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
+                $ref: "#/components/schemas/Profile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
     put:
+      operationId: updateProfile
       tags:
         - Profile
       summary: Update user profile
@@ -679,16 +713,16 @@ paths:
                   example: ["weight_loss", "muscle_gain"]
                 medical_conditions:
                   type: string
-                  nullable: true
+
                   example: "Asthma, controlled with medication"
                   description: Medical conditions AI should consider for safety
                 injuries:
                   type: string
-                  nullable: true
+
                   example: "Previous right knee injury - avoid deep squats"
                   description: Injuries to avoid aggravating during workouts
       responses:
-        '200':
+        "200":
           description: Profile updated successfully
           content:
             application/json:
@@ -698,33 +732,35 @@ paths:
                   success:
                     type: boolean
                     example: true
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /workout-templates:
     get:
+      operationId: getWorkoutTemplates
       tags:
         - Workout Templates
       summary: Get all workout templates
       description: Retrieves user's own templates plus all public templates
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/WorkoutTemplate'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                  $ref: "#/components/schemas/WorkoutTemplate"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /images/{path}:
     get:
+      operationId: getImage
       tags:
         - Images
       summary: Get optimized image
@@ -752,18 +788,19 @@ paths:
             default: 75
           description: Quality (1-100)
       responses:
-        '200':
+        "200":
           description: Optimized image
           content:
             image/*:
               schema:
                 type: string
                 format: binary
-        '404':
+        "404":
           description: Image not found
 
   /weekly-analysis/generate:
     post:
+      operationId: generateWeeklyAnalysis
       tags:
         - Weekly Analysis
       summary: Generate weekly workout analysis
@@ -779,7 +816,7 @@ paths:
                   format: date
                   description: Optional - defaults to last Monday
       responses:
-        '200':
+        "200":
           description: Analysis generated successfully
           content:
             application/json:
@@ -789,21 +826,35 @@ paths:
                   success:
                     type: boolean
                   data:
-                    $ref: '#/components/schemas/WeeklyAnalysis'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
+                    $ref: "#/components/schemas/WeeklyAnalysis"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /weekly-analysis/latest:
     get:
+      operationId: getLatestWeeklyAnalysis
       tags:
         - Weekly Analysis
-      summary: Get latest weekly analysis
-      description: Retrieve the most recent analysis for the authenticated user
+      summary: Get latest weekly analysis for current week
+      description: |
+        Retrieves the weekly analysis for the authenticated user.
+
+        **Week Detection:**
+        - Returns analysis only if it's for the current week (last Monday)
+        - Returns 404 if no analysis exists OR if analysis is from a previous week
+
+        **Auto-Generation:**
+        - When 404 is returned, the dashboard automatically triggers generation in background
+        - Analysis will be available on next visit/refresh
+
+        **Week Boundary:**
+        - Week starts on Monday
+        - Analysis is for the previous week's workouts
       responses:
-        '200':
-          description: Successful response
+        "200":
+          description: Analysis found for current week
           content:
             application/json:
               schema:
@@ -812,14 +863,15 @@ paths:
                   success:
                     type: boolean
                   data:
-                    $ref: '#/components/schemas/WeeklyAnalysis'
-        '404':
-          description: No analysis found
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                    $ref: "#/components/schemas/WeeklyAnalysis"
+        "404":
+          description: No analysis for current week (triggers auto-generation)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /weekly-analysis/{id}/view:
     put:
+      operationId: markWeeklyAnalysisViewed
       tags:
         - Weekly Analysis
       summary: Mark analysis as viewed
@@ -832,7 +884,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Marked as viewed
           content:
             application/json:
@@ -843,11 +895,12 @@ paths:
                     type: boolean
                   message:
                     type: string
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /weekly-analysis/{id}/dismiss:
     put:
+      operationId: dismissWeeklyAnalysis
       tags:
         - Weekly Analysis
       summary: Dismiss analysis notification
@@ -860,7 +913,7 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        "200":
           description: Analysis dismissed
           content:
             application/json:
@@ -871,50 +924,8 @@ paths:
                     type: boolean
                   message:
                     type: string
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /cron/weekly-analysis:
-    get:
-      tags:
-        - Cron
-      summary: Weekly analysis cron job
-      description: |
-        Generates weekly analysis for all eligible users.
-        Runs every Monday at 8:00 AM via Vercel Cron.
-        **Requires CRON_SECRET header for authentication.**
-      security:
-        - CronSecret: []
-      responses:
-        '200':
-          description: Cron job completed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-                  results:
-                    type: object
-                    properties:
-                      total_users:
-                        type: integer
-                      successful:
-                        type: integer
-                      failed:
-                        type: integer
-                      errors:
-                        type: array
-                        items:
-                          type: string
-                  timestamp:
-                    type: string
-                    format: date-time
-        '401':
-          description: Invalid CRON_SECRET
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
 components:
   securitySchemes:
@@ -923,11 +934,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Supabase session token
-    CronSecret:
-      type: apiKey
-      in: header
-      name: Authorization
-      description: Bearer token with CRON_SECRET value
 
   schemas:
     WeeklyAnalysis:
@@ -983,7 +989,7 @@ components:
           additionalProperties: true
         measurements_comparison:
           type: object
-          nullable: true
+
           properties:
             weight_change:
               type: number
@@ -1002,7 +1008,7 @@ components:
         viewed_at:
           type: string
           format: date-time
-          nullable: true
+
         is_dismissed:
           type: boolean
 
@@ -1020,7 +1026,7 @@ components:
           example: "Lose 10kg"
         description:
           type: string
-          nullable: true
+
           example: "Weight loss goal for summer"
         target_value:
           type: number
@@ -1040,7 +1046,7 @@ components:
         target_date:
           type: string
           format: date
-          nullable: true
+
         achieved:
           type: boolean
         created_at:
@@ -1063,48 +1069,48 @@ components:
           example: "user@example.com"
         full_name:
           type: string
-          nullable: true
+
           example: "John Doe"
         avatar_url:
           type: string
-          nullable: true
+
           example: "https://example.com/avatar.jpg"
         date_of_birth:
           type: string
           format: date
-          nullable: true
+
           example: "1990-01-15"
           description: Used for age-based recommendations
         gender:
           type: string
           enum: [male, female, other, prefer_not_to_say]
-          nullable: true
+
           example: "male"
         height_cm:
           type: number
           format: float
-          nullable: true
+
           example: 175.5
           description: Height in centimeters for BMI calculation
         fitness_level:
           type: string
           enum: [beginner, intermediate, advanced]
-          nullable: true
+
           example: "intermediate"
         fitness_goals:
           type: array
           items:
             type: string
-          nullable: true
+
           example: ["weight_loss", "muscle_gain"]
         medical_conditions:
           type: string
-          nullable: true
+
           example: "Asthma, controlled with medication"
           description: Medical conditions for AI safety considerations
         injuries:
           type: string
-          nullable: true
+
           example: "Previous right knee injury"
           description: Past or current injuries to avoid aggravating
         created_at:
@@ -1128,7 +1134,7 @@ components:
           example: "Morning Chest & Triceps"
         description:
           type: string
-          nullable: true
+
           example: "Upper body workout"
         date:
           type: string
@@ -1136,24 +1142,24 @@ components:
           example: "2025-01-21"
         duration_minutes:
           type: integer
-          nullable: true
+
           example: 45
         effort_level:
           type: integer
           minimum: 1
           maximum: 6
-          nullable: true
+
           example: 4
           description: Effort level from 1 (very easy) to 6 (maximum)
         exercises:
           type: array
           items:
-            $ref: '#/components/schemas/Exercise'
+            $ref: "#/components/schemas/Exercise"
           description: List of exercises in this workout
         workout_selfies:
           type: array
           items:
-            $ref: '#/components/schemas/WorkoutSelfie'
+            $ref: "#/components/schemas/WorkoutSelfie"
           description: Progress photos from this workout
         created_at:
           type: string
@@ -1180,53 +1186,53 @@ components:
           example: "strength"
         sets:
           type: integer
-          nullable: true
+
           example: 4
         reps:
           type: integer
-          nullable: true
+
           example: 10
         weight:
           type: number
           format: float
-          nullable: true
+
           example: 60.0
         weight_unit:
           type: string
           enum: [kg, lbs]
-          nullable: true
+
           example: "kg"
         duration_minutes:
           type: integer
-          nullable: true
+
           example: 30
           description: For cardio exercises
         distance:
           type: number
           format: float
-          nullable: true
+
           example: 5.0
           description: Distance in km (for cardio)
         speed:
           type: number
           format: float
-          nullable: true
+
           description: Speed in km/h (for cardio)
         calories:
           type: integer
-          nullable: true
+
           description: Calories burned (for cardio)
         resistance_level:
           type: integer
-          nullable: true
+
           description: Resistance level (for cardio machines)
         incline:
           type: integer
-          nullable: true
+
           description: Incline percentage (for treadmill)
         notes:
           type: string
-          nullable: true
+
         created_at:
           type: string
           format: date-time
@@ -1248,7 +1254,7 @@ components:
           description: Temporary signed URL for accessing the image
         caption:
           type: string
-          nullable: true
+
         created_at:
           type: string
           format: date-time
@@ -1267,11 +1273,11 @@ components:
           example: "Summer Fitness Plan"
         description:
           type: string
-          nullable: true
+
         goal_id:
           type: string
           format: uuid
-          nullable: true
+
         goal_type:
           type: string
           enum: [weight_loss, muscle_building, endurance, general_fitness]
@@ -1288,7 +1294,7 @@ components:
           example: 4
         avg_workout_duration:
           type: integer
-          nullable: true
+
           example: 45
         status:
           type: string
@@ -1297,11 +1303,11 @@ components:
         started_at:
           type: string
           format: date-time
-          nullable: true
+
         completed_at:
           type: string
           format: date-time
-          nullable: true
+
         created_at:
           type: string
           format: date-time
@@ -1311,13 +1317,13 @@ components:
 
     WorkoutPlanWithSessions:
       allOf:
-        - $ref: '#/components/schemas/WorkoutPlan'
+        - $ref: "#/components/schemas/WorkoutPlan"
         - type: object
           properties:
             sessions:
               type: array
               items:
-                $ref: '#/components/schemas/WorkoutPlanSession'
+                $ref: "#/components/schemas/WorkoutPlanSession"
 
     WorkoutPlanSession:
       type: object
@@ -1349,7 +1355,7 @@ components:
         workout_template_id:
           type: string
           format: uuid
-          nullable: true
+
         workout_name:
           type: string
           example: "Upper Body Strength"
@@ -1359,13 +1365,13 @@ components:
           example: "strength"
         estimated_duration:
           type: integer
-          nullable: true
+
           description: Duration in minutes
           example: 60
         exercises:
           type: array
           items:
-            $ref: '#/components/schemas/Exercise'
+            $ref: "#/components/schemas/Exercise"
         muscle_groups:
           type: array
           items:
@@ -1374,7 +1380,7 @@ components:
         intensity_level:
           type: string
           enum: [low, moderate, high, max]
-          nullable: true
+
           example: "high"
         status:
           type: string
@@ -1383,21 +1389,21 @@ components:
         completed_workout_id:
           type: string
           format: uuid
-          nullable: true
+
         completed_at:
           type: string
           format: date-time
-          nullable: true
+
         skipped_at:
           type: string
           format: date-time
-          nullable: true
+
         skip_reason:
           type: string
-          nullable: true
+
         notes:
           type: string
-          nullable: true
+
         created_at:
           type: string
           format: date-time
@@ -1407,11 +1413,11 @@ components:
 
     WorkoutPlanSessionWithPlan:
       allOf:
-        - $ref: '#/components/schemas/WorkoutPlanSession'
+        - $ref: "#/components/schemas/WorkoutPlanSession"
         - type: object
           properties:
             plan:
-              $ref: '#/components/schemas/WorkoutPlan'
+              $ref: "#/components/schemas/WorkoutPlan"
 
     WorkoutTemplate:
       type: object
@@ -1422,24 +1428,24 @@ components:
         user_id:
           type: string
           format: uuid
-          nullable: true
+
           description: NULL for public/system templates
         name:
           type: string
           example: "StrongLifts 5x5 - Workout A"
         description:
           type: string
-          nullable: true
+
           example: "Classic strength building program"
         estimated_duration:
           type: integer
-          nullable: true
+
           description: Duration in minutes
           example: 45
         exercises:
           type: array
           items:
-            $ref: '#/components/schemas/Exercise'
+            $ref: "#/components/schemas/Exercise"
         is_public:
           type: boolean
           description: Whether template is available to all users
