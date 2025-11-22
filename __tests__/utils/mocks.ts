@@ -36,6 +36,7 @@ export function createMockUser(overrides = {}) {
 
 export function createMockWorkout(overrides = {}): Database['public']['Tables']['workouts']['Row'] {
   return {
+    effort_level: null,
     id: 'workout-1',
     user_id: 'test-user-id',
     name: 'Test Workout',
@@ -44,7 +45,7 @@ export function createMockWorkout(overrides = {}): Database['public']['Tables'][
     duration_minutes: 60,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -68,6 +69,14 @@ export function createMockGoal(overrides = {}): Database['public']['Tables']['go
 
 export function createMockExercise(overrides = {}): Database['public']['Tables']['exercises']['Row'] {
   return {
+    calories: null,
+    distance: null,
+    distance_unit: null,
+    duration_minutes: null,
+    exercise_type: null,
+    incline: null,
+    resistance_level: null,
+    speed: null,
     id: 'exercise-1',
     workout_id: 'workout-1',
     name: 'Bench Press',
@@ -77,7 +86,7 @@ export function createMockExercise(overrides = {}): Database['public']['Tables']
     weight_unit: 'kg',
     notes: null,
     created_at: '2024-01-01T00:00:00Z',
-    ...overrides,
+    ...overrides
   }
 }
 
