@@ -2,6 +2,48 @@
 
 ## System Design
 
+```mermaid
+graph TB
+    subgraph Client
+        Browser[Browser/PWA]
+        Mobile[Mobile Device]
+    end
+
+    subgraph Vercel
+        NextJS[Next.js 16 App Router]
+        API[API Routes]
+        ServerActions[Server Actions]
+        Cron[Cron Jobs]
+    end
+
+    subgraph Supabase
+        Auth[Supabase Auth]
+        DB[(PostgreSQL)]
+        Storage[Storage Buckets]
+        RLS[Row Level Security]
+    end
+
+    subgraph External
+        Gemini[Google Gemini AI]
+        OAuth[OAuth Providers]
+    end
+
+    Browser -->|HTTPS| NextJS
+    Mobile -->|HTTPS| NextJS
+    NextJS --> ServerActions
+    NextJS --> API
+    ServerActions --> Auth
+    API --> Auth
+    Auth --> RLS
+    RLS --> DB
+    API --> Storage
+    Cron -->|Monday 8AM| API
+    API -->|Weekly Analysis| Gemini
+    Auth -->|Google Login| OAuth
+```
+
+## Tech Stack
+
 ### Frontend
 - **Framework:** Next.js 16 App Router
 - **Language:** TypeScript 5
@@ -22,16 +64,6 @@
 - **Cost:** ~$0.01 per analysis
 - **Scheduling:** Vercel Cron (Monday 8AM)
 
-### Data Flow
-
-```
-User → Next.js (SSR) → Supabase (RLS) → PostgreSQL
-                    ↓
-              Server Actions
-                    ↓
-              API Routes → Gemini AI
-```
-
 ## Key Architectural Decisions
 
 See [ADRs](adr/) for detailed decision rationale:
@@ -39,15 +71,108 @@ See [ADRs](adr/) for detailed decision rationale:
 
 ## Database Schema
 
-### Core Tables
-- `profiles` - User profiles (extends auth.users)
-- `workouts` - Workout sessions
-- `exercises` - Exercise details (child of workouts)
-- `goals` - User fitness goals
-- `body_measurements` - Body metrics tracking
-- `workout_plans` - AI-generated workout programs
-- `workout_plan_sessions` - Individual scheduled workouts
-- `weekly_workout_analysis` - AI analysis results
+```mermaid
+erDiagram
+    PROFILES ||--o{ WORKOUTS : creates
+    PROFILES ||--o{ GOALS : sets
+    PROFILES ||--o{ BODY_MEASUREMENTS : records
+    PROFILES ||--o{ WORKOUT_PLANS : generates
+    PROFILES ||--o{ WEEKLY_ANALYSIS : receives
+
+    WORKOUTS ||--o{ EXERCISES : contains
+    WORKOUTS ||--o{ WORKOUT_SELFIES : has
+
+    WORKOUT_PLANS ||--o{ WORKOUT_PLAN_SESSIONS : schedules
+    WORKOUT_PLANS }o--|| GOALS : targets
+
+    WORKOUT_PLAN_SESSIONS }o--|| WORKOUT_TEMPLATES : uses
+    WORKOUT_PLAN_SESSIONS }o--o| WORKOUTS : completed_as
+
+    PROFILES {
+        uuid id PK
+        text email
+        text full_name
+        text fitness_level
+        text[] fitness_goals
+        timestamptz deleted_at
+    }
+
+    WORKOUTS {
+        uuid id PK
+        uuid user_id FK
+        text name
+        date date
+        int duration_minutes
+        int effort_level
+        timestamptz deleted_at
+    }
+
+    EXERCISES {
+        uuid id PK
+        uuid workout_id FK
+        text name
+        text exercise_type
+        int sets
+        int reps
+        float weight
+        timestamptz deleted_at
+    }
+
+    GOALS {
+        uuid id PK
+        uuid user_id FK
+        text title
+        float current_value
+        float target_value
+        date target_date
+        bool achieved
+        timestamptz deleted_at
+    }
+
+    BODY_MEASUREMENTS {
+        uuid id PK
+        uuid user_id FK
+        timestamptz measured_at
+        float weight
+        float body_fat_percentage
+        float muscle_mass
+        timestamptz deleted_at
+    }
+
+    WORKOUT_PLANS {
+        uuid id PK
+        uuid user_id FK
+        uuid goal_id FK
+        text name
+        text status
+        int weeks_duration
+        date start_date
+        timestamptz deleted_at
+    }
+
+    WORKOUT_PLAN_SESSIONS {
+        uuid id PK
+        uuid plan_id FK
+        int week_number
+        int day_of_week
+        text workout_name
+        text status
+        uuid completed_workout_id FK
+        timestamptz deleted_at
+    }
+
+    WEEKLY_ANALYSIS {
+        uuid id PK
+        uuid user_id FK
+        date week_start_date
+        text analysis_summary
+        text[] key_achievements
+        jsonb weekly_stats
+        timestamptz viewed_at
+        bool is_dismissed
+        timestamptz deleted_at
+    }
+```
 
 ### Design Patterns
 - **Soft Delete:** All tables use `deleted_at` timestamp
