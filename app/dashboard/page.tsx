@@ -147,18 +147,18 @@ export default function DashboardPage() {
         const result = await response.json()
         setWeeklyAnalysis(result.data)
       } else if (response.status === 404) {
-        // No analysis exists - try to generate one automatically
-        console.log('No weekly analysis found, attempting to generate...')
-        const generateResponse = await fetch('/api/weekly-analysis/generate', {
-          method: 'POST',
-        })
-        if (generateResponse.ok) {
-          const result = await generateResponse.json()
-          setWeeklyAnalysis(result.data)
-          console.log('Weekly analysis generated successfully')
-        } else {
-          console.log('Could not generate analysis (might not have enough data yet)')
-        }
+        // No analysis exists - trigger generation in background (fire and forget)
+        console.log('No weekly analysis found, triggering background generation...')
+        fetch('/api/weekly-analysis/generate', { method: 'POST' })
+          .then(response => {
+            if (response.ok) {
+              console.log('Weekly analysis generation started - will be available on next visit')
+            } else {
+              console.log('Could not generate analysis (might not have enough data yet)')
+            }
+          })
+          .catch(err => console.log('Background analysis generation error:', err))
+        // Don't set analysis - user will see quote this time
       } else {
         console.error('Error fetching weekly analysis')
       }
