@@ -327,7 +327,7 @@ function parseAIAnalysis(responseText: string): WeeklyAnalysisResult {
 export async function generateWeeklyAnalysis(
   userId: string,
   weekStartDate?: Date
-): Promise<WeeklyAnalysisResult & { weekly_stats: WeeklyStats; goal_progress: any; measurements_comparison: MeasurementsComparison }> {
+): Promise<WeeklyAnalysisResult & { weekly_stats: WeeklyStats; goal_progress: GoalProgress[]; measurements_comparison: MeasurementsComparison }> {
   // Default to previous Monday (last week)
   const targetDate = weekStartDate || startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 })
 
@@ -369,7 +369,7 @@ export async function generateWeeklyAnalysis(
 export async function saveWeeklyAnalysis(
   userId: string,
   weekStartDate: Date,
-  analysis: WeeklyAnalysisResult & { weekly_stats: WeeklyStats; goal_progress: any; measurements_comparison: MeasurementsComparison }
+  analysis: WeeklyAnalysisResult & { weekly_stats: WeeklyStats; goal_progress: GoalProgress[]; measurements_comparison: MeasurementsComparison }
 ) {
   const supabase = await createClient()
   const weekEndDate = endOfWeek(weekStartDate, { weekStartsOn: 1 })

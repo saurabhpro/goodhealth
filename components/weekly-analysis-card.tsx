@@ -128,7 +128,7 @@ export function WeeklyAnalysisCard({
           <div className="flex gap-3">
             <Quote className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
             <p className="text-base font-medium italic text-foreground leading-relaxed">
-              "{analysis.motivational_quote}"
+              &ldquo;{analysis.motivational_quote}&rdquo;
             </p>
           </div>
         </div>

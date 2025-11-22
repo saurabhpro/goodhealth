@@ -79,7 +79,26 @@ export default function DashboardPage() {
   const [selectedSession, setSelectedSession] = useState<WorkoutPlanSession | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [weeklyAnalysis, setWeeklyAnalysis] = useState<any>(null)
+  const [weeklyAnalysis, setWeeklyAnalysis] = useState<{
+    id: string
+    week_start_date: string
+    week_end_date: string
+    analysis_summary: string
+    key_achievements: string[]
+    areas_for_improvement: string[]
+    recommendations: string[]
+    motivational_quote: string
+    weekly_stats: {
+      workouts_completed: number
+      total_duration_minutes: number
+      avg_effort_level: number
+      total_exercises: number
+      workout_types: Record<string, number>
+    }
+    viewed_at: string | null
+    is_dismissed: boolean
+    generated_at: string
+  } | null>(null)
   const [analysisLoading, setAnalysisLoading] = useState(true)
 
   useEffect(() => {
