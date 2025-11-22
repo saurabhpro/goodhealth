@@ -34,10 +34,10 @@ export function Navbar() {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Activity },
-    { name: 'Workouts', href: '/workouts', icon: Dumbbell },
     { name: 'Workout Plans', href: '/workout-plans', icon: CalendarDays },
-    { name: 'Measurements', href: '/measurements', icon: Ruler },
+    // { name: 'Workouts', href: '/workouts', icon: Dumbbell },
     { name: 'Progress', href: '/progress', icon: TrendingUp },
+    { name: 'Measurements', href: '/measurements', icon: Ruler },
     { name: 'Goals', href: '/goals', icon: Target },
   ]
 

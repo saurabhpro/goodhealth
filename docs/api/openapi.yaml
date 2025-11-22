@@ -38,10 +38,14 @@ tags:
     description: Workout template library (user and public)
   - name: Workout Sessions
     description: Individual workout session management
+  - name: Weekly Analysis
+    description: AI-powered weekly workout analysis and insights
   - name: Images
     description: Image optimization and serving
   - name: Auth
     description: Authentication callbacks
+  - name: Cron
+    description: Scheduled background jobs
 
 security:
   - BearerAuth: []
@@ -758,6 +762,160 @@ paths:
         '404':
           description: Image not found
 
+  /weekly-analysis/generate:
+    post:
+      tags:
+        - Weekly Analysis
+      summary: Generate weekly workout analysis
+      description: Manually trigger AI analysis for the previous week
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                weekStartDate:
+                  type: string
+                  format: date
+                  description: Optional - defaults to last Monday
+      responses:
+        '200':
+          description: Analysis generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/WeeklyAnalysis'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /weekly-analysis/latest:
+    get:
+      tags:
+        - Weekly Analysis
+      summary: Get latest weekly analysis
+      description: Retrieve the most recent analysis for the authenticated user
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/WeeklyAnalysis'
+        '404':
+          description: No analysis found
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /weekly-analysis/{id}/view:
+    put:
+      tags:
+        - Weekly Analysis
+      summary: Mark analysis as viewed
+      description: Update viewed_at timestamp
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Marked as viewed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /weekly-analysis/{id}/dismiss:
+    put:
+      tags:
+        - Weekly Analysis
+      summary: Dismiss analysis notification
+      description: Set is_dismissed to true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Analysis dismissed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /cron/weekly-analysis:
+    get:
+      tags:
+        - Cron
+      summary: Weekly analysis cron job
+      description: |
+        Generates weekly analysis for all eligible users.
+        Runs every Monday at 8:00 AM via Vercel Cron.
+        **Requires CRON_SECRET header for authentication.**
+      security:
+        - CronSecret: []
+      responses:
+        '200':
+          description: Cron job completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  results:
+                    type: object
+                    properties:
+                      total_users:
+                        type: integer
+                      successful:
+                        type: integer
+                      failed:
+                        type: integer
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          description: Invalid CRON_SECRET
+
 components:
   securitySchemes:
     BearerAuth:
@@ -765,8 +923,89 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Supabase session token
+    CronSecret:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Bearer token with CRON_SECRET value
 
   schemas:
+    WeeklyAnalysis:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        week_start_date:
+          type: string
+          format: date
+        week_end_date:
+          type: string
+          format: date
+        analysis_summary:
+          type: string
+          description: AI-generated summary of week's performance
+        key_achievements:
+          type: array
+          items:
+            type: string
+        areas_for_improvement:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        motivational_quote:
+          type: string
+        weekly_stats:
+          type: object
+          properties:
+            workouts_completed:
+              type: integer
+            total_duration_minutes:
+              type: integer
+            avg_effort_level:
+              type: number
+              format: float
+            total_exercises:
+              type: integer
+            workout_types:
+              type: object
+              additionalProperties:
+                type: integer
+        goal_progress:
+          type: object
+          additionalProperties: true
+        measurements_comparison:
+          type: object
+          nullable: true
+          properties:
+            weight_change:
+              type: number
+              format: float
+            body_fat_change:
+              type: number
+              format: float
+            muscle_mass_change:
+              type: number
+              format: float
+            has_measurements:
+              type: boolean
+        generated_at:
+          type: string
+          format: date-time
+        viewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_dismissed:
+          type: boolean
+
     Goal:
       type: object
       properties:
@@ -1311,3 +1550,10 @@ components:
               error:
                 type: string
                 example: "An unexpected error occurred"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase session token
