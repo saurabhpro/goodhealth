@@ -70,9 +70,11 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Left side: Logo and Desktop Navigation */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="text-xl font-bold flex items-center gap-2">
-              <Dumbbell className="h-6 w-6" />
-              <span className="hidden sm:inline">GoodHealth</span>
+            <Link href="/" className="flex items-center gap-2">
+              <Dumbbell className="h-6 w-6 text-purple-500" />
+              <span className="hidden text-xl font-bold sm:inline bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                GoodHealth
+              </span>
             </Link>
             {user && (
               <div className="hidden lg:flex gap-6">
@@ -153,8 +155,10 @@ export function Navbar() {
                   <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                     <SheetHeader>
                       <SheetTitle className="flex items-center gap-2">
-                        <Dumbbell className="h-5 w-5" />
-                        GoodHealth
+                        <Dumbbell className="h-5 w-5 text-purple-500" />
+                        <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                          GoodHealth
+                        </span>
                       </SheetTitle>
                     </SheetHeader>
                     <div className="mt-6 flex flex-col gap-4">
