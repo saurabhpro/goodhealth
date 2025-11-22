@@ -339,13 +339,7 @@ export async function generateWeeklyAnalysis(
 
   // Call Gemini AI
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-exp',
-    generationConfig: {
-      temperature: 0.7,
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 2048,
-    },
+    model: 'gemini-2.5-pro',
   })
 
   const result = await model.generateContent(prompt)
