@@ -2,44 +2,67 @@
 
 ## System Design
 
+### High-Level Architecture
+
+The application follows a modern JAMstack architecture with Next.js 16 on Vercel, Supabase for backend services, and Google Gemini for AI capabilities.
+
 ```mermaid
 graph TB
-    subgraph Client
-        Browser[Browser/PWA]
-        Mobile[Mobile Device]
+    subgraph Client["Client Layer"]
+        Browser["🌐 Browser/PWA<br/>(Progressive Web App)"]
+        Mobile["📱 Mobile Device<br/>(iOS/Android)"]
     end
 
-    subgraph Vercel
-        NextJS[Next.js 16 App Router]
-        API[API Routes - 21 endpoints]
-        ServerActions[Server Actions]
+    subgraph Vercel["Vercel Cloud Platform"]
+        NextJS["⚛️ Next.js 16 App Router<br/>React 19 + TypeScript"]
+        API["🔌 API Routes<br/>(21 REST endpoints)"]
+        ServerActions["⚡ Server Actions<br/>(form submissions)"]
     end
 
-    subgraph Supabase
-        Auth[Supabase Auth]
-        DB[(PostgreSQL - 11 tables)]
-        Storage[Storage Buckets]
-        RLS[Row Level Security]
+    subgraph Supabase["Supabase Backend"]
+        Auth["🔐 Supabase Auth<br/>(JWT + OAuth)"]
+        DB[("📊 PostgreSQL<br/>(11 tables)<br/>RLS enabled")]
+        Storage["📦 Storage Buckets<br/>(workout selfies)"]
+        RLS["🛡️ Row Level Security<br/>(user_id policies)"]
     end
 
-    subgraph External
-        Gemini[Google Gemini 2.5 Pro]
-        OAuth[OAuth Providers]
+    subgraph External["External Services"]
+        Gemini["🤖 Google Gemini 2.5 Pro<br/>(AI generation)"]
+        OAuth["🔑 OAuth Providers<br/>(Google)"]
     end
 
-    Browser -->|HTTPS| NextJS
-    Mobile -->|HTTPS| NextJS
-    NextJS --> ServerActions
-    NextJS --> API
-    ServerActions --> Auth
-    API --> Auth
-    Auth --> RLS
-    RLS --> DB
-    API --> Storage
-    API -->|Workout Plans| Gemini
-    API -->|Weekly Analysis| Gemini
-    Auth -->|Google Login| OAuth
+    Browser -->|"HTTPS<br/>GET/POST"| NextJS
+    Mobile -->|"HTTPS<br/>PWA install"| NextJS
+    NextJS -->|"mutations"| ServerActions
+    NextJS -->|"data fetch"| API
+    ServerActions -->|"verify JWT"| Auth
+    API -->|"verify JWT"| Auth
+    Auth -.->|"enforce"| RLS
+    RLS -->|"filter by user_id"| DB
+    API -->|"upload/download<br/>5MB max"| Storage
+    API -->|"AI plan generation<br/>temp: 0.7"| Gemini
+    API -->|"weekly analysis<br/>~$0.01/analysis"| Gemini
+    Auth -->|"OAuth2 flow"| OAuth
+
+    style Browser fill:#e1f5ff
+    style Mobile fill:#e1f5ff
+    style NextJS fill:#fff3e0
+    style API fill:#fff3e0
+    style ServerActions fill:#fff3e0
+    style DB fill:#f3e5f5
+    style Auth fill:#f3e5f5
+    style Storage fill:#f3e5f5
+    style Gemini fill:#e8f5e9
+    style OAuth fill:#e8f5e9
 ```
+
+**Flow Explanation:**
+1. **Client → Vercel**: Users access via browser or installed PWA over HTTPS
+2. **Next.js → Supabase**: Server Actions and API routes authenticate with JWT tokens
+3. **Auth → RLS**: Every database query is filtered by the authenticated user's ID
+4. **API → Storage**: Workout selfies stored in private buckets (max 5MB per file)
+5. **API → Gemini**: AI generates workout plans and weekly analysis on-demand
+6. **Auth → OAuth**: Google OAuth for seamless authentication
 
 ## Tech Stack
 
@@ -76,26 +99,32 @@ See [ADRs](adr/) for detailed decision rationale:
 
 ## Database Schema
 
-11 tables with full Row-Level Security (RLS) policies.
+### Entity Relationship Diagram
+
+11 tables with full Row-Level Security (RLS) policies. All tables implement soft deletes via `deleted_at` timestamp.
 
 ```mermaid
 erDiagram
-    PROFILES ||--o{ WORKOUTS : creates
-    PROFILES ||--o{ GOALS : sets
-    PROFILES ||--o{ BODY_MEASUREMENTS : records
-    PROFILES ||--o{ WORKOUT_PLANS : generates
-    PROFILES ||--o{ WEEKLY_WORKOUT_ANALYSIS : receives
-    PROFILES ||--|| USER_WORKOUT_PREFERENCES : configures
+    %% Core User & Profile
+    PROFILES ||--o{ WORKOUTS : "creates"
+    PROFILES ||--o{ GOALS : "sets"
+    PROFILES ||--o{ BODY_MEASUREMENTS : "records"
+    PROFILES ||--o{ WORKOUT_PLANS : "generates"
+    PROFILES ||--o{ WEEKLY_WORKOUT_ANALYSIS : "receives"
+    PROFILES ||--|| USER_WORKOUT_PREFERENCES : "configures"
 
-    WORKOUTS ||--o{ EXERCISES : contains
-    WORKOUTS ||--o{ WORKOUT_SELFIES : has
+    %% Workout Tracking
+    WORKOUTS ||--o{ EXERCISES : "contains"
+    WORKOUTS ||--o{ WORKOUT_SELFIES : "has progress photos"
 
-    WORKOUT_PLANS ||--o{ WORKOUT_PLAN_SESSIONS : schedules
-    WORKOUT_PLANS }o--|| GOALS : targets
-    WORKOUT_PLANS ||--o{ WORKOUT_PLAN_GENERATION_JOBS : tracks
+    %% Workout Plans
+    WORKOUT_PLANS ||--o{ WORKOUT_PLAN_SESSIONS : "schedules"
+    WORKOUT_PLANS }o--|| GOALS : "targets"
+    WORKOUT_PLANS ||--o{ WORKOUT_PLAN_GENERATION_JOBS : "tracks AI generation"
 
-    WORKOUT_PLAN_SESSIONS }o--o| WORKOUT_TEMPLATES : uses
-    WORKOUT_PLAN_SESSIONS }o--o| WORKOUTS : completed_as
+    %% Sessions & Templates
+    WORKOUT_PLAN_SESSIONS }o--o| WORKOUT_TEMPLATES : "based on"
+    WORKOUT_PLAN_SESSIONS }o--o| WORKOUTS : "completed as"
 
     PROFILES {
         uuid id PK
@@ -308,6 +337,162 @@ erDiagram
 - **workout_plan_sessions**: Day-of-week based scheduling (0=Sunday, 6=Saturday) with actual_date
 - **body_measurements**: 20+ metrics tracked (weight, body fat, muscle mass, circumferences, visceral fat, metabolic age)
 - **user_workout_preferences**: Used by AI to personalize workout plan generation
+
+### User Journey: Workout Plan Generation
+
+This sequence diagram shows how AI-powered workout plans are generated:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant UI as Next.js UI
+    participant API as API Route
+    participant DB as PostgreSQL
+    participant AI as Gemini 2.5 Pro
+    participant Jobs as Generation Jobs
+
+    User->>UI: Click "Generate Plan"
+    UI->>User: Show preferences form
+    User->>UI: Submit preferences
+    UI->>API: POST /api/workout-plans/generate
+
+    API->>DB: Fetch user profile
+    DB-->>API: Profile data
+    API->>DB: Fetch workout history
+    DB-->>API: Exercise performance
+    API->>DB: Fetch goal details
+    DB-->>API: Goal data
+    API->>DB: Fetch preferences
+    DB-->>API: User preferences
+
+    API->>Jobs: Create generation job (pending)
+    Jobs-->>API: Job ID
+
+    API->>AI: Generate plan<br/>(profile, history, goal, prefs)
+    Note over AI: Analyzes data<br/>Plans 1-12 weeks<br/>4-6 exercises/workout<br/>Progressive overload
+    AI-->>API: Weekly schedule JSON
+
+    API->>DB: Create workout_plan
+    DB-->>API: Plan ID
+    API->>DB: Create 20-84 sessions
+    DB-->>API: Session IDs
+
+    API->>Jobs: Update job (completed)
+    Jobs-->>API: Success
+
+    API-->>UI: Plan created (plan_id)
+    UI->>User: Show success + redirect
+    User->>UI: View plan details
+```
+
+### User Journey: Weekly Analysis
+
+This sequence diagram shows the auto-generation of weekly analysis:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Dashboard as Dashboard Page
+    participant API as API Route
+    participant DB as PostgreSQL
+    participant AI as Gemini 2.5 Pro
+
+    User->>Dashboard: Visit /dashboard
+    Dashboard->>API: GET /api/weekly-analysis/latest
+
+    API->>DB: Check for current week analysis
+    DB-->>API: Not found (404)
+
+    Note over Dashboard: Detects missing analysis
+    Dashboard->>API: POST /api/weekly-analysis/generate
+
+    API->>DB: Fetch last week's workouts
+    DB-->>API: Workout data
+    API->>DB: Fetch goal progress
+    DB-->>API: Goal data
+    API->>DB: Fetch body measurements
+    DB-->>API: Measurement changes
+    API->>DB: Fetch active plan
+    DB-->>API: Plan status
+
+    API->>AI: Analyze weekly performance<br/>(workouts, goals, measurements)
+    Note over AI: Generates:<br/>- Summary (2-3 para)<br/>- 3 achievements<br/>- 2 improvements<br/>- 3 recommendations<br/>- Motivational quote
+    AI-->>API: Analysis JSON
+
+    API->>DB: Insert weekly_workout_analysis
+    DB-->>API: Analysis ID
+
+    API-->>Dashboard: Analysis data
+    Dashboard->>User: Display AI insights
+
+    User->>Dashboard: Click "Dismiss"
+    Dashboard->>API: PUT /api/weekly-analysis/{id}/dismiss
+    API->>DB: Update is_dismissed = true
+    DB-->>API: Success
+    API-->>Dashboard: Confirmed
+```
+
+### Data Flow: Workout Logging
+
+This diagram shows how workout data flows through the system:
+
+```mermaid
+flowchart TD
+    Start([User opens<br/>New Workout form]) --> Form[Fill workout details:<br/>• Name, date, duration<br/>• Effort level 1-6]
+    Form --> AddExercise{Add exercises?}
+
+    AddExercise -->|Yes| ExerciseType{Exercise type?}
+    ExerciseType -->|Strength| StrengthForm[Enter:<br/>• Sets, reps<br/>• Weight + unit]
+    ExerciseType -->|Cardio| CardioForm[Enter:<br/>• Duration, distance<br/>• Speed, calories]
+    ExerciseType -->|Functional| FunctionalForm[Enter:<br/>• Description<br/>• Duration]
+
+    StrengthForm --> MoreExercises{More exercises?}
+    CardioForm --> MoreExercises
+    FunctionalForm --> MoreExercises
+    MoreExercises -->|Yes| AddExercise
+    MoreExercises -->|No| Selfie{Upload selfie?}
+
+    AddExercise -->|No| Selfie
+    Selfie -->|Yes| UploadSelfie[Select photo<br/>Max 5MB<br/>Optional caption]
+    Selfie -->|No| Submit
+    UploadSelfie --> Submit[Submit workout]
+
+    Submit --> API[POST /api/workouts]
+    API --> ValidateAuth{JWT valid?}
+    ValidateAuth -->|No| Error401[401 Unauthorized]
+    ValidateAuth -->|Yes| ValidateData{Data valid?}
+    ValidateData -->|No| Error400[400 Bad Request]
+    ValidateData -->|Yes| CreateWorkout[Insert workout row]
+
+    CreateWorkout --> CreateExercises[Insert exercise rows<br/>Link to workout_id]
+    CreateExercises --> HasSelfie{Has selfie?}
+    HasSelfie -->|Yes| UploadStorage[Upload to Supabase Storage<br/>workout-selfies bucket]
+    UploadStorage --> CreateSelfieRecord[Insert workout_selfie row<br/>Store file_path]
+    HasSelfie -->|No| CheckPlan
+    CreateSelfieRecord --> CheckPlan{Part of plan?}
+
+    CheckPlan -->|Yes| UpdateSession[Update session:<br/>completed_workout_id<br/>status = completed]
+    CheckPlan -->|No| UpdateGoal{Related to goal?}
+    UpdateSession --> UpdateGoal
+
+    UpdateGoal -->|Yes| SyncGoal[Update goal.current_value<br/>Check if achieved]
+    UpdateGoal -->|No| Success
+    SyncGoal --> Success[200 OK<br/>Return workout data]
+
+    Success --> Redirect[Redirect to /workouts]
+    Error401 --> ShowError[Show error message]
+    Error400 --> ShowError
+    Redirect --> End([User sees workout list])
+    ShowError --> End
+
+    style Start fill:#e8f5e9
+    style End fill:#e8f5e9
+    style Error401 fill:#ffebee
+    style Error400 fill:#ffebee
+    style Success fill:#e1f5ff
+    style API fill:#fff3e0
+    style UploadStorage fill:#f3e5f5
+```
 
 ## Security Model
 
@@ -529,42 +714,223 @@ erDiagram
 
 ## Code Organization
 
-### Directory Structure
+### Application Layer Architecture
+
+The codebase follows a clear separation of concerns with Next.js App Router conventions:
+
+```mermaid
+graph TB
+    subgraph "Presentation Layer"
+        Pages["/app - Pages & Layouts<br/>26+ routes"]
+        Components["/components<br/>24+ UI components<br/>shadcn/ui + custom"]
+    end
+
+    subgraph "API Layer"
+        APIRoutes["/app/api<br/>21 REST endpoints<br/>Route handlers"]
+        ServerActions["Server Actions<br/>Form submissions"]
+    end
+
+    subgraph "Business Logic Layer"
+        LibAuth["/lib/auth<br/>Authentication<br/>actions & hooks"]
+        LibWorkouts["/lib/workouts<br/>Workout CRUD<br/>actions"]
+        LibPlans["/lib/workout-plans<br/>Plan generation<br/>AI, sessions"]
+        LibAnalysis["/lib/weekly-analysis<br/>AI analyzer<br/>Gemini integration"]
+        LibGoals["/lib/goals<br/>Goal logic<br/>sync & calculations"]
+        LibProfile["/lib/profile<br/>Profile actions"]
+        LibMeasurements["/lib/measurements<br/>Body tracking"]
+        LibSelfies["/lib/selfies<br/>Upload actions"]
+        LibData["/lib/data<br/>Static data"]
+    end
+
+    subgraph "Data Layer"
+        SupabaseClient["/lib/supabase/client.ts<br/>Browser client"]
+        SupabaseServer["/lib/supabase/server.ts<br/>Server client"]
+        Database[("PostgreSQL<br/>11 tables")]
+        Storage[("Supabase Storage<br/>workout-selfies")]
+    end
+
+    subgraph "External Services"
+        Gemini["Google Gemini 2.5 Pro<br/>AI generation"]
+    end
+
+    Pages --> Components
+    Pages --> ServerActions
+    Pages --> APIRoutes
+
+    APIRoutes --> LibAuth
+    APIRoutes --> LibWorkouts
+    APIRoutes --> LibPlans
+    APIRoutes --> LibAnalysis
+    APIRoutes --> LibGoals
+    APIRoutes --> LibProfile
+    APIRoutes --> LibMeasurements
+    APIRoutes --> LibSelfies
+
+    ServerActions --> LibAuth
+    ServerActions --> LibWorkouts
+    ServerActions --> LibGoals
+    ServerActions --> LibProfile
+
+    LibAuth --> SupabaseClient
+    LibAuth --> SupabaseServer
+    LibWorkouts --> SupabaseServer
+    LibPlans --> SupabaseServer
+    LibPlans --> Gemini
+    LibAnalysis --> SupabaseServer
+    LibAnalysis --> Gemini
+    LibGoals --> SupabaseServer
+    LibProfile --> SupabaseServer
+    LibMeasurements --> SupabaseServer
+    LibSelfies --> SupabaseServer
+    LibSelfies --> Storage
+
+    SupabaseClient --> Database
+    SupabaseServer --> Database
+
+    style Pages fill:#e1f5ff
+    style Components fill:#e1f5ff
+    style APIRoutes fill:#fff3e0
+    style ServerActions fill:#fff3e0
+    style Database fill:#f3e5f5
+    style Storage fill:#f3e5f5
+    style Gemini fill:#e8f5e9
 ```
-/app                    # Next.js App Router pages
-  /api                  # 21 API routes
-  /dashboard            # Main dashboard
-  /workouts             # Workout tracking
-  /goals                # Goal management
-  /measurements         # Body measurements
-  /workout-plans        # Workout plans & templates
-  /profile              # User profile
-  /settings             # App settings
-  /auth                 # Auth callbacks
 
-/lib                    # Business logic (73+ exported functions)
-  /auth                 # Authentication actions & hooks
-  /workout-plans        # Plan generation, AI, sessions
-  /weekly-analysis      # AI analyzer
-  /goals                # Goal logic & sync
-  /measurements         # Measurement actions
-  /workouts             # Workout actions
-  /profile              # Profile actions
-  /selfies              # Selfie upload actions
-  /data                 # Static data (gym equipment)
+### Directory Structure
 
-/components             # React components (24+)
-/migrations             # Database migrations (3 files)
-/public                 # Static assets, manifest.json
-/docs                   # Documentation
-  /api                  # OpenAPI spec
-  /adr                  # Architecture Decision Records
+```
+goodhealth/
+├── app/                           # Next.js App Router (26+ routes)
+│   ├── api/                       # API Routes (21 endpoints)
+│   │   ├── auth/callback/         # OAuth callback
+│   │   ├── goals/                 # Goals CRUD
+│   │   ├── workouts/              # Workout CRUD
+│   │   ├── workout-plans/         # Plans & sessions
+│   │   ├── workout-templates/     # Template library
+│   │   ├── weekly-analysis/       # AI analysis
+│   │   └── images/[...path]/      # Image optimization
+│   ├── dashboard/                 # Main dashboard
+│   ├── workouts/                  # Workout tracking
+│   │   ├── new/                   # Log workout
+│   │   └── [id]/                  # View/edit workout
+│   ├── goals/                     # Goal management
+│   ├── measurements/              # Body measurements
+│   ├── workout-plans/             # Workout plans
+│   │   ├── new/                   # Generate plan
+│   │   ├── preferences/           # Set preferences
+│   │   ├── templates/             # Template library
+│   │   └── [id]/                  # Plan details & progress
+│   ├── profile/                   # User profile
+│   ├── settings/                  # App settings
+│   ├── login/                     # Login page
+│   ├── signup/                    # Registration
+│   ├── forgot-password/           # Password reset
+│   ├── layout.tsx                 # Root layout (auth wrapper)
+│   └── page.tsx                   # Landing page
+│
+├── lib/                           # Business Logic (73+ functions)
+│   ├── auth/                      # Authentication
+│   │   ├── actions.ts             # Sign in/out, password reset
+│   │   └── hooks.ts               # useUser, useAuth
+│   ├── workout-plans/             # Workout Plans
+│   │   ├── ai-generator.ts        # Gemini plan generation ⭐
+│   │   ├── generator.ts           # Plan creation logic
+│   │   ├── actions.ts             # CRUD operations
+│   │   ├── session-actions.ts     # Session management
+│   │   ├── job-processor.ts       # Job tracking
+│   │   ├── preferences-actions.ts # User preferences
+│   │   └── planning/              # Planning algorithms
+│   │       ├── goal-analyzer.ts   # Goal analysis
+│   │       ├── template-selector.ts # Template matching
+│   │       ├── schedule-generator.ts # Weekly schedule
+│   │       └── progressive-overload.ts # Weight progression
+│   ├── weekly-analysis/           # Weekly Analysis
+│   │   └── ai-analyzer.ts         # Gemini analysis ⭐
+│   ├── workouts/                  # Workouts
+│   │   └── actions.ts             # CRUD operations
+│   ├── goals/                     # Goals
+│   │   ├── actions.ts             # CRUD operations
+│   │   ├── sync.ts                # Goal-plan sync
+│   │   ├── progress.ts            # Progress calculations
+│   │   └── calculate-initial-value.ts # Initial value logic
+│   ├── measurements/              # Body Measurements
+│   │   └── actions.ts             # CRUD operations
+│   ├── profile/                   # Profile
+│   │   └── actions.ts             # Profile updates
+│   ├── selfies/                   # Selfie Uploads
+│   │   └── actions.ts             # Upload to Storage
+│   ├── supabase/                  # Supabase Clients
+│   │   ├── client.ts              # Browser client
+│   │   └── server.ts              # Server client (SSR)
+│   ├── data/                      # Static Data
+│   │   └── gym-equipment.ts       # Equipment list
+│   └── utils.ts                   # Utility functions
+│
+├── components/                    # React Components (24+)
+│   ├── ui/                        # shadcn/ui components
+│   │   ├── button.tsx             # Button
+│   │   ├── card.tsx               # Card
+│   │   ├── dialog.tsx             # Modal dialog
+│   │   ├── form.tsx               # Form components
+│   │   ├── select.tsx             # Select dropdown
+│   │   ├── tabs.tsx               # Tabs
+│   │   └── ...                    # 15+ more
+│   ├── workout-form.tsx           # Workout logging form
+│   ├── exercise-form.tsx          # Exercise input
+│   ├── goal-progress.tsx          # Goal progress chart
+│   ├── weekly-analysis-card.tsx   # AI insights display
+│   └── ...                        # Custom components
+│
+├── migrations/                    # Database Migrations
+│   ├── 000_consolidated_schema.sql       # Base schema (11 tables)
+│   ├── 001_add_plan_start_dates.sql      # Start date fields
+│   └── 002_add_weekly_workout_analysis.sql # Weekly analysis
+│
+├── docs/                          # Documentation
+│   ├── ARCHITECTURE.md            # This file
+│   ├── SETUP.md                   # Installation guide
+│   ├── TESTING.md                 # Testing guide
+│   ├── DEPLOYMENT.md              # Deployment guide
+│   ├── api/                       # API Documentation
+│   │   └── openapi.yaml           # OpenAPI 3.1.0 spec
+│   └── adr/                       # Architecture Decisions
+│       └── 001-weekly-analysis-ai-gemini.md
+│
+├── public/                        # Static Assets
+│   ├── manifest.json              # PWA manifest
+│   ├── favicon.ico                # Favicon
+│   └── icons/                     # App icons (TODO)
+│
+├── next.config.ts                 # Next.js config (Turbopack, PWA)
+├── tailwind.config.ts             # Tailwind CSS config
+├── tsconfig.json                  # TypeScript config
+├── jest.config.js                 # Jest testing config
+├── package.json                   # Dependencies & scripts
+└── README.md                      # Project overview
+
+⭐ = AI-powered with Google Gemini 2.5 Pro
 ```
 
 ### Key Files
-- `lib/workout-plans/ai-generator.ts` - Gemini workout plan generation
-- `lib/weekly-analysis/ai-analyzer.ts` - Gemini weekly analysis
-- `lib/supabase/client.ts` - Supabase client setup
-- `lib/supabase/server.ts` - Supabase server-side client
-- `app/layout.tsx` - Root layout with auth
+
+**AI & Core Logic:**
+- `lib/workout-plans/ai-generator.ts` - Gemini workout plan generation (16K tokens, temp 0.7)
+- `lib/weekly-analysis/ai-analyzer.ts` - Gemini weekly analysis (~$0.01/analysis)
+- `lib/workout-plans/planning/progressive-overload.ts` - Weight progression algorithm
+- `lib/goals/sync.ts` - Goal-plan synchronization
+
+**Database Clients:**
+- `lib/supabase/client.ts` - Browser-side Supabase client
+- `lib/supabase/server.ts` - Server-side Supabase client (SSR, cookies)
+
+**Entry Points:**
+- `app/layout.tsx` - Root layout with authentication wrapper
+- `app/page.tsx` - Landing page
+- `app/dashboard/page.tsx` - Main dashboard (triggers weekly analysis)
+
+**API Documentation:**
 - `docs/api/openapi.yaml` - OpenAPI 3.1.0 specification (22 operationIds)
+
+**Configuration:**
+- `next.config.ts` - Turbopack, PWA, image optimization, 10MB body limit
+- `migrations/` - Database schema evolution (3 migrations)
