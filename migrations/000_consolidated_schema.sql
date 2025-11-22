@@ -1,7 +1,7 @@
 -- =====================================================
 -- CONSOLIDATED MIGRATION SCRIPT
 -- Contains complete schema with all features and optimizations
--- Last updated: 2025-11-21
+-- Last updated: 2025-11-22
 -- =====================================================
 
 BEGIN;
@@ -768,6 +768,40 @@ INSERT INTO public.workout_templates (id, user_id, name, description, exercises,
   {"name": "Russian Twists", "sets": 3, "reps": 20, "rest_seconds": 60, "notes": "Rotational. Hold weight, feet elevated, twist torso. Control movement."}
 ]', TRUE, 'functional', 30, 'medium', 'intermediate', ARRAY['cable_machine', 'ab_wheel', 'medicine_ball'], ARRAY['core', 'abs']);
 
+-- =====================================================
+-- TABLE: weekly_workout_analysis
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.weekly_workout_analysis (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  week_start_date DATE NOT NULL,
+  week_end_date DATE NOT NULL,
+  analysis_summary TEXT NOT NULL,
+  key_achievements TEXT[],
+  areas_for_improvement TEXT[],
+  weekly_stats JSONB NOT NULL DEFAULT '{}',
+  goal_progress JSONB NOT NULL DEFAULT '{}',
+  measurements_comparison JSONB DEFAULT NULL,
+  recommendations TEXT[],
+  motivational_quote TEXT NOT NULL,
+  generated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  viewed_at TIMESTAMPTZ DEFAULT NULL,
+  is_dismissed BOOLEAN DEFAULT FALSE,
+  deleted_at TIMESTAMPTZ DEFAULT NULL,
+  CONSTRAINT unique_user_week UNIQUE (user_id, week_start_date)
+);
+
+CREATE INDEX idx_weekly_analysis_user_date ON public.weekly_workout_analysis(user_id, week_start_date DESC) WHERE deleted_at IS NULL;
+CREATE INDEX idx_weekly_analysis_generated ON public.weekly_workout_analysis(generated_at DESC) WHERE deleted_at IS NULL AND is_dismissed = FALSE;
+CREATE INDEX idx_weekly_analysis_user_unviewed ON public.weekly_workout_analysis(user_id, viewed_at) WHERE deleted_at IS NULL AND viewed_at IS NULL;
+
+ALTER TABLE public.weekly_workout_analysis ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own weekly analysis" ON public.weekly_workout_analysis FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own weekly analysis" ON public.weekly_workout_analysis FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own weekly analysis" ON public.weekly_workout_analysis FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete own weekly analysis" ON public.weekly_workout_analysis FOR DELETE USING (auth.uid() = user_id);
+
 COMMIT;
 
 -- =====================================================
@@ -778,4 +812,5 @@ COMMIT;
 -- 3. RLS policies use (SELECT auth.uid()) pattern for better query performance
 -- 4. Remember to add deleted_at IS NULL filters in application queries
 -- 5. Public workout templates are seeded and ready to use
+-- 6. Weekly analysis runs via Vercel Cron every Monday at 8:00 AM
 -- =====================================================

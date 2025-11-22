@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { MotivationalQuote } from '@/components/motivational-quote'
 import { SessionDetailModal } from '@/components/workout-plans/session-detail-modal'
+import { WeeklyAnalysisCard } from '@/components/weekly-analysis-card'
 import type { Workout, Goal, WorkoutPlan, WorkoutPlanSession } from '@/types'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -78,9 +79,12 @@ export default function DashboardPage() {
   const [selectedSession, setSelectedSession] = useState<WorkoutPlanSession | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [weeklyAnalysis, setWeeklyAnalysis] = useState<any>(null)
+  const [analysisLoading, setAnalysisLoading] = useState(true)
 
   useEffect(() => {
     fetchData()
+    fetchWeeklyAnalysis()
   }, [])
 
   async function fetchData() {
@@ -113,6 +117,39 @@ export default function DashboardPage() {
       console.error('Error fetching dashboard data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function fetchWeeklyAnalysis() {
+    try {
+      const response = await fetch('/api/weekly-analysis/latest')
+      if (response.ok) {
+        const result = await response.json()
+        setWeeklyAnalysis(result.data)
+      } else if (response.status !== 404) {
+        console.error('Error fetching weekly analysis')
+      }
+    } catch (error) {
+      console.error('Error fetching weekly analysis:', error)
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }
+
+  async function handleViewAnalysis(id: string) {
+    try {
+      await fetch(`/api/weekly-analysis/${id}/view`, { method: 'PUT' })
+    } catch (error) {
+      console.error('Error marking analysis as viewed:', error)
+    }
+  }
+
+  async function handleDismissAnalysis(id: string) {
+    try {
+      await fetch(`/api/weekly-analysis/${id}/dismiss`, { method: 'PUT' })
+      setWeeklyAnalysis(null)
+    } catch (error) {
+      console.error('Error dismissing analysis:', error)
     }
   }
 
@@ -169,8 +206,18 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Motivational Quote */}
-      <MotivationalQuote />
+      {/* Weekly Analysis Card - Only show if there's an unviewed or recent analysis */}
+      {weeklyAnalysis && !weeklyAnalysis.is_dismissed && (
+        <WeeklyAnalysisCard
+          analysis={weeklyAnalysis}
+          onDismiss={handleDismissAnalysis}
+          onView={handleViewAnalysis}
+          isLoading={analysisLoading}
+        />
+      )}
+
+      {/* Motivational Quote - Only show if no weekly analysis */}
+      {(!weeklyAnalysis || weeklyAnalysis.is_dismissed) && <MotivationalQuote />}
 
       {/* Compact Stats Row - Single row on all devices */}
       <div className="grid grid-cols-4 gap-2">

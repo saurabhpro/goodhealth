@@ -1,0 +1,45 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { dismissAnalysis } from '@/lib/weekly-analysis/ai-analyzer'
+
+/**
+ * PUT /api/weekly-analysis/[id]/dismiss
+ * Dismiss a weekly analysis notification
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createClient()
+
+    // Check authentication
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+
+    // Dismiss analysis
+    await dismissAnalysis(id)
+
+    return NextResponse.json({
+      success: true,
+      message: 'Analysis dismissed',
+    })
+  } catch (error) {
+    console.error('Error dismissing analysis:', error)
+    return NextResponse.json(
+      {
+        error: 'Failed to dismiss analysis',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
+  }
+}

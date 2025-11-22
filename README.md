@@ -57,6 +57,21 @@ A comprehensive Progressive Web App for tracking gym workouts, body measurements
 - Visual progress bars
 - Goal editing and deletion
 
+### 🤖 AI-Powered Weekly Workout Analysis (New!)
+- **Automated Weekly Insights** - AI analyzes your workout performance every Monday
+- **Comprehensive Analysis** includes:
+  - Weekly workout statistics (count, duration, effort level)
+  - Goal progress tracking with percentage completion
+  - Body measurement changes (weight, body fat, muscle mass)
+  - Key achievements highlighting your wins
+  - Areas for improvement with constructive feedback
+  - Personalized recommendations based on your fitness level and goals
+  - Motivational quote tailored to your performance
+- **Smart Dashboard Integration** - Analysis appears prominently when available
+- **Interactive Cards** - Expandable details with dismiss functionality
+- **Scheduled Automation** - Runs every Monday at 8:00 AM via Vercel Cron
+- **User-Specific Analysis** - Only for users with active goals or workout plans
+
 ### 🔐 Authentication & Security
 - Email/Password authentication
 - Google OAuth sign-in
@@ -76,12 +91,13 @@ A comprehensive Progressive Web App for tracking gym workouts, body measurements
 - **Frontend**: Next.js 16 (App Router) + React 19 + TypeScript 5
 - **Styling**: Tailwind CSS 4 + shadcn/ui components
 - **Backend**: Supabase (PostgreSQL + Auth + Storage + RLS)
+- **AI**: Google Gemini 2.0 Flash (for workout analysis)
 - **Charts**: Recharts for time-series visualizations
 - **State Management**: React hooks + Server Actions
 - **Forms**: React Hook Form + Zod validation
 - **Testing**: Jest + React Testing Library
 - **CI/CD**: GitHub Actions
-- **Deployment**: Vercel (recommended)
+- **Deployment**: Vercel (recommended) with Cron Jobs
 
 ## Getting Started
 
