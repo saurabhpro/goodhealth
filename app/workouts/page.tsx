@@ -61,8 +61,8 @@ export default async function WorkoutsPage() {
                 <Card className="cursor-pointer hover:border-primary transition-colors overflow-hidden">
                   <div className="flex gap-4 p-4">
                     {/* Selfie thumbnail on the left */}
-                    {selfie?.signedUrl && (
-                      <div className="relative w-24 h-24 flex-shrink-0 bg-muted rounded-md overflow-hidden">
+                    <div className="relative w-24 h-24 flex-shrink-0 bg-muted rounded-md overflow-hidden">
+                      {selfie?.signedUrl ? (
                         <Image
                           src={selfie.signedUrl}
                           alt={selfie.caption || 'Workout selfie'}
@@ -72,8 +72,23 @@ export default async function WorkoutsPage() {
                           sizes="96px"
                           quality={80}
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <>
+                          <Image
+                            src="/goku-placeholder.jpg"
+                            alt="Workout placeholder"
+                            width={96}
+                            height={96}
+                            className="object-cover w-full h-full opacity-50"
+                            sizes="96px"
+                            quality={80}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <Camera className="h-8 w-8 text-white" />
+                          </div>
+                        </>
+                      )}
+                    </div>
 
                     {/* Content on the right */}
                     <div className="flex-1 flex flex-col justify-center min-w-0">

@@ -391,8 +391,8 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-2 sm:space-y-3">
-            {workouts.slice(0, 5).map((workout) => {
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {workouts.slice(0, 6).map((workout) => {
               const workoutWithExtras = workout as typeof workout & {
                 workout_selfies?: { signedUrl?: string; caption?: string | null }[]
                 exercises?: unknown[]
@@ -401,56 +401,84 @@ export default function DashboardPage() {
 
               return (
                 <Link href={`/workouts/${workout.id}`} key={workout.id}>
-                  <Card className="cursor-pointer hover:border-primary transition-colors overflow-hidden">
-                    <div className="flex gap-2 sm:gap-3 p-2 sm:p-3">
-                      {/* Selfie thumbnail */}
-                      {selfie?.signedUrl && (
-                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-muted rounded-md overflow-hidden">
+                  <Card className="group cursor-pointer hover:border-primary hover:shadow-lg transition-all overflow-hidden h-full">
+                    {/* Image Header */}
+                    <div className="relative h-32 sm:h-40 w-full bg-muted overflow-hidden">
+                      {selfie?.signedUrl ? (
+                        <Image
+                          src={selfie.signedUrl}
+                          alt={selfie.caption || 'Workout selfie'}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          quality={80}
+                        />
+                      ) : (
+                        <>
                           <Image
-                            src={selfie.signedUrl}
-                            alt={selfie.caption || 'Workout selfie'}
+                            src="/goku-placeholder.jpg"
+                            alt="Workout placeholder"
                             fill
-                            className="object-cover"
-                            sizes="(max-width: 640px) 64px, 80px"
+                            className="object-cover opacity-50 group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             quality={80}
                           />
-                        </div>
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <Camera className="h-10 w-10 text-white" />
+                          </div>
+                        </>
                       )}
+                      {/* Date Badge */}
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-black/60 text-white backdrop-blur-sm border-0">
+                          {new Date(workout.date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </Badge>
+                      </div>
+                    </div>
 
-                      {/* Content */}
-                      <div className="flex-1 flex flex-col justify-center min-w-0">
-                        <div className="space-y-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-sm sm:text-base font-semibold leading-tight line-clamp-1">
-                                {workout.name}
-                              </h3>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {new Date(workout.date).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </p>
-                            </div>
-                            <Badge variant="secondary" className="text-xs flex-shrink-0">
-                              {workoutWithExtras.exercises?.length || 0}
-                            </Badge>
+                    {/* Content */}
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div>
+                          <h3 className="font-semibold text-base leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+                            {workout.name}
+                          </h3>
+                          {workout.description && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              {workout.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Stats Row */}
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Dumbbell className="h-3.5 w-3.5" />
+                            <span className="font-medium">{workoutWithExtras.exercises?.length || 0}</span>
                           </div>
                           {workout.duration_minutes && (
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              <span>{workout.duration_minutes} min</span>
-                              {selfie && (
-                                <>
-                                  <span>•</span>
-                                  <Camera className="h-3 w-3" />
-                                </>
-                              )}
-                            </div>
+                            <>
+                              <span>•</span>
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>{workout.duration_minutes} min</span>
+                              </div>
+                            </>
+                          )}
+                          {selfie && (
+                            <>
+                              <span>•</span>
+                              <div className="flex items-center gap-1">
+                                <Camera className="h-3.5 w-3.5 text-green-600" />
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
-                    </div>
+                    </CardContent>
                   </Card>
                 </Link>
               )

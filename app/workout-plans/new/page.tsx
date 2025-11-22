@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
-import { ArrowLeft, Calendar, ChevronRight, Target, Dumbbell } from 'lucide-react'
+import { ArrowLeft, Calendar, ChevronRight, Target, Dumbbell, Sparkles } from 'lucide-react'
 import type { Goal } from '@/types'
 
 type PlanStep = 'goal' | 'configure' | 'review'
@@ -235,8 +235,9 @@ export default function NewWorkoutPlanPage() {
           </Button>
         </Link>
         <h1 className="text-3xl font-bold mb-2">Create Workout Plan</h1>
-        <p className="text-muted-foreground">
-          Generate a personalized workout plan based on your goals
+        <p className="text-muted-foreground flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-purple-500" />
+          AI-powered personalized workout plan based on your goals
         </p>
       </div>
 
@@ -250,7 +251,7 @@ export default function NewWorkoutPlanPage() {
             Configure Plan
           </span>
           <span className={currentStep === 'review' ? 'font-semibold' : 'text-muted-foreground'}>
-            Review & Generate
+            Review & Generate with AI
           </span>
         </div>
       </div>
@@ -604,7 +605,17 @@ export default function NewWorkoutPlanPage() {
               disabled={loading}
               className="min-w-[200px]"
             >
-              {loading ? generatingStatus || 'Generating...' : 'Generate Plan'}
+              {loading ? (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4 animate-pulse" />
+                  {generatingStatus || 'Generating with AI...'}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate with AI
+                </>
+              )}
             </Button>
           </div>
         </div>
