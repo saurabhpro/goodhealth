@@ -39,6 +39,39 @@ import {
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+function getWeekStartDay(startDate: string): number {
+  // Parse date carefully to avoid timezone issues
+  // If the date is in ISO format (YYYY-MM-DD), add time to ensure correct day
+  const date = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`)
+  const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+  return dayOfWeek
+}
+
+function getOrderedDayNames(weekStartDay: number): { name: string; dayOfWeek: number }[] {
+  const orderedDays = []
+  for (let i = 0; i < 7; i++) {
+    const dayIndex = (weekStartDay + i) % 7
+    orderedDays.push({
+      name: DAY_NAMES[dayIndex],
+      dayOfWeek: dayIndex
+    })
+  }
+  return orderedDays
+}
+
+function getDateForDayOfWeek(startDate: string, currentWeek: number, dayOfWeek: number): Date {
+  const start = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`)
+  const startDayOfWeek = start.getDay()
+
+  // Calculate days from start to reach the target day in the current week
+  let daysToAdd = (dayOfWeek - startDayOfWeek + 7) % 7
+  daysToAdd += (currentWeek - 1) * 7
+
+  const targetDate = new Date(start)
+  targetDate.setDate(start.getDate() + daysToAdd)
+  return targetDate
+}
+
 export default function WorkoutPlanPage() {
   const params = useParams()
   const router = useRouter()
@@ -191,6 +224,10 @@ export default function WorkoutPlanPage() {
   const completedSessions = sessions.filter(s => s.status === 'completed').length
   const totalSessions = sessions.length
   const weekProgress = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0
+
+  const orderedDays = plan.started_at
+    ? getOrderedDayNames(getWeekStartDay(plan.started_at))
+    : DAY_NAMES.map((name, index) => ({ name, dayOfWeek: index }))
 
   return (
     <>
@@ -382,9 +419,14 @@ export default function WorkoutPlanPage() {
 
         {/* Weekly Calendar */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {DAY_NAMES.map((dayName, dayOfWeek) => {
+          {orderedDays.map(({ name: dayName, dayOfWeek }) => {
             const session = getSessionForDay(dayOfWeek)
             const isRest = !session || session.workout_type === 'rest'
+
+            // Calculate the actual date for this day
+            const date = plan.started_at
+              ? getDateForDayOfWeek(plan.started_at, currentWeek, dayOfWeek)
+              : null
 
             return (
               <Card
@@ -401,9 +443,16 @@ export default function WorkoutPlanPage() {
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-semibold">
-                      {dayName}
-                    </CardTitle>
+                    <div className="flex flex-col gap-0.5">
+                      <CardTitle className="text-base font-semibold">
+                        {dayName}
+                      </CardTitle>
+                      {date && (
+                        <p className="text-xs text-muted-foreground font-normal">
+                          {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      )}
+                    </div>
                     {session && getStatusIcon(session.status)}
                   </div>
                 </CardHeader>

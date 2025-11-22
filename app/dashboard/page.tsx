@@ -14,11 +14,60 @@ import {
   Calendar,
   TrendingUp,
   Clock,
-  Camera
+  Camera,
+  Check,
+  X
 } from 'lucide-react'
 import { MotivationalQuote } from '@/components/motivational-quote'
 import { SessionDetailModal } from '@/components/workout-plans/session-detail-modal'
 import type { Workout, Goal, WorkoutPlan, WorkoutPlanSession } from '@/types'
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+function getStatusIcon(status: string) {
+  switch (status) {
+    case 'completed':
+      return <Check className="h-3.5 w-3.5 text-green-500" />
+    case 'skipped':
+      return <X className="h-3.5 w-3.5 text-red-500" />
+    case 'scheduled':
+      return <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+    default:
+      return null
+  }
+}
+
+function getWeekStartDay(startDate: string): number {
+  // Parse date carefully to avoid timezone issues
+  const date = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`)
+  const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+  return dayOfWeek
+}
+
+function getOrderedDayNames(weekStartDay: number): { name: string; dayOfWeek: number }[] {
+  const orderedDays = []
+  for (let i = 0; i < 7; i++) {
+    const dayIndex = (weekStartDay + i) % 7
+    orderedDays.push({
+      name: DAY_NAMES[dayIndex],
+      dayOfWeek: dayIndex
+    })
+  }
+  return orderedDays
+}
+
+function getDateForDayOfWeek(startDate: string, currentWeek: number, dayOfWeek: number): Date {
+  const start = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`)
+  const startDayOfWeek = start.getDay()
+
+  // Calculate days from start to reach the target day in the current week
+  let daysToAdd = (dayOfWeek - startDayOfWeek + 7) % 7
+  daysToAdd += (currentWeek - 1) * 7
+
+  const targetDate = new Date(start)
+  targetDate.setDate(start.getDate() + daysToAdd)
+  return targetDate
+}
 
 export default function DashboardPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
@@ -198,27 +247,47 @@ export default function DashboardPage() {
                   {currentWeek && <span className="text-sm font-normal text-muted-foreground ml-2">Week {currentWeek}</span>}
                 </CardTitle>
               </div>
-              <Badge variant={activePlan.status === 'active' ? 'default' : 'secondary'}>
-                {activePlan.status}
+              <Badge
+                className={
+                  activePlan.status === 'active' ? 'bg-green-500 hover:bg-green-600 text-white' :
+                  activePlan.status === 'completed' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
+                  activePlan.status === 'draft' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' :
+                  activePlan.status === 'archived' ? 'bg-gray-500 hover:bg-gray-600 text-white' :
+                  ''
+                }
+                variant={activePlan.status === 'active' || activePlan.status === 'completed' || activePlan.status === 'draft' || activePlan.status === 'archived' ? undefined : 'outline'}
+              >
+                {activePlan.status.charAt(0).toUpperCase() + activePlan.status.slice(1)}
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {weekSessions && weekSessions.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((dayName, dayIndex) => {
-                  const session = weekSessions.find(s => s.day_of_week === dayIndex + 1)
-                  const isRestDay = !session || session.workout_type === 'rest'
-                  const isCompleted = session?.status === 'completed'
+                {(() => {
+                  // Get ordered days based on when the plan started
+                  const orderedDays = activePlan?.started_at
+                    ? getOrderedDayNames(getWeekStartDay(activePlan.started_at))
+                    : DAY_NAMES.map((name, index) => ({ name, dayOfWeek: index }))
 
-                  return (
-                    <div
-                      key={dayName}
+                  return orderedDays.map(({ name: dayName, dayOfWeek }) => {
+                    const session = weekSessions.find(s => s.day_of_week === dayOfWeek)
+                    const isRestDay = !session || session.workout_type === 'rest'
+                    const isCompleted = session?.status === 'completed'
+
+                    // Calculate the actual date for this day
+                    const date = activePlan?.started_at
+                      ? getDateForDayOfWeek(activePlan.started_at, currentWeek, dayOfWeek)
+                      : null
+
+                    return (
+                      <div
+                        key={dayOfWeek}
                       className={`p-3 rounded-lg border transition-all ${
-                        isCompleted
-                          ? 'bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700'
-                          : isRestDay
+                        isRestDay
                           ? 'bg-muted/30 border-muted'
+                          : isCompleted
+                          ? 'border-green-500 cursor-pointer'
                           : 'bg-primary/5 border-primary/30 hover:border-primary/50 cursor-pointer'
                       }`}
                       onClick={() => {
@@ -229,14 +298,17 @@ export default function DashboardPage() {
                       }}
                     >
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-muted-foreground truncate">
-                            {dayName.slice(0, 3)}
-                          </p>
-                          {isCompleted && (
-                            <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-green-600 text-white">
-                              ✓
-                            </Badge>
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold text-muted-foreground truncate">
+                              {dayName.slice(0, 3)}
+                            </p>
+                            {session && getStatusIcon(session.status)}
+                          </div>
+                          {date && (
+                            <p className="text-[10px] text-muted-foreground">
+                              {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
                           )}
                         </div>
                         {isRestDay ? (
@@ -252,12 +324,18 @@ export default function DashboardPage() {
                                 <span>{session.estimated_duration}m</span>
                               </div>
                             )}
+                            {session.status === 'completed' && (
+                              <div className="text-[10px] text-green-600 font-medium text-center pt-1">
+                                Completed ✓
+                              </div>
+                            )}
                           </>
                         )}
                       </div>
                     </div>
-                  )
-                })}
+                    )
+                  })
+                })()}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">No workouts scheduled for this week</p>
