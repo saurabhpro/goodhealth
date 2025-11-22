@@ -17,12 +17,6 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 NEXT_PUBLIC_APP_URL
 GEMINI_API_KEY
-CRON_SECRET
-```
-
-Generate CRON_SECRET:
-```bash
-openssl rand -base64 32
 ```
 
 ### Production Deploy
@@ -30,13 +24,6 @@ openssl rand -base64 32
 ```bash
 vercel --prod
 ```
-
-### Cron Jobs
-
-Configured in `vercel.json`:
-- Weekly analysis runs Monday 8:00 AM
-- Requires CRON_SECRET env var
-- Monitor: Vercel Dashboard → Functions
 
 ## Alternative Platforms
 
@@ -54,7 +41,7 @@ Configured in `vercel.json`:
 
 1. **Verify migrations** - Check Supabase tables exist
 2. **Test auth** - Try login/signup
-3. **Check cron** - Verify in Functions logs
+3. **Test weekly analysis** - Visit dashboard, should auto-generate if data exists
 4. **Monitor errors** - Check Vercel logs
 
 ## CI/CD
@@ -70,10 +57,11 @@ GitHub Actions runs on push/PR:
 - Verify Node.js version (25.2.0+)
 - Run `yarn build` locally
 
-**Cron not running:**
-- Verify CRON_SECRET set
-- Check vercel.json deployed
-- View logs in Vercel Dashboard
+**Weekly analysis not generating:**
+- Ensure user has workouts/goals/plans
+- Check GEMINI_API_KEY is set
+- View browser console for errors
+- Check Vercel function logs
 
 **Database errors:**
 - Ensure migrations ran

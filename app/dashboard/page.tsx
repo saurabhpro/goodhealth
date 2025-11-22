@@ -141,11 +141,25 @@ export default function DashboardPage() {
 
   async function fetchWeeklyAnalysis() {
     try {
+      // Try to fetch latest analysis
       const response = await fetch('/api/weekly-analysis/latest')
       if (response.ok) {
         const result = await response.json()
         setWeeklyAnalysis(result.data)
-      } else if (response.status !== 404) {
+      } else if (response.status === 404) {
+        // No analysis exists - trigger generation in background (fire and forget)
+        console.log('No weekly analysis found, triggering background generation...')
+        fetch('/api/weekly-analysis/generate', { method: 'POST' })
+          .then(response => {
+            if (response.ok) {
+              console.log('Weekly analysis generation started - will be available on next visit')
+            } else {
+              console.log('Could not generate analysis (might not have enough data yet)')
+            }
+          })
+          .catch(err => console.log('Background analysis generation error:', err))
+        // Don't set analysis - user will see quote this time
+      } else {
         console.error('Error fetching weekly analysis')
       }
     } catch (error) {
