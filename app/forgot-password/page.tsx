@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button onClick={() => window.location.href = '/login'} className="w-full">
+            <Button onClick={() => globalThis.location.href = '/login'} className="w-full">
               Back to Sign In
             </Button>
           </CardFooter>

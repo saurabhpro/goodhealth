@@ -27,16 +27,6 @@ interface MeasurementsListProps {
   measurements: Measurement[]
 }
 
-type MeasurementField =
-  | 'weight'
-  | 'body_fat_percentage'
-  | 'muscle_mass'
-  | 'waist'
-  | 'chest'
-  | 'hips'
-  | 'bicep_left'
-  | 'bicep_right'
-
 // Define which measurements are better when decreasing (true) vs increasing (false/undefined)
 const BETTER_WHEN_DECREASING: Record<string, boolean> = {
   weight: true,
@@ -61,11 +51,11 @@ function TrendIndicator({
   trend,
   value,
   fieldName
-}: {
+}: Readonly<{
   trend: 'up' | 'down' | 'stable' | 'none';
   value?: string;
   fieldName?: string;
-}) {
+}>) {
   if (trend === 'none') return null
 
   // Determine if this trend is positive for health

@@ -39,21 +39,6 @@ export interface WeeklySchedule {
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-const MUSCLE_GROUP_RECOVERY_DAYS: Record<string, number> = {
-  chest: 2,
-  back: 2,
-  legs: 3,
-  shoulders: 2,
-  arms: 1,
-  core: 1,
-  biceps: 1,
-  triceps: 1,
-  quads: 3,
-  hamstrings: 3,
-  glutes: 2,
-  calves: 1,
-}
-
 /**
  * Distributes rest days throughout the week
  */
@@ -160,23 +145,6 @@ function createSessionFromTemplate(
     status: 'scheduled',
     notes: template.description,
   }
-}
-
-/**
- * Checks if a muscle group can be worked based on recovery time
- */
-function canWorkMuscleGroup(
-  muscleGroup: string,
-  lastWorked: Map<string, number>,
-  currentDay: number
-): boolean {
-  const lastWorkedDay = lastWorked.get(muscleGroup)
-  if (lastWorkedDay === undefined) return true
-
-  const daysSinceWorked = currentDay - lastWorkedDay
-  const recoveryDays = MUSCLE_GROUP_RECOVERY_DAYS[muscleGroup] || 2
-
-  return daysSinceWorked >= recoveryDays
 }
 
 /**

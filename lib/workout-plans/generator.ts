@@ -148,7 +148,6 @@ export async function generateWorkoutPlan(
     // 7. Create the workout plan in database
     const planName = request.name || `${goal.title} - ${request.weeksCount} Week Plan`
     const planDescription = request.description || `AI-generated ${request.weeksCount}-week plan for ${goal.title}`
-    const startDate = request.startDate || new Date().toISOString()
 
     const { data: createdPlan, error: planError } = await supabase
       .from('workout_plans')

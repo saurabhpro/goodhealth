@@ -38,7 +38,7 @@ export default function WorkoutPlansPage() {
       } else {
         toast.error('Failed to load plans')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load plans')
     } finally {
       setLoading(false)
@@ -61,7 +61,7 @@ export default function WorkoutPlansPage() {
       } else {
         toast.error('Failed to delete plan')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete plan')
     }
   }

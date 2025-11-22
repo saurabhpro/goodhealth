@@ -141,11 +141,11 @@ async function fetchWeekData(userId: string, weekStartDate: Date): Promise<Analy
   const goal_progress: GoalProgress[] = goals
     ? goals.map((goal) => {
         const progress =
-          goal.target_value !== goal.initial_value
-            ? ((goal.current_value - goal.initial_value) /
-                (goal.target_value - goal.initial_value)) *
+          goal.target_value === goal.initial_value
+              ? 0
+              : ((goal.current_value - goal.initial_value) /
+                  (goal.target_value - goal.initial_value)) *
               100
-            : 0
 
         return {
           goal_id: goal.id,
@@ -291,7 +291,7 @@ function parseAIAnalysis(responseText: string): WeeklyAnalysisResult {
     let jsonText = responseText
     const jsonRegex = /```(?:json)?\s*(\{[\s\S]*\})\s*```/
     const jsonMatch = jsonRegex.exec(responseText)
-    if (jsonMatch && jsonMatch[1]) {
+    if (jsonMatch?.[1]) {
       jsonText = jsonMatch[1]
     }
 

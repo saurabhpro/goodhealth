@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -28,11 +28,7 @@ export default function WorkoutPlanProgressPage() {
   const [allSessions, setAllSessions] = useState<WorkoutPlanSession[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchPlanData()
-  }, [planId])
-
-  async function fetchPlanData() {
+  const fetchPlanData = useCallback(async () => {
     try {
       // Fetch plan
       const planResponse = await fetch(`/api/workout-plans/${planId}`)
@@ -55,12 +51,16 @@ export default function WorkoutPlanProgressPage() {
       const weeksData = await Promise.all(sessionsPromises)
       const sessions = weeksData.flatMap(weekData => weekData.sessions || [])
       setAllSessions(sessions)
-    } catch (error) {
+    } catch {
       toast.error('Failed to load progress data')
     } finally {
       setLoading(false)
     }
-  }
+  }, [planId, router])
+
+  useEffect(() => {
+    fetchPlanData()
+  }, [fetchPlanData])
 
   if (loading) {
     return (

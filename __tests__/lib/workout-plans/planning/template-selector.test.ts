@@ -220,20 +220,3 @@ describe('Template Selector', () => {
     })
   })
 })
-
-// Helper function to get exercises (imported from template-helpers)
-function getTemplateExercises(template: WorkoutTemplate): Exercise[] {
-  if (!template.exercises) return []
-
-  try {
-    if (Array.isArray(template.exercises)) {
-      return template.exercises as Exercise[]
-    }
-    if (typeof template.exercises === 'string') {
-      return JSON.parse(template.exercises) as Exercise[]
-    }
-    return []
-  } catch {
-    return []
-  }
-}

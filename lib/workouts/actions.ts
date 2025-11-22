@@ -54,9 +54,9 @@ export async function createWorkout(formData: FormData) {
       user_id: user.id,
       name,
       date,
-      duration_minutes: duration ? parseInt(duration) : null,
+      duration_minutes: duration ? Number.parseInt(duration) : null,
       description,
-      effort_level: effortLevel ? parseInt(effortLevel) : null,
+      effort_level: effortLevel ? Number.parseInt(effortLevel) : null,
     })
     .select()
     .single()
@@ -75,18 +75,18 @@ export async function createWorkout(formData: FormData) {
       name: ex.name,
       exercise_type: ex.type || 'strength',
       // Strength fields
-      sets: ex.sets ? parseInt(ex.sets) : null,
-      reps: ex.reps ? parseInt(ex.reps) : null,
-      weight: ex.weight ? parseFloat(ex.weight) : null,
+      sets: ex.sets ? Number.parseInt(ex.sets) : null,
+      reps: ex.reps ? Number.parseInt(ex.reps) : null,
+      weight: ex.weight ? Number.parseFloat(ex.weight) : null,
       weight_unit: 'kg',
       // Cardio fields
-      duration_minutes: ex.duration ? parseInt(ex.duration) : null,
-      distance: ex.distance ? parseFloat(ex.distance) : null,
+      duration_minutes: ex.duration ? Number.parseInt(ex.duration) : null,
+      distance: ex.distance ? Number.parseFloat(ex.distance) : null,
       distance_unit: 'km',
-      speed: ex.speed ? parseFloat(ex.speed) : null,
-      calories: ex.calories ? parseInt(ex.calories) : null,
-      resistance_level: ex.resistance ? parseInt(ex.resistance) : null,
-      incline: ex.incline ? parseFloat(ex.incline) : null,
+      speed: ex.speed ? Number.parseFloat(ex.speed) : null,
+      calories: ex.calories ? Number.parseInt(ex.calories) : null,
+      resistance_level: ex.resistance ? Number.parseInt(ex.resistance) : null,
+      incline: ex.incline ? Number.parseFloat(ex.incline) : null,
     }))
 
     console.log('Creating exercises:', exerciseRecords)

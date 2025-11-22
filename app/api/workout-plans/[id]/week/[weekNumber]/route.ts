@@ -7,9 +7,9 @@ export async function GET(
 ) {
   try {
     const { id, weekNumber } = await params
-    const week = parseInt(weekNumber, 10)
+    const week = Number.parseInt(weekNumber, 10)
 
-    if (isNaN(week) || week < 1) {
+    if (Number.isNaN(week) || week < 1) {
       return NextResponse.json(
         { error: 'Invalid week number' },
         { status: 400 }

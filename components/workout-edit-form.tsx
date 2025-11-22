@@ -38,7 +38,7 @@ interface ExerciseFormData {
   incline?: string
 }
 
-export function WorkoutEditForm({ workout, exercises: initialExercises }: WorkoutEditFormProps) {
+export function WorkoutEditForm({ workout, exercises: initialExercises }: Readonly<WorkoutEditFormProps>) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [effortLevel, setEffortLevel] = useState(workout.effort_level || 3)
@@ -260,7 +260,7 @@ export function WorkoutEditForm({ workout, exercises: initialExercises }: Workou
                   />
                   <datalist id={`exercise-list-${index}`}>
                     {equipmentCategories.map((category) =>
-                      gymEquipment[category.value as keyof typeof gymEquipment]?.map((equipment) => (
+                      gymEquipment[category.value]?.map((equipment) => (
                         <option key={equipment.name} value={equipment.name}>
                           {equipment.name}
                           {equipment.brands.length > 0 && ` (${equipment.brands[0]})`}

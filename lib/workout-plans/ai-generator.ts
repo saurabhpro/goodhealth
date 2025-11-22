@@ -195,7 +195,7 @@ function buildPrompt(request: AIGenerationRequest): string {
   }
 
   // Add latest measurements
-  if (latestMeasurements && latestMeasurements.weight) {
+  if (latestMeasurements?.weight) {
     prompt += `\n## Current Body Metrics (as of ${latestMeasurements.measurementDate ? new Date(latestMeasurements.measurementDate).toLocaleDateString() : 'latest'})\n`
     prompt += `- **Weight**: ${latestMeasurements.weight} kg\n`
 
@@ -468,13 +468,13 @@ function parseAIResponse(
     // Remove markdown code blocks
     // Pattern 1: ```json\n{...}\n```
     // Pattern 2: ```\n{...}\n```
-    const codeBlockMatch = jsonText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/)
+    const codeBlockMatch = new RegExp(/```(?:json)?\s*\n?([\s\S]*?)\n?```/).exec(jsonText)
     if (codeBlockMatch) {
       jsonText = codeBlockMatch[1].trim()
     }
 
     // Remove any remaining backticks at start/end
-    jsonText = jsonText.replace(/^`+|`+$/g, '').trim()
+    jsonText = jsonText.replaceAll(/^`+|`+$/g, '').trim()
 
     // Remove "json" word if it appears at the start
     if (jsonText.startsWith('json')) {

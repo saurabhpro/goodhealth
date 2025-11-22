@@ -271,9 +271,9 @@ describe('Workout Plan Start Date Calculations', () => {
           { day: 6, name: 'Saturday', expected: '2024-12-07' },
         ]
 
-        days.forEach(({ day, name, expected }) => {
+        days.forEach(({ day, expected }) => {
           const result = calculateActualDate(startDate, 1, day)
-          expect(result).toBe(expected) // , `Failed for ${name}`
+          expect(result).toBe(expected)
         })
       })
     })

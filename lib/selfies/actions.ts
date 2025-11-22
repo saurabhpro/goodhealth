@@ -93,7 +93,7 @@ export async function uploadWorkoutSelfie(
   try {
     // Generate unique filename
     const timestamp = Date.now()
-    const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+    const fileName = `${timestamp}_${file.name.replaceAll(/[^a-zA-Z0-9._-]/g, '_')}`
     const filePath = `${user.id}/${workoutId}/${fileName}`
 
     // Upload to Supabase Storage

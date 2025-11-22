@@ -14,7 +14,7 @@ import type { Database } from '@/types/database'
 type WorkoutSelfie = Database['public']['Tables']['workout_selfies']['Row']
 
 interface WorkoutSelfieDisplayProps {
-  workoutId: string
+  readonly workoutId: string
 }
 
 interface SelfieWithUrl extends WorkoutSelfie {

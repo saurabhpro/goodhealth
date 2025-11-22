@@ -49,7 +49,7 @@ export default function WorkoutTemplatesPage() {
       }
 
       setTemplates(data || [])
-    } catch (error) {
+    } catch {
       toast.error('Failed to load templates')
     } finally {
       setLoading(false)
@@ -71,7 +71,7 @@ export default function WorkoutTemplatesPage() {
       setTemplates(templates.filter(t => t.id !== templateToDelete.id))
       setDeleteDialogOpen(false)
       setTemplateToDelete(null)
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete template')
     }
   }

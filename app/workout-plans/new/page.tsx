@@ -24,7 +24,6 @@ export default function NewWorkoutPlanPage() {
   const [loading, setLoading] = useState(false)
   const [goalsLoading, setGoalsLoading] = useState(true)
   const [goals, setGoals] = useState<Goal[]>([])
-  const [generatingJobId, setGeneratingJobId] = useState<string | null>(null)
   const [generatingStatus, setGeneratingStatus] = useState('')
 
   // Form state
@@ -48,7 +47,7 @@ export default function NewWorkoutPlanPage() {
         const data = await response.json()
         setGoals(data)
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load goals')
     } finally {
       setGoalsLoading(false)
@@ -62,15 +61,15 @@ export default function NewWorkoutPlanPage() {
         const data = await response.json()
         // Store active/draft plans by goal_id for checking
         const plansByGoal: Record<string, { id: string; status: string; goal_id: string }> = {}
-        data.forEach((plan: { id: string; status: string; goal_id: string }) => {
+        for (const plan of data) {
           if (plan.status === 'active' || plan.status === 'draft') {
             plansByGoal[plan.goal_id] = plan
           }
-        })
+        }
         // You can use this to disable goals
         // For now, we'll just check in handleGenerate
       }
-    } catch (error) {
+    } catch {
       console.error('Failed to load plans')
     }
   }
@@ -98,7 +97,6 @@ export default function NewWorkoutPlanPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setGeneratingJobId(data.jobId)
         setGeneratingStatus('🍳 Cooking your workout plan...')
 
         toast.success('Plan generation started!', {
@@ -126,7 +124,7 @@ export default function NewWorkoutPlanPage() {
         })
         setLoading(false)
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate plan')
       setLoading(false)
     }

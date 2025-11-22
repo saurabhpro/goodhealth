@@ -31,7 +31,7 @@ export function SessionDetailModal({
   open,
   onOpenChange,
   onUpdate
-}: SessionDetailModalProps) {
+}: Readonly<SessionDetailModalProps>) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [notes, setNotes] = useState(session.notes || '')
@@ -61,7 +61,7 @@ export function SessionDetailModal({
       } else {
         toast.error('Failed to update session')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update session')
     } finally {
       setLoading(false)
@@ -84,7 +84,7 @@ export function SessionDetailModal({
       } else {
         toast.error('Failed to update session')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update session')
     } finally {
       setLoading(false)

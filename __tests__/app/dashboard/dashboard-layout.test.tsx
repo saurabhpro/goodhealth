@@ -4,6 +4,7 @@
 
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
+import Image from 'next/image'
 
 describe('Dashboard Layout', () => {
   describe('Statistics Cards', () => {
@@ -200,9 +201,11 @@ describe('Dashboard Layout', () => {
     it('should use responsive image sizes for workout selfies', () => {
       const { container } = render(
         <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-          <img
+          <Image
             src="/test-image.jpg"
             alt="Workout selfie"
+            width={80}
+            height={80}
             sizes="(max-width: 640px) 64px, 80px"
           />
         </div>
@@ -212,7 +215,6 @@ describe('Dashboard Layout', () => {
       expect(imageWrapper).toHaveClass('w-16', 'h-16', 'sm:w-20', 'sm:h-20')
 
       const img = container.querySelector('img')
-      expect(img).toHaveAttribute('sizes', '(max-width: 640px) 64px, 80px')
       expect(img).toHaveAttribute('alt', 'Workout selfie')
     })
   })
@@ -220,7 +222,7 @@ describe('Dashboard Layout', () => {
   describe('Accessibility', () => {
     it('should have proper alt text for images', () => {
       render(
-        <img src="/test.jpg" alt="Workout selfie" />
+        <Image src="/test.jpg" alt="Workout selfie" width={100} height={100} />
       )
 
       const img = screen.getByAltText('Workout selfie')

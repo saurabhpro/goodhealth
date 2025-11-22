@@ -11,7 +11,6 @@ import {
   calculateVolume,
 } from '@/lib/workout-plans/planning/progressive-overload'
 import type { Exercise } from '@/types'
-import type { GoalType } from '@/lib/workout-plans/planning'
 
 // Mock exercise
 const createMockExercise = (name: string, sets: number, reps: number, weight: number = 0): Exercise => ({

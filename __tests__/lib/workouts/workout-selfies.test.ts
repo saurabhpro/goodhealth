@@ -2,7 +2,7 @@
  * Unit tests for workout selfie integration in getWorkouts
  */
 
-import { createMockWorkout, createMockSelfie, createMockExercise, createMockSupabaseClient, createMockUser } from '../../utils/mocks'
+import { createMockWorkout, createMockSelfie, createMockExercise } from '../../utils/mocks'
 
 describe('Workout Selfies Integration', () => {
   describe('getWorkouts with selfies', () => {
@@ -57,11 +57,7 @@ describe('Workout Selfies Integration', () => {
         workout_id: 'workout-1',
         taken_at: '2024-01-01T10:00:00Z'
       })
-      const selfie2 = createMockSelfie({
-        id: 'selfie-2',
-        workout_id: 'workout-1',
-        taken_at: '2024-01-01T11:00:00Z'
-      })
+      // Note: A second selfie (selfie-2) also exists but is not returned by the backend
 
       // Simulate backend returning only first selfie (most recent)
       const workoutWithSelfie = {
@@ -234,11 +230,7 @@ describe('Workout Selfies Integration', () => {
 
   describe('Image optimization metadata', () => {
     it('should track original image dimensions (if available)', () => {
-      const selfie = createMockSelfie({
-        file_size: 2048000,
-        mime_type: 'image/jpeg'
-      })
-
+      // Mock selfie with 2MB JPEG image
       // Mock width/height could be added to selfie metadata
       const metadata = {
         width: 1920,

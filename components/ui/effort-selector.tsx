@@ -59,7 +59,7 @@ const effortLevels = [
   },
 ]
 
-export function EffortSelector({ value, onChange, disabled = false }: EffortSelectorProps) {
+export function EffortSelector({ value, onChange, disabled = false }: Readonly<EffortSelectorProps>) {
   const selectedLevel = effortLevels.find(level => level.value === value)
 
   return (

@@ -16,8 +16,8 @@ const KM_TO_MILES = 0.621371
 function extractExerciseName(goalTitle: string): string | null {
   // Remove numbers and units
   const cleaned = goalTitle
-    .replace(/\d+(\.\d+)?/g, '') // Remove numbers
-    .replace(/\b(kg|lbs|km|miles|reps|minutes|days|workouts)\b/gi, '') // Remove units
+    .replaceAll(/\d+(\.\d+)?/g, '') // Remove numbers
+    .replaceAll(/\b(kg|lbs|km|miles|reps|minutes|days|workouts)\b/gi, '') // Remove units
     .trim()
 
   return cleaned || null

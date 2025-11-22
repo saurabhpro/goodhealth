@@ -16,7 +16,7 @@ interface SelfieUploadProps {
   variant?: 'default' | 'compact'
 }
 
-export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' }: SelfieUploadProps) {
+export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' }: Readonly<SelfieUploadProps>) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [caption, setCaption] = useState('')
@@ -127,66 +127,66 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
           className="hidden"
         />
 
-        {!selectedFile ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCameraClick}
-            className="w-full"
-            disabled={uploading}
-          >
-            <Camera className="mr-2 h-4 w-4" />
-            Add Workout Selfie
-          </Button>
-        ) : (
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <div className="relative">
-                {previewUrl && (
-                  <Image
-                    src={previewUrl}
-                    alt="Preview"
-                    width={600}
-                    height={400}
-                    className="w-full h-48 object-cover rounded-lg"
-                    unoptimized
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    quality={85}
+        {selectedFile ? (
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div className="relative">
+                  {previewUrl && (
+                      <Image
+                          src={previewUrl}
+                          alt="Preview"
+                          width={600}
+                          height={400}
+                          className="w-full h-48 object-cover rounded-lg"
+                          unoptimized
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          quality={85}
+                      />
+                  )}
+                  <button
+                      type="button"
+                      onClick={handleClearFile}
+                      className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                      disabled={uploading}
+                  >
+                    <X className="h-4 w-4"/>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="caption">Caption (optional)</Label>
+                  <Textarea
+                      id="caption"
+                      placeholder="How are you feeling? Add a note..."
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      disabled={uploading}
+                      rows={2}
                   />
-                )}
-                <button
-                  type="button"
-                  onClick={handleClearFile}
-                  className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
-                  disabled={uploading}
+                </div>
+
+                <Button
+                    type="button"
+                    onClick={handleUpload}
+                    disabled={uploading}
+                    className="w-full"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="caption">Caption (optional)</Label>
-                <Textarea
-                  id="caption"
-                  placeholder="How are you feeling? Add a note..."
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  disabled={uploading}
-                  rows={2}
-                />
-              </div>
-
-              <Button
+                  <Upload className="mr-2 h-4 w-4"/>
+                  {uploading ? 'Uploading...' : 'Upload Selfie'}
+                </Button>
+              </CardContent>
+            </Card>
+        ) : (
+            <Button
                 type="button"
-                onClick={handleUpload}
-                disabled={uploading}
+                variant="outline"
+                onClick={handleCameraClick}
                 className="w-full"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {uploading ? 'Uploading...' : 'Upload Selfie'}
-              </Button>
-            </CardContent>
-          </Card>
+                disabled={uploading}
+            >
+              <Camera className="mr-2 h-4 w-4"/>
+              Add Workout Selfie
+            </Button>
         )}
       </div>
     )
@@ -202,81 +202,81 @@ export function SelfieUpload({ workoutId, onUploadComplete, variant = 'default' 
         className="hidden"
       />
 
-      {!selectedFile ? (
-        <div className="space-y-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCameraClick}
-            className="w-full h-32 border-2 border-dashed"
-            disabled={uploading}
-          >
-            <div className="flex flex-col items-center gap-2">
-              <ImageIcon className="h-8 w-8 text-muted-foreground" />
-              <span className="text-sm font-medium">Click to select photo</span>
-              <span className="text-xs text-muted-foreground">
+      {selectedFile ? (
+          <div className="space-y-4">
+            <div className="relative">
+              {previewUrl && (
+                  <Image
+                      src={previewUrl}
+                      alt="Preview"
+                      width={800}
+                      height={600}
+                      className="w-full h-64 object-cover rounded-lg"
+                      unoptimized
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 60vw"
+                      quality={85}
+                  />
+              )}
+              <button
+                  type="button"
+                  onClick={handleClearFile}
+                  className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  disabled={uploading}
+              >
+                <X className="h-5 w-5"/>
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="caption-full">Caption (optional)</Label>
+              <Textarea
+                  id="caption-full"
+                  placeholder="How are you feeling? Add a note about your progress..."
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  disabled={uploading}
+                  rows={3}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                  type="button"
+                  onClick={handleUpload}
+                  disabled={uploading}
+                  className="flex-1"
+              >
+                <Upload className="mr-2 h-4 w-4"/>
+                {uploading ? 'Uploading...' : 'Upload Selfie'}
+              </Button>
+              <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClearFile}
+                  disabled={uploading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+      ) : (
+          <div className="space-y-2">
+            <Button
+                type="button"
+                variant="outline"
+                onClick={handleCameraClick}
+                className="w-full h-32 border-2 border-dashed"
+                disabled={uploading}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <ImageIcon className="h-8 w-8 text-muted-foreground"/>
+                <span className="text-sm font-medium">Click to select photo</span>
+                <span className="text-xs text-muted-foreground">
                 JPEG, PNG, WebP, or HEIC (max 5MB)
               </span>
-            </div>
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="relative">
-            {previewUrl && (
-              <Image
-                src={previewUrl}
-                alt="Preview"
-                width={800}
-                height={600}
-                className="w-full h-64 object-cover rounded-lg"
-                unoptimized
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 60vw"
-                quality={85}
-              />
-            )}
-            <button
-              type="button"
-              onClick={handleClearFile}
-              className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
-              disabled={uploading}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="caption-full">Caption (optional)</Label>
-            <Textarea
-              id="caption-full"
-              placeholder="How are you feeling? Add a note about your progress..."
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              disabled={uploading}
-              rows={3}
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              onClick={handleUpload}
-              disabled={uploading}
-              className="flex-1"
-            >
-              <Upload className="mr-2 h-4 w-4" />
-              {uploading ? 'Uploading...' : 'Upload Selfie'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClearFile}
-              disabled={uploading}
-            >
-              Cancel
+              </div>
             </Button>
           </div>
-        </div>
       )}
     </div>
   )

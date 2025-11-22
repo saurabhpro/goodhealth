@@ -69,7 +69,7 @@ export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartPr
     const latest = values.at(-1)!
     const earliest = values.at(0)!
     const change = latest - earliest
-    const changePercent = earliest !== 0 ? (change / earliest) * 100 : 0
+    const changePercent = earliest === 0 ? 0 : (change / earliest) * 100
     const avg = values.reduce((a, b) => a + b, 0) / values.length
     const max = Math.max(...values)
     const min = Math.min(...values)

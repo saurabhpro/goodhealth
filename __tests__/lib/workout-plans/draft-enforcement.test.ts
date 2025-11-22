@@ -31,13 +31,7 @@ describe('Workout Plan Draft Enforcement', () => {
 
   describe('Draft plan creation with soft delete', () => {
     it('should allow creating new draft when previous draft was soft-deleted', async () => {
-      // Setup: User has a soft-deleted draft plan
-      const softDeletedDraft = {
-        id: 'old-draft-123',
-        status: 'draft',
-        name: 'Old Draft',
-        deleted_at: '2025-11-20T00:00:00Z', // Soft deleted
-      }
+      // Setup: User has a soft-deleted draft plan (old-draft-123 was soft deleted on 2025-11-20)
 
       // Mock query chain
       const selectMock = jest.fn().mockReturnThis()

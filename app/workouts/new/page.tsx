@@ -401,7 +401,7 @@ function NewWorkoutForm() {
                     />
                     <datalist id={`exercise-list-${index}`}>
                       {equipmentCategories.map((category) =>
-                        gymEquipment[category.value as keyof typeof gymEquipment]?.map((equipment) => (
+                        gymEquipment[category.value]?.map((equipment) => (
                           <option key={equipment.name} value={equipment.name}>
                             {equipment.name}
                             {equipment.brands.length > 0 && ` (${equipment.brands[0]})`}

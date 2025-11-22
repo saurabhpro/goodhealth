@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -83,17 +83,7 @@ export default function WorkoutPlanPage() {
   const [selectedSession, setSelectedSession] = useState<WorkoutPlanSession | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  useEffect(() => {
-    fetchPlan()
-  }, [planId])
-
-  useEffect(() => {
-    if (plan) {
-      fetchWeekSchedule(currentWeek)
-    }
-  }, [currentWeek, plan])
-
-  async function fetchPlan() {
+  const fetchPlan = useCallback(async () => {
     try {
       const response = await fetch(`/api/workout-plans/${planId}`)
       if (response.ok) {
@@ -103,14 +93,14 @@ export default function WorkoutPlanPage() {
         toast.error('Failed to load plan')
         router.push('/workout-plans')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load plan')
     } finally {
       setLoading(false)
     }
-  }
+  }, [planId, router])
 
-  async function fetchWeekSchedule(week: number) {
+  const fetchWeekSchedule = useCallback(async (week: number) => {
     try {
       const response = await fetch(`/api/workout-plans/${planId}/week/${week}`)
       if (response.ok) {
@@ -119,10 +109,20 @@ export default function WorkoutPlanPage() {
       } else {
         toast.error('Failed to load schedule')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load schedule')
     }
-  }
+  }, [planId])
+
+  useEffect(() => {
+    fetchPlan()
+  }, [fetchPlan])
+
+  useEffect(() => {
+    if (plan) {
+      fetchWeekSchedule(currentWeek)
+    }
+  }, [currentWeek, plan, fetchWeekSchedule])
 
   async function handleActivate() {
     try {
@@ -137,7 +137,7 @@ export default function WorkoutPlanPage() {
         const error = await response.json()
         toast.error(error.error || 'Failed to activate plan')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to activate plan')
     }
   }
@@ -155,7 +155,7 @@ export default function WorkoutPlanPage() {
         const error = await response.json()
         toast.error(error.error || 'Failed to archive plan')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to archive plan')
     }
   }

@@ -9,11 +9,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { ArrowLeft, Save, Loader2, Dumbbell, MapPin, Clock, Target, Calendar } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Dumbbell, Clock, Target, Calendar } from 'lucide-react'
 import { getUserPreferences, upsertUserPreferences } from '@/lib/workout-plans/preferences-actions'
 import type { UserWorkoutPreferences } from '@/types'
 
@@ -73,7 +72,7 @@ export default function WorkoutPreferencesPage() {
       if (data) {
         setPreferences(data)
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load preferences')
     } finally {
       setFetching(false)
@@ -94,7 +93,7 @@ export default function WorkoutPreferencesPage() {
 
       toast.success('Preferences saved successfully!')
       router.push('/workout-plans')
-    } catch (error) {
+    } catch {
       toast.error('Failed to save preferences')
     } finally {
       setLoading(false)
@@ -184,7 +183,7 @@ export default function WorkoutPreferencesPage() {
                   min="10"
                   max="180"
                   value={preferences.min_duration ?? 30}
-                  onChange={(e) => setPreferences({ ...preferences, min_duration: parseInt(e.target.value) })}
+                  onChange={(e) => setPreferences({ ...preferences, min_duration: Number.parseInt(e.target.value) })}
                 />
               </div>
               <div className="space-y-2">
@@ -195,7 +194,7 @@ export default function WorkoutPreferencesPage() {
                   min="10"
                   max="180"
                   value={preferences.preferred_duration ?? 60}
-                  onChange={(e) => setPreferences({ ...preferences, preferred_duration: parseInt(e.target.value) })}
+                  onChange={(e) => setPreferences({ ...preferences, preferred_duration: Number.parseInt(e.target.value) })}
                 />
               </div>
               <div className="space-y-2">
@@ -206,7 +205,7 @@ export default function WorkoutPreferencesPage() {
                   min="10"
                   max="180"
                   value={preferences.max_duration ?? 90}
-                  onChange={(e) => setPreferences({ ...preferences, max_duration: parseInt(e.target.value) })}
+                  onChange={(e) => setPreferences({ ...preferences, max_duration: Number.parseInt(e.target.value) })}
                 />
               </div>
             </div>

@@ -88,7 +88,7 @@ export default function NewTemplatePage() {
 
       toast.success('Template created successfully!')
       router.push('/workout-plans/templates')
-    } catch (error) {
+    } catch {
       toast.error('Failed to create template')
     } finally {
       setLoading(false)
@@ -152,7 +152,7 @@ export default function NewTemplatePage() {
                   min="10"
                   max="180"
                   value={estimatedDuration}
-                  onChange={(e) => setEstimatedDuration(parseInt(e.target.value))}
+                  onChange={(e) => setEstimatedDuration(Number.parseInt(e.target.value))}
                 />
               </div>
             </div>
@@ -269,7 +269,7 @@ export default function NewTemplatePage() {
                           type="number"
                           min="1"
                           value={exercise.sets}
-                          onChange={(e) => updateExercise(index, 'sets', parseInt(e.target.value))}
+                          onChange={(e) => updateExercise(index, 'sets', Number.parseInt(e.target.value))}
                         />
                       </div>
 
@@ -280,7 +280,7 @@ export default function NewTemplatePage() {
                           type="number"
                           min="1"
                           value={exercise.reps}
-                          onChange={(e) => updateExercise(index, 'reps', parseInt(e.target.value))}
+                          onChange={(e) => updateExercise(index, 'reps', Number.parseInt(e.target.value))}
                         />
                       </div>
 
@@ -292,7 +292,7 @@ export default function NewTemplatePage() {
                           min="0"
                           step="0.5"
                           value={exercise.weight || ''}
-                          onChange={(e) => updateExercise(index, 'weight', parseFloat(e.target.value))}
+                          onChange={(e) => updateExercise(index, 'weight', Number.parseFloat(e.target.value))}
                           placeholder="kg"
                         />
                       </div>
@@ -305,7 +305,7 @@ export default function NewTemplatePage() {
                           min="0"
                           step="15"
                           value={exercise.rest_seconds || ''}
-                          onChange={(e) => updateExercise(index, 'rest_seconds', parseInt(e.target.value))}
+                          onChange={(e) => updateExercise(index, 'rest_seconds', Number.parseInt(e.target.value))}
                           placeholder="90"
                         />
                       </div>

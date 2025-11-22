@@ -52,7 +52,7 @@ export function WeeklyAnalysisCard({
   onDismiss,
   onView,
   isLoading = false
-}: WeeklyAnalysisCardProps) {
+}: Readonly<WeeklyAnalysisCardProps>) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isDismissing, setIsDismissing] = useState(false)
 
@@ -66,7 +66,7 @@ export function WeeklyAnalysisCard({
   const handleDismiss = async () => {
     if (!analysis || !onDismiss) return
     setIsDismissing(true)
-    await onDismiss(analysis.id)
+    onDismiss(analysis.id)
   }
 
   if (isLoading) {
