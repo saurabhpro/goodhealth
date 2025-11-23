@@ -140,8 +140,12 @@ export function GoalEditForm({ goal }: GoalEditFormProps) {
               name="target_date"
               type="date"
               defaultValue={goal.target_date || ''}
+              min={new Date().toISOString().split('T')[0]}
               disabled={loading}
             />
+            <p className="text-xs text-muted-foreground">
+              Target date must be today or in the future
+            </p>
           </div>
 
           {/* Actions */}

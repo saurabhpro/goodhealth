@@ -1,12 +1,10 @@
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
 import { getGoals } from '@/lib/goals/actions'
-import { GoalActions } from '@/components/goal-actions'
 import { redirect } from 'next/navigation'
-import { calculateGoalProgress } from '@/lib/goals/progress'
+import { GoalsCalendar } from '@/components/goals-calendar'
 
 // Force dynamic rendering to prevent caching issues
 export const dynamic = 'force-dynamic'
@@ -28,7 +26,7 @@ export default async function GoalsPage() {
         <div>
           <h1 className="text-3xl font-bold mb-2">My Goals</h1>
           <p className="text-muted-foreground">
-            Set and track your fitness objectives
+            Track your fitness objectives on a timeline
           </p>
         </div>
         <Button asChild>
@@ -36,7 +34,7 @@ export default async function GoalsPage() {
         </Button>
       </div>
 
-      {/* Goals Grid */}
+      {/* Goals Calendar View */}
       {goals.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
@@ -52,60 +50,7 @@ export default async function GoalsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {goals.map((goal) => (
-            <Card key={goal.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="mb-2">{goal.title}</CardTitle>
-                    <CardDescription>{goal.description}</CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {goal.achieved ? (
-                      <Badge variant="default">Achieved</Badge>
-                    ) : (
-                      <Badge variant="secondary">In Progress</Badge>
-                    )}
-                    <GoalActions goalId={goal.id} goalTitle={goal.title} />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Progress Bar */}
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">
-                        {goal.current_value} / {goal.target_value} {goal.unit}
-                      </span>
-                    </div>
-                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary transition-all"
-                        style={{
-                          width: `${calculateGoalProgress({
-                            initial_value: goal.initial_value,
-                            current_value: goal.current_value,
-                            target_value: goal.target_value
-                          })}%`
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Target Date */}
-                  {goal.target_date && (
-                    <div className="text-sm text-muted-foreground">
-                      Target: {new Date(goal.target_date).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <GoalsCalendar goals={goals} />
       )}
     </div>
   )
