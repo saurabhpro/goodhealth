@@ -1,9 +1,11 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useUser } from '@/lib/auth/hooks'
 
-type Theme = 'light' | 'dark' | 'system'
-type AccentTheme = 'default' | 'blue' | 'gray'
+export type Theme = 'light' | 'dark' | 'system'
+export type AccentTheme = 'default' | 'blue' | 'gray' | 'red' | 'green'
 
 interface ThemeContextType {
   theme: Theme
@@ -26,20 +28,52 @@ function getSystemTheme(): 'light' | 'dark' {
 export function ThemeProvider({ children }: ThemeProviderProps) {
   // Check if we're on the client side
   const isClient = globalThis.window !== undefined
+  const { user } = useUser()
 
-  // Initialize theme from localStorage or default to system
+  // Initialize theme from localStorage
   const [theme, setThemeState] = useState<Theme>(() => {
     if (!isClient) return 'system'
     const stored = globalThis.localStorage.getItem('theme') as Theme | null
     return stored || 'system'
   })
 
-  // Initialize accent theme from localStorage or default to 'default'
+  // Initialize accent theme from localStorage
   const [accentTheme, setAccentThemeState] = useState<AccentTheme>(() => {
     if (!isClient) return 'default'
     const stored = globalThis.localStorage.getItem('accentTheme') as AccentTheme | null
     return stored || 'default'
   })
+
+  // Load preferences from database when user is available
+  useEffect(() => {
+    if (!user) return
+
+    const loadPreferences = async () => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from('profiles')
+          .select('theme, accent_theme')
+          .eq('id', user.id)
+          .single()
+
+        if (data) {
+          if (data.theme) {
+            setThemeState(data.theme as Theme)
+            globalThis.localStorage.setItem('theme', data.theme)
+          }
+          if (data.accent_theme) {
+            setAccentThemeState(data.accent_theme as AccentTheme)
+            globalThis.localStorage.setItem('accentTheme', data.accent_theme)
+          }
+        }
+      } catch (err) {
+        console.error('Error loading theme preferences:', err)
+      }
+    }
+
+    loadPreferences()
+  }, [user])
 
   // Calculate resolved theme
   const resolvedTheme: 'light' | 'dark' = useMemo(() => {
@@ -59,7 +93,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.classList.add(resolvedTheme)
 
     // Apply accent theme
-    root.classList.remove('accent-blue', 'accent-gray')
+    root.classList.remove('accent-blue', 'accent-gray', 'accent-red', 'accent-green')
     if (accentTheme !== 'default') {
       root.classList.add(`accent-${accentTheme}`)
     }
@@ -72,6 +106,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         color = resolvedTheme === 'dark' ? '#1a1f2e' : '#f5f7ff'
       } else if (accentTheme === 'gray') {
         color = resolvedTheme === 'dark' ? '#1c1d20' : '#f7f8f9'
+      } else if (accentTheme === 'red') {
+        color = resolvedTheme === 'dark' ? '#2e1a1a' : '#fff5f5'
+      } else if (accentTheme === 'green') {
+        color = resolvedTheme === 'dark' ? '#1a2e1a' : '#f5fff5'
       }
       metaThemeColor.setAttribute('content', color)
     }
@@ -92,23 +130,45 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [theme, isClient])
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme)
     if (globalThis.localStorage !== undefined) {
       globalThis.localStorage.setItem('theme', newTheme)
     }
-  }
+    // Save to database
+    if (user) {
+      const supabase = createClient()
+      supabase
+        .from('profiles')
+        .update({ theme: newTheme })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.error('Failed to save theme preference:', error)
+        })
+    }
+  }, [user])
 
-  const setAccentTheme = (newAccent: AccentTheme) => {
+  const setAccentTheme = useCallback((newAccent: AccentTheme) => {
     setAccentThemeState(newAccent)
     if (globalThis.localStorage !== undefined) {
       globalThis.localStorage.setItem('accentTheme', newAccent)
     }
-  }
+    // Save to database
+    if (user) {
+      const supabase = createClient()
+      supabase
+        .from('profiles')
+        .update({ accent_theme: newAccent })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.error('Failed to save accent theme preference:', error)
+        })
+    }
+  }, [user])
 
   const value = useMemo(
     () => ({ theme, setTheme, resolvedTheme, accentTheme, setAccentTheme }),
-    [theme, resolvedTheme, accentTheme]
+    [theme, resolvedTheme, accentTheme, setTheme, setAccentTheme]
   )
 
   return (

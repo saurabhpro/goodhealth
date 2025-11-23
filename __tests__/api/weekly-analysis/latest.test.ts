@@ -13,6 +13,13 @@ const mockSupabase = {
   auth: {
     getUser: jest.fn(),
   },
+  from: jest.fn(() => ({
+    select: jest.fn(() => ({
+      eq: jest.fn(() => ({
+        single: jest.fn(),
+      })),
+    })),
+  })),
 }
 
 describe('GET /api/weekly-analysis/latest', () => {
@@ -39,6 +46,20 @@ describe('GET /api/weekly-analysis/latest', () => {
       data: { user: { id: 'user-123' } },
       error: null,
     })
+
+    // Mock profile with weekly_summary enabled
+    const mockFrom = jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn().mockResolvedValue({
+            data: { notification_preferences: { weekly_summary: true } },
+            error: null,
+          }),
+        })),
+      })),
+    }))
+    mockSupabase.from = mockFrom
+
     ;(getLatestWeeklyAnalysis as jest.Mock).mockResolvedValue(null)
 
     const response = await GET()
@@ -55,6 +76,20 @@ describe('GET /api/weekly-analysis/latest', () => {
       data: { user: { id: 'user-123' } },
       error: null,
     })
+
+    // Mock profile with weekly_summary enabled
+    const mockFrom = jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn().mockResolvedValue({
+            data: { notification_preferences: { weekly_summary: true } },
+            error: null,
+          }),
+        })),
+      })),
+    }))
+    mockSupabase.from = mockFrom
+
     ;(getLatestWeeklyAnalysis as jest.Mock).mockResolvedValue({
       id: 'analysis-1',
       week_start_date: format(twoWeeksAgo, 'yyyy-MM-dd'),
@@ -75,6 +110,20 @@ describe('GET /api/weekly-analysis/latest', () => {
       data: { user: { id: 'user-123' } },
       error: null,
     })
+
+    // Mock profile with weekly_summary enabled
+    const mockFrom = jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn().mockResolvedValue({
+            data: { notification_preferences: { weekly_summary: true } },
+            error: null,
+          }),
+        })),
+      })),
+    }))
+    mockSupabase.from = mockFrom
+
     ;(getLatestWeeklyAnalysis as jest.Mock).mockResolvedValue({
       id: 'analysis-1',
       week_start_date: format(lastMonday, 'yyyy-MM-dd'),
@@ -96,6 +145,20 @@ describe('GET /api/weekly-analysis/latest', () => {
       data: { user: { id: 'user-123' } },
       error: null,
     })
+
+    // Mock profile with weekly_summary enabled
+    const mockFrom = jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn().mockResolvedValue({
+            data: { notification_preferences: { weekly_summary: true } },
+            error: null,
+          }),
+        })),
+      })),
+    }))
+    mockSupabase.from = mockFrom
+
     ;(getLatestWeeklyAnalysis as jest.Mock).mockRejectedValue(
       new Error('Database error')
     )
@@ -106,5 +169,31 @@ describe('GET /api/weekly-analysis/latest', () => {
     expect(response.status).toBe(500)
     expect(data.error).toBe('Failed to fetch weekly analysis')
     expect(data.details).toBe('Database error')
+  })
+
+  it('should return 404 if weekly summary is disabled', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'user-123' } },
+      error: null,
+    })
+
+    // Mock profile with weekly_summary disabled
+    const mockFrom = jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn().mockResolvedValue({
+            data: { notification_preferences: { weekly_summary: false } },
+            error: null,
+          }),
+        })),
+      })),
+    }))
+    mockSupabase.from = mockFrom
+
+    const response = await GET()
+    const data = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(data.error).toBe('Weekly summary disabled in settings')
   })
 })

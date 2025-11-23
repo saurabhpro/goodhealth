@@ -1,34 +1,72 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useUser } from '@/lib/auth/hooks'
+import { usePreferences } from '@/lib/preferences/hooks'
 import { toast } from 'sonner'
 
 export default function SettingsPage() {
-  const { loading } = useUser()
-  const [weightUnit, setWeightUnit] = useState('kg')
-  const [distanceUnit, setDistanceUnit] = useState('km')
-  const [notifications, setNotifications] = useState(true)
+  const { loading: userLoading } = useUser()
+  const { preferences, loading: prefsLoading, savePreferences } = usePreferences()
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
+  const [distanceUnit, setDistanceUnit] = useState<'km' | 'miles'>('km')
+  const [workoutReminders, setWorkoutReminders] = useState(false)
+  const [goalProgress, setGoalProgress] = useState(false)
+  const [weeklySummary, setWeeklySummary] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // Load preferences when they're available
+  useEffect(() => {
+    if (preferences) {
+      setWeightUnit(preferences.weightUnit)
+      setDistanceUnit(preferences.distanceUnit)
+      setWorkoutReminders(preferences.notificationPreferences.workout_reminders)
+      setGoalProgress(preferences.notificationPreferences.goal_progress)
+      setWeeklySummary(preferences.notificationPreferences.weekly_summary)
+    }
+  }, [preferences])
 
   async function handleSave() {
     setSaving(true)
 
-    // TODO: Save settings to Supabase or local storage
-    console.log('Saving settings:', { weightUnit, distanceUnit, notifications })
-
-    // Simulate API call
-    setTimeout(() => {
-      setSaving(false)
-      toast.success('Settings saved!', {
-        description: 'Your preferences have been updated successfully.'
+    try {
+      const result = await savePreferences({
+        weightUnit,
+        distanceUnit,
+        notificationPreferences: {
+          workout_reminders: workoutReminders,
+          goal_progress: goalProgress,
+          weekly_summary: weeklySummary,
+        },
       })
-    }, 1000)
+
+      if (result.success) {
+        toast.success('Settings saved!', {
+          description: 'Your preferences have been updated successfully.'
+        })
+      } else {
+        const errorMsg = result.error?.message || 'Please try again later.'
+        console.error('Save failed:', result.error)
+        toast.error('Failed to save settings', {
+          description: errorMsg
+        })
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      const errorMsg = error instanceof Error ? error.message : 'Please try again later.'
+      toast.error('Failed to save settings', {
+        description: errorMsg
+      })
+    } finally {
+      setSaving(false)
+    }
   }
+
+  const loading = userLoading || prefsLoading
 
   if (loading) {
     return (
@@ -59,7 +97,7 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="weightUnit">Weight Unit</Label>
-            <Select value={weightUnit} onValueChange={setWeightUnit}>
+            <Select value={weightUnit} onValueChange={(value) => setWeightUnit(value as 'kg' | 'lbs')}>
               <SelectTrigger id="weightUnit">
                 <SelectValue />
               </SelectTrigger>
@@ -72,7 +110,7 @@ export default function SettingsPage() {
 
           <div className="space-y-2">
             <Label htmlFor="distanceUnit">Distance Unit</Label>
-            <Select value={distanceUnit} onValueChange={setDistanceUnit}>
+            <Select value={distanceUnit} onValueChange={(value) => setDistanceUnit(value as 'km' | 'miles')}>
               <SelectTrigger id="distanceUnit">
                 <SelectValue />
               </SelectTrigger>
@@ -100,11 +138,11 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button
-              variant={notifications ? "default" : "outline"}
+              variant={workoutReminders ? "default" : "outline"}
               size="sm"
-              onClick={() => setNotifications(!notifications)}
+              onClick={() => setWorkoutReminders(!workoutReminders)}
             >
-              {notifications ? "On" : "Off"}
+              {workoutReminders ? "On" : "Off"}
             </Button>
           </div>
 
@@ -116,10 +154,11 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button
-              variant="outline"
+              variant={goalProgress ? "default" : "outline"}
               size="sm"
+              onClick={() => setGoalProgress(!goalProgress)}
             >
-              Off
+              {goalProgress ? "On" : "Off"}
             </Button>
           </div>
 
@@ -131,10 +170,11 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button
-              variant="outline"
+              variant={weeklySummary ? "default" : "outline"}
               size="sm"
+              onClick={() => setWeeklySummary(!weeklySummary)}
             >
-              Off
+              {weeklySummary ? "On" : "Off"}
             </Button>
           </div>
         </CardContent>

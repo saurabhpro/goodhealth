@@ -22,6 +22,24 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check user's weekly summary preference
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('notification_preferences')
+      .eq('id', user.id)
+      .single()
+
+    const notificationPrefs = profile?.notification_preferences as { weekly_summary?: boolean } | null
+    const weeklySummaryEnabled = notificationPrefs?.weekly_summary ?? false
+
+    // If user has weekly summary disabled, return 404 (no analysis available)
+    if (!weeklySummaryEnabled) {
+      return NextResponse.json(
+        { error: 'Weekly summary disabled in settings' },
+        { status: 404 }
+      )
+    }
+
     // Fetch latest analysis
     const analysis = await getLatestWeeklyAnalysis(user.id)
 
