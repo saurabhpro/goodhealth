@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { isGoalAchieved, calculateGoalStatus } from './progress'
+import { calculateGoalStatus } from './progress'
 
 export async function createGoal(formData: FormData) {
   const supabase = await createClient()

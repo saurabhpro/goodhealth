@@ -18,6 +18,7 @@ interface GoalsCalendarProps {
 export function GoalsCalendar({ goals }: GoalsCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<'month' | 'quarter' | 'year'>('month')
+  const now = new Date()
 
   // Get date range based on view mode
   const dateRange = useMemo(() => {
@@ -159,12 +160,12 @@ export function GoalsCalendar({ goals }: GoalsCalendarProps) {
             {/* Timeline scale */}
             <div className="relative h-8 bg-muted rounded-lg">
               {/* Today marker */}
-              {new Date() >= dateRange.start && new Date() <= dateRange.end && (
+              {now >= dateRange.start && now <= dateRange.end && (
                 <div
                   className="absolute top-0 bottom-0 w-0.5 bg-primary"
                   style={{
                     left: `${
-                      ((Date.now() - dateRange.start.getTime()) /
+                      ((now.getTime() - dateRange.start.getTime()) /
                         (dateRange.end.getTime() - dateRange.start.getTime())) *
                       100
                     }%`,
