@@ -59,6 +59,11 @@ CREATE TABLE public.profiles (
   fitness_goals TEXT[],
   medical_conditions TEXT,
   injuries TEXT,
+  theme TEXT DEFAULT 'system' CHECK (theme IN ('light', 'dark', 'system')),
+  accent_theme TEXT DEFAULT 'default' CHECK (accent_theme IN ('default', 'blue', 'gray', 'red', 'green')),
+  weight_unit TEXT DEFAULT 'kg' CHECK (weight_unit IN ('kg', 'lbs')),
+  distance_unit TEXT DEFAULT 'km' CHECK (distance_unit IN ('km', 'miles')),
+  notification_preferences JSONB DEFAULT '{"workout_reminders": false, "goal_progress": false, "weekly_summary": false}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
