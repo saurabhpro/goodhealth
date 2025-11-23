@@ -100,7 +100,6 @@ export default function DashboardPage() {
     generated_at: string
   } | null>(null)
   const [analysisLoading, setAnalysisLoading] = useState(true)
-  const [weeklySummaryDisabled, setWeeklySummaryDisabled] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -147,14 +146,11 @@ export default function DashboardPage() {
       if (response.ok) {
         const result = await response.json()
         setWeeklyAnalysis(result.data)
-        setWeeklySummaryDisabled(false)
       } else if (response.status === 404) {
         const errorData = await response.json().catch(() => ({}))
 
-        // Check if it's disabled in settings
-        if (errorData.error?.includes('disabled in settings')) {
-          setWeeklySummaryDisabled(true)
-        } else {
+        // Check if it's disabled in settings - don't trigger generation
+        if (!errorData.error?.includes('disabled in settings')) {
           // No analysis exists - trigger generation in background (fire and forget)
           console.log('No weekly analysis found, triggering background generation...')
           fetch('/api/weekly-analysis/generate', { method: 'POST' })
