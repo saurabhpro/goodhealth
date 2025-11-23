@@ -140,8 +140,12 @@ export default function NewGoalPage() {
                   id="target_date"
                   name="target_date"
                   type="date"
+                  min={new Date().toISOString().split('T')[0]}
                   disabled={loading}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Target date must be today or in the future
+                </p>
               </div>
             </div>
 

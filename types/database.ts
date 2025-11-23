@@ -208,9 +208,11 @@ export type Database = {
           achieved: boolean | null
           created_at: string
           current_value: number | null
+          deleted_at: string | null
           description: string | null
           id: string
           initial_value: number
+          status: string
           target_date: string | null
           target_value: number
           title: string
@@ -222,9 +224,11 @@ export type Database = {
           achieved?: boolean | null
           created_at?: string
           current_value?: number | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           initial_value?: number
+          status?: string
           target_date?: string | null
           target_value: number
           title: string
@@ -236,9 +240,11 @@ export type Database = {
           achieved?: boolean | null
           created_at?: string
           current_value?: number | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           initial_value?: number
+          status?: string
           target_date?: string | null
           target_value?: number
           title?: string

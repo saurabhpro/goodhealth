@@ -88,14 +88,19 @@ CREATE TABLE public.goals (
   unit TEXT NOT NULL,
   target_date DATE,
   achieved BOOLEAN NOT NULL DEFAULT FALSE,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'archived')),
   deleted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+COMMENT ON COLUMN public.goals.status IS 'Goal lifecycle status: active (in progress), completed (achieved target), archived (target date passed without achievement)';
+
 CREATE INDEX idx_goals_user_id ON public.goals(user_id);
 CREATE INDEX idx_goals_target_date ON public.goals(target_date);
+CREATE INDEX idx_goals_status ON public.goals(status);
 CREATE INDEX idx_goals_user_deleted ON public.goals(user_id, deleted_at) WHERE deleted_at IS NULL;
+CREATE INDEX idx_goals_user_status ON public.goals(user_id, status) WHERE deleted_at IS NULL;
 
 CREATE TRIGGER update_goals_updated_at
   BEFORE UPDATE ON public.goals

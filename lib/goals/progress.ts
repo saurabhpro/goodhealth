@@ -105,3 +105,38 @@ export function isGoalAchieved(goal: GoalProgress): boolean {
 export function getGoalDirection(goal: Pick<GoalProgress, 'initial_value' | 'target_value'>): 'increase' | 'decrease' {
   return goal.target_value > goal.initial_value ? 'increase' : 'decrease'
 }
+
+/**
+ * Calculates the status of a goal based on progress and target date.
+ *
+ * Status logic:
+ * - 'completed': Goal has been achieved (progress >= 100%)
+ * - 'archived': Target date has passed without achievement
+ * - 'active': Goal is still in progress
+ *
+ * @param goal - Goal with progress info and optional target_date
+ * @returns 'active' | 'completed' | 'archived'
+ */
+export function calculateGoalStatus(
+  goal: GoalProgress & { target_date: string | null }
+): 'active' | 'completed' | 'archived' {
+  // Check if goal is achieved first
+  if (isGoalAchieved(goal)) {
+    return 'completed'
+  }
+
+  // Check if target date has passed
+  if (goal.target_date) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const targetDate = new Date(goal.target_date)
+    targetDate.setHours(0, 0, 0, 0)
+
+    if (targetDate < today) {
+      return 'archived'
+    }
+  }
+
+  // Otherwise, goal is still active
+  return 'active'
+}

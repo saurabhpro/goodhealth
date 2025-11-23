@@ -2,7 +2,7 @@
  * Unit tests for bidirectional goal progress calculation
  */
 
-import { calculateGoalProgress, isGoalAchieved, getGoalDirection } from '@/lib/goals/progress'
+import { calculateGoalProgress, isGoalAchieved, getGoalDirection, calculateGoalStatus } from '@/lib/goals/progress'
 
 describe('Goal Progress Tracking', () => {
   describe('calculateGoalProgress - Increasing Goals', () => {
@@ -318,6 +318,111 @@ describe('Goal Progress Tracking', () => {
       expect(calculateGoalProgress(goal)).toBe(30) // Lost 3% out of 10%
       expect(isGoalAchieved(goal)).toBe(false)
       expect(getGoalDirection(goal)).toBe('decrease')
+    })
+  })
+
+  describe('calculateGoalStatus', () => {
+    describe('Completed status', () => {
+      it('should return completed when goal is achieved (increasing)', () => {
+        const status = calculateGoalStatus({
+          initial_value: 50,
+          current_value: 100,
+          target_value: 100,
+          target_date: '2025-12-31',
+        })
+        expect(status).toBe('completed')
+      })
+
+      it('should return completed when goal is achieved (decreasing)', () => {
+        const status = calculateGoalStatus({
+          initial_value: 90,
+          current_value: 70,
+          target_value: 70,
+          target_date: '2025-12-31',
+        })
+        expect(status).toBe('completed')
+      })
+
+      it('should return completed when goal is achieved even without target date', () => {
+        const status = calculateGoalStatus({
+          initial_value: 50,
+          current_value: 100,
+          target_value: 100,
+          target_date: null,
+        })
+        expect(status).toBe('completed')
+      })
+    })
+
+    describe('Archived status', () => {
+      it('should return archived when target date has passed without achievement', () => {
+        // Create a date in the past
+        const pastDate = new Date()
+        pastDate.setDate(pastDate.getDate() - 1)
+        const pastDateStr = pastDate.toISOString().split('T')[0]
+
+        const status = calculateGoalStatus({
+          initial_value: 50,
+          current_value: 75,
+          target_value: 100,
+          target_date: pastDateStr,
+        })
+        expect(status).toBe('archived')
+      })
+
+      it('should return completed even if target date passed when goal is achieved', () => {
+        // Create a date in the past
+        const pastDate = new Date()
+        pastDate.setDate(pastDate.getDate() - 1)
+        const pastDateStr = pastDate.toISOString().split('T')[0]
+
+        const status = calculateGoalStatus({
+          initial_value: 50,
+          current_value: 100,
+          target_value: 100,
+          target_date: pastDateStr,
+        })
+        expect(status).toBe('completed')
+      })
+    })
+
+    describe('Active status', () => {
+      it('should return active when goal is in progress with future target date', () => {
+        // Create a date in the future
+        const futureDate = new Date()
+        futureDate.setDate(futureDate.getDate() + 30)
+        const futureDateStr = futureDate.toISOString().split('T')[0]
+
+        const status = calculateGoalStatus({
+          initial_value: 50,
+          current_value: 75,
+          target_value: 100,
+          target_date: futureDateStr,
+        })
+        expect(status).toBe('active')
+      })
+
+      it('should return active when goal is in progress without target date', () => {
+        const status = calculateGoalStatus({
+          initial_value: 50,
+          current_value: 75,
+          target_value: 100,
+          target_date: null,
+        })
+        expect(status).toBe('active')
+      })
+
+      it('should return active for today as target date', () => {
+        const todayStr = new Date().toISOString().split('T')[0]
+
+        const status = calculateGoalStatus({
+          initial_value: 50,
+          current_value: 75,
+          target_value: 100,
+          target_date: todayStr,
+        })
+        expect(status).toBe('active')
+      })
     })
   })
 })
