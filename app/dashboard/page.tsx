@@ -100,6 +100,7 @@ export default function DashboardPage() {
     generated_at: string
   } | null>(null)
   const [analysisLoading, setAnalysisLoading] = useState(true)
+  const [weeklySummaryDisabled, setWeeklySummaryDisabled] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -146,18 +147,26 @@ export default function DashboardPage() {
       if (response.ok) {
         const result = await response.json()
         setWeeklyAnalysis(result.data)
+        setWeeklySummaryDisabled(false)
       } else if (response.status === 404) {
-        // No analysis exists - trigger generation in background (fire and forget)
-        console.log('No weekly analysis found, triggering background generation...')
-        fetch('/api/weekly-analysis/generate', { method: 'POST' })
-          .then(response => {
-            if (response.ok) {
-              console.log('Weekly analysis generation started - will be available on next visit')
-            } else {
-              console.log('Could not generate analysis (might not have enough data yet)')
-            }
-          })
-          .catch(err => console.log('Background analysis generation error:', err))
+        const errorData = await response.json().catch(() => ({}))
+
+        // Check if it's disabled in settings
+        if (errorData.error?.includes('disabled in settings')) {
+          setWeeklySummaryDisabled(true)
+        } else {
+          // No analysis exists - trigger generation in background (fire and forget)
+          console.log('No weekly analysis found, triggering background generation...')
+          fetch('/api/weekly-analysis/generate', { method: 'POST' })
+            .then(response => {
+              if (response.ok) {
+                console.log('Weekly analysis generation started - will be available on next visit')
+              } else {
+                console.log('Could not generate analysis (might not have enough data yet)')
+              }
+            })
+            .catch(err => console.log('Background analysis generation error:', err))
+        }
         // Don't set analysis - user will see quote this time
       } else {
         console.error('Error fetching weekly analysis')

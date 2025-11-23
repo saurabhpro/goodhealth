@@ -263,6 +263,11 @@ export type Database = {
           injuries: string | null
           medical_conditions: string | null
           updated_at: string
+          theme: string | null
+          accent_theme: string | null
+          weight_unit: string | null
+          distance_unit: string | null
+          notification_preferences: Json | null
         }
         Insert: {
           avatar_url?: string | null
@@ -278,6 +283,11 @@ export type Database = {
           injuries?: string | null
           medical_conditions?: string | null
           updated_at?: string
+          theme?: string | null
+          accent_theme?: string | null
+          weight_unit?: string | null
+          distance_unit?: string | null
+          notification_preferences?: Json | null
         }
         Update: {
           avatar_url?: string | null
@@ -293,6 +303,11 @@ export type Database = {
           injuries?: string | null
           medical_conditions?: string | null
           updated_at?: string
+          theme?: string | null
+          accent_theme?: string | null
+          weight_unit?: string | null
+          distance_unit?: string | null
+          notification_preferences?: Json | null
         }
         Relationships: []
       }

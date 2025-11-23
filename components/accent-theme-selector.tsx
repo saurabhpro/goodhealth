@@ -53,6 +53,24 @@ export function AccentThemeSelector() {
             <span>Gray</span>
           </div>
         </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setAccentTheme('red')}
+          className={accentTheme === 'red' ? 'bg-accent' : ''}
+        >
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 rounded-full bg-gradient-to-br from-red-500 to-red-600" />
+            <span>Red</span>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setAccentTheme('green')}
+          className={accentTheme === 'green' ? 'bg-accent' : ''}
+        >
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 rounded-full bg-gradient-to-br from-green-500 to-green-600" />
+            <span>Green</span>
+          </div>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
