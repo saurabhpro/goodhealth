@@ -39,9 +39,12 @@ The commit [8e499af](https://github.com/saurabhpro/goodhealth/commit/8e499afabb1
 
 1. Go to your Vercel project: https://vercel.com/saurabhpro/goodhealth
 2. Navigate to **Settings** → **Environment Variables**
-3. Add/update the following variable:
+3. Add/update the following variables:
 
    ```
+   Name: APP_URL
+   Value: https://goodhealth-three.vercel.app
+
    Name: NEXT_PUBLIC_APP_URL
    Value: https://goodhealth-three.vercel.app
    ```
@@ -50,6 +53,8 @@ The commit [8e499af](https://github.com/saurabhpro/goodhealth/commit/8e499afabb1
    - No trailing slash
    - Must be `https://` not `http://`
    - Must match your production domain exactly
+   - `APP_URL` is used on the server-side (preferred)
+   - `NEXT_PUBLIC_APP_URL` is used on the client-side as fallback
 
 4. Click **Save**
 5. **Redeploy** your application for the changes to take effect
@@ -88,7 +93,7 @@ The commit [8e499af](https://github.com/saurabhpro/goodhealth/commit/8e499afabb1
 **Cause:** The authentication session expired or the redirect URL mismatch caused the PKCE flow to fail.
 
 **Solution:**
-- Ensure `NEXT_PUBLIC_APP_URL` in Vercel matches your production URL exactly
+- Ensure both `APP_URL` and `NEXT_PUBLIC_APP_URL` in Vercel match your production URL exactly
 - Ensure all redirect URLs are whitelisted in Supabase
 - Try signing in again (don't use old email links)
 
@@ -114,14 +119,15 @@ The commit [8e499af](https://github.com/saurabhpro/goodhealth/commit/8e499afabb1
 **Cause:** The `emailRedirectTo` parameter doesn't match Supabase's whitelist.
 
 **Solution:**
-- Ensure `NEXT_PUBLIC_APP_URL` is set in Vercel environment variables
+- Ensure both `APP_URL` and `NEXT_PUBLIC_APP_URL` are set in Vercel environment variables
 - Ensure the callback URL is whitelisted in Supabase
 - Redeploy after making changes
 
 ## Verification Checklist
 
-- [ ] `NEXT_PUBLIC_APP_URL` is set in Vercel environment variables
-- [ ] `NEXT_PUBLIC_APP_URL` matches your production domain exactly (no trailing slash)
+- [ ] `APP_URL` is set in Vercel environment variables (recommended for server-side)
+- [ ] `NEXT_PUBLIC_APP_URL` is set in Vercel environment variables (fallback for client-side)
+- [ ] URLs match your production domain exactly (no trailing slash)
 - [ ] Production callback URL is whitelisted in Supabase
 - [ ] Site URL is set in Supabase to your production domain
 - [ ] Google OAuth redirect URI is configured (if using Google sign-in)
@@ -135,6 +141,7 @@ The commit [8e499af](https://github.com/saurabhpro/goodhealth/commit/8e499afabb1
 For local development, your `.env.local` should have:
 
 ```bash
+APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
