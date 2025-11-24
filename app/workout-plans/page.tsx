@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,17 +19,23 @@ import {
   BookTemplate
 } from 'lucide-react'
 import type { WorkoutPlan } from '@/types'
+import { AIGeneratingPlaceholder } from '@/components/workout-plans/ai-generating-placeholder'
 
-export default function WorkoutPlansPage() {
+interface PendingJob {
+  jobId: string
+  planName: string
+  weeksDuration: number
+  workoutsPerWeek: number
+}
+
+function WorkoutPlansContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [plans, setPlans] = useState<WorkoutPlan[]>([])
   const [loading, setLoading] = useState(true)
+  const [pendingJob, setPendingJob] = useState<PendingJob | null>(null)
 
-  useEffect(() => {
-    fetchPlans()
-  }, [])
-
-  async function fetchPlans() {
+  const fetchPlans = useCallback(async () => {
     try {
       const response = await fetch('/api/workout-plans')
       if (response.ok) {
@@ -43,7 +49,84 @@ export default function WorkoutPlansPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  const pollJobStatus = useCallback(async (jobId: string) => {
+    const pollInterval = 3000 // Poll every 3 seconds
+    const maxAttempts = 60 // Max 3 minutes
+    let attempts = 0
+
+    const poll = async () => {
+      attempts++
+
+      try {
+        const response = await fetch(`/api/workout-plans/jobs/${jobId}`)
+
+        if (response.ok) {
+          const data = await response.json()
+
+          if (data.status === 'completed' && data.planId) {
+            toast.success('Workout plan generated!', {
+              description: 'Your personalized workout plan is ready'
+            })
+            setPendingJob(null)
+            // Refresh the plans list
+            fetchPlans()
+            // Clean up URL params
+            router.replace('/workout-plans')
+            return
+          } else if (data.status === 'failed') {
+            toast.error('Plan generation failed', {
+              description: data.error || 'Please try again'
+            })
+            setPendingJob(null)
+            router.replace('/workout-plans')
+            return
+          }
+        }
+
+        // Continue polling if still processing and haven't exceeded max attempts
+        if (attempts < maxAttempts) {
+          setTimeout(poll, pollInterval)
+        } else {
+          toast.error('Generation timeout', {
+            description: 'The plan is still generating. Check back in a few minutes.'
+          })
+          setPendingJob(null)
+          router.replace('/workout-plans')
+        }
+      } catch (error) {
+        console.error('Error polling job status:', error)
+        if (attempts < maxAttempts) {
+          setTimeout(poll, pollInterval)
+        }
+      }
+    }
+
+    poll()
+  }, [router, fetchPlans])
+
+  useEffect(() => {
+    fetchPlans()
+
+    // Check if we have a pending job from URL params
+    const jobId = searchParams.get('jobId')
+    const planName = searchParams.get('planName')
+    const weeksDuration = searchParams.get('weeks')
+    const workoutsPerWeek = searchParams.get('workouts')
+
+    if (jobId && planName) {
+      setPendingJob({
+        jobId,
+        planName,
+        weeksDuration: weeksDuration ? parseInt(weeksDuration) : 8,
+        workoutsPerWeek: workoutsPerWeek ? parseInt(workoutsPerWeek) : 4,
+      })
+
+      // Start polling for the job
+      pollJobStatus(jobId)
+    }
+  }, [searchParams, fetchPlans, pollJobStatus])
 
   async function handleDelete(planId: string) {
     if (!confirm('Are you sure you want to delete this workout plan?')) {
@@ -135,7 +218,18 @@ export default function WorkoutPlansPage() {
         </Card>
       </div>
 
-      {plans.length === 0 ? (
+      {/* Show AI Generating Placeholder if there's a pending job */}
+      {pendingJob && (
+        <div className="mb-6">
+          <AIGeneratingPlaceholder
+            planName={pendingJob.planName}
+            weeksDuration={pendingJob.weeksDuration}
+            workoutsPerWeek={pendingJob.workoutsPerWeek}
+          />
+        </div>
+      )}
+
+      {plans.length === 0 && !pendingJob ? (
         <Card>
           <CardContent className="text-center py-12">
             <Dumbbell className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
@@ -285,5 +379,19 @@ export default function WorkoutPlansPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function WorkoutPlansPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <div className="text-muted-foreground">Loading plans...</div>
+        </div>
+      </div>
+    }>
+      <WorkoutPlansContent />
+    </Suspense>
   )
 }

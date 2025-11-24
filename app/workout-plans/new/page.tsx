@@ -97,14 +97,20 @@ export default function NewWorkoutPlanPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setGeneratingStatus('🍳 Cooking your workout plan...')
 
         toast.success('Plan generation started!', {
-          description: 'You can navigate away - we\'ll notify you when it\'s ready'
+          description: 'Redirecting to your plans page...'
         })
 
-        // Start polling for job status
-        pollJobStatus(data.jobId)
+        // Redirect to workout plans page with job ID
+        const params = new URLSearchParams({
+          jobId: data.jobId,
+          planName: planName || `${selectedGoal.title} - Workout Plan`,
+          weeks: weeksDuration.toString(),
+          workouts: workoutsPerWeek.toString(),
+        })
+
+        router.push(`/workout-plans?${params.toString()}`)
       } else if (response.status === 409) {
         // Conflict - plan already exists
         const error = await response.json()
@@ -130,60 +136,6 @@ export default function NewWorkoutPlanPage() {
     }
   }
 
-  async function pollJobStatus(jobId: string) {
-    const pollInterval = 3000 // Poll every 3 seconds
-    const maxAttempts = 60 // Max 3 minutes (60 * 3s)
-    let attempts = 0
-
-    const poll = async () => {
-      attempts++
-
-      try {
-        const response = await fetch(`/api/workout-plans/jobs/${jobId}`)
-
-        if (response.ok) {
-          const data = await response.json()
-
-          if (data.status === 'completed' && data.planId) {
-            setGeneratingStatus('✨ Plan ready!')
-            toast.success('Workout plan generated!', {
-              description: 'Your personalized workout plan is ready'
-            })
-            setTimeout(() => {
-              router.push(`/workout-plans/${data.planId}`)
-            }, 1000)
-            return
-          } else if (data.status === 'failed') {
-            setGeneratingStatus('Failed to generate plan')
-            toast.error('Generation failed', {
-              description: data.errorMessage || 'Please try again'
-            })
-            setLoading(false)
-            return
-          } else if (data.status === 'processing') {
-            setGeneratingStatus('🍳 Cooking your workout plan... (almost done!)')
-          }
-        }
-
-        // Continue polling if still pending/processing and not maxed out
-        if (attempts < maxAttempts) {
-          setTimeout(poll, pollInterval)
-        } else {
-          toast.error('Generation is taking longer than expected', {
-            description: 'Please check back in a few minutes'
-          })
-          setLoading(false)
-        }
-      } catch (error) {
-        console.error('Error polling job status:', error)
-        if (attempts < maxAttempts) {
-          setTimeout(poll, pollInterval)
-        }
-      }
-    }
-
-    poll()
-  }
 
   const stepProgress = currentStep === 'goal' ? 33 : currentStep === 'configure' ? 66 : 100
 

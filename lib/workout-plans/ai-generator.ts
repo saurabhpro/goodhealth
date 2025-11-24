@@ -362,10 +362,51 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
 
 **Remember**: day field uses 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
 
-**CRITICAL:** Keep the JSON response concise:
-- 4-6 exercises per workout maximum
-- Brief notes (one sentence max)
-- Focus on quality over quantity
+**CRITICAL INSTRUCTIONS FOR WORKOUT DESCRIPTIONS:**
+
+1. **Session Notes** - Make them PERSONALIZED and MOTIVATIONAL:
+   ❌ BAD: "Week 1 - focus on form"
+   ❌ BAD: "Rest day between workouts"
+   ✅ GOOD: "Start strong! Master the movement patterns today - your future self will thank you"
+   ✅ GOOD: "Power through! You're 40% stronger than when you started - prove it today"
+   ✅ GOOD: "Recovery matters: Active cardio keeps blood flowing to rebuild those muscles"
+
+   - Reference the user's goal explicitly ("Getting closer to ${goal.title}!")
+   - Use specific progress indicators ("Week 2: Already 10% stronger!")
+   - Add context about why this workout matters ("Building the foundation for heavier lifts next week")
+   - Be encouraging but specific, not generic
+
+2. **Rationale** - Explain the "WHY" with user-specific details:
+   ❌ BAD: "This plan suits your fitness level"
+   ✅ GOOD: "Your recent ${workoutHistory?.length || 0}-workout streak shows you're ready for progressive overload. Starting at your proven max of ${latestMeasurements?.weight ? latestMeasurements.weight + 'kg' : 'current baseline'}, we'll add 5-10% weekly to maximize ${goal.title} gains while respecting your ${preferences?.fitness_level || 'intermediate'} fitness level"
+
+   - Reference their actual workout history
+   - Mention their current metrics (weight, body fat %, etc.)
+   - Connect to their specific goal
+   - Explain the scientific approach
+
+3. **Progression Strategy** - Be SPECIFIC about the journey:
+   ❌ BAD: "Gradually increase intensity over time"
+   ✅ GOOD: "Weeks 1-2: Establish baseline with proper form | Weeks 3-4: Add 10% weight, perfect your technique | Weeks 5-6: Volume increase with supersets | Weeks 7-8: Peak intensity - you'll be lifting 20-30% more than Day 1"
+
+   - Break down by week ranges
+   - Use numbers and percentages
+   - Show the transformation arc
+
+4. **Key Considerations** - Address the user's SPECIFIC situation:
+   ❌ BAD: ["Stay hydrated", "Get enough sleep", "Eat protein"]
+   ✅ GOOD: [
+     "${preferences?.constraints ? 'Modified exercises avoid ' + preferences.constraints : 'Full range programming with no restrictions'} - safety first",
+     "${preferences?.preferred_time_of_day ? 'Optimized for ' + preferences.preferred_time_of_day : 'Flexible timing'} workouts to match your energy peaks",
+     "Progressive overload built on your proven workout history baseline data"
+   ]
+
+   - Address their injuries/constraints if any
+   - Reference their equipment/gym access
+   - Mention their preferred schedule
+   - Use their actual historical data from recent workouts
+
+**MAKE IT PERSONAL. MAKE IT MOTIVATING. MAKE IT SPECIFIC TO THIS USER.**
 
 Generate a safe and effective workout plan. Return ONLY the JSON object, no additional text or explanation.`
 
