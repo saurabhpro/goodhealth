@@ -370,19 +370,24 @@ export async function saveWeeklyAnalysis(
 
   const { data, error } = await supabase
     .from('weekly_workout_analysis')
-    .insert({
-      user_id: userId,
-      week_start_date: format(weekStartDate, 'yyyy-MM-dd'),
-      week_end_date: format(weekEndDate, 'yyyy-MM-dd'),
-      analysis_summary: analysis.analysis_summary,
-      key_achievements: analysis.key_achievements,
-      areas_for_improvement: analysis.areas_for_improvement,
-      recommendations: analysis.recommendations,
-      motivational_quote: analysis.motivational_quote,
-      weekly_stats: analysis.weekly_stats,
-      goal_progress: analysis.goal_progress,
-      measurements_comparison: analysis.measurements_comparison,
-    })
+    .upsert(
+      {
+        user_id: userId,
+        week_start_date: format(weekStartDate, 'yyyy-MM-dd'),
+        week_end_date: format(weekEndDate, 'yyyy-MM-dd'),
+        analysis_summary: analysis.analysis_summary,
+        key_achievements: analysis.key_achievements,
+        areas_for_improvement: analysis.areas_for_improvement,
+        recommendations: analysis.recommendations,
+        motivational_quote: analysis.motivational_quote,
+        weekly_stats: analysis.weekly_stats,
+        goal_progress: analysis.goal_progress,
+        measurements_comparison: analysis.measurements_comparison,
+      },
+      {
+        onConflict: 'user_id,week_start_date',
+      }
+    )
     .select()
     .single()
 

@@ -114,7 +114,7 @@ describe('Weekly Analysis - AI Analyzer', () => {
 
   describe('saveWeeklyAnalysis', () => {
     it('should save analysis to database', async () => {
-      const mockInsert = jest.fn().mockReturnThis()
+      const mockUpsert = jest.fn().mockReturnThis()
       const mockSelect = jest.fn().mockReturnThis()
       const mockSingle = jest.fn().mockResolvedValue({
         data: { id: 'analysis1' },
@@ -122,7 +122,7 @@ describe('Weekly Analysis - AI Analyzer', () => {
       })
 
       mockSupabase.from.mockReturnValue({
-        insert: mockInsert,
+        upsert: mockUpsert,
         select: mockSelect,
         single: mockSingle,
       })
@@ -151,7 +151,13 @@ describe('Weekly Analysis - AI Analyzer', () => {
         analysis
       )
 
-      expect(mockInsert).toHaveBeenCalled()
+      expect(mockUpsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user1',
+          analysis_summary: 'Test summary',
+        }),
+        { onConflict: 'user_id,week_start_date' }
+      )
       expect(result).toHaveProperty('id')
     })
   })
