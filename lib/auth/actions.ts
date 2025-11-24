@@ -9,22 +9,49 @@ import { headers } from 'next/headers'
  * Get the application URL for redirects, with proper support for Vercel preview deployments.
  * Priority order:
  * 1. Origin header (ensures preview deployments work correctly)
- * 2. Host header + protocol (fallback if origin not available)
- * 3. VERCEL_URL environment variable (Vercel's automatic deployment URL)
- * 4. APP_URL or NEXT_PUBLIC_APP_URL (explicit configuration)
+ * 2. Referer header (fallback, contains the full URL)
+ * 3. Host header + protocol (fallback if origin not available)
+ * 4. VERCEL_URL environment variable (Vercel's automatic deployment URL)
+ * 5. APP_URL or NEXT_PUBLIC_APP_URL (explicit configuration)
  */
 async function getAppUrl(): Promise<string> {
   const headersList = await headers()
   const origin = headersList.get('origin')
+  const referer = headersList.get('referer')
   const host = headersList.get('host')
   const protocol = headersList.get('x-forwarded-proto') || 'https'
 
-  return origin ||
+  // Debug logging to understand what headers are available
+  console.log('[getAppUrl] Headers:', {
+    origin,
+    referer,
+    host,
+    protocol,
+    vercelUrl: process.env.VERCEL_URL,
+    appUrl: process.env.APP_URL,
+  })
+
+  // Try to extract origin from referer if origin header is not available
+  let urlFromReferer = ''
+  if (!origin && referer) {
+    try {
+      const refererUrl = new URL(referer)
+      urlFromReferer = refererUrl.origin
+    } catch (e) {
+      console.error('[getAppUrl] Failed to parse referer:', e)
+    }
+  }
+
+  const result = origin ||
+    urlFromReferer ||
     (host ? `${protocol}://${host}` : '') ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
     process.env.APP_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     'http://localhost:3000'
+
+  console.log('[getAppUrl] Resolved URL:', result)
+  return result
 }
 
 export async function signUp(formData: FormData) {
