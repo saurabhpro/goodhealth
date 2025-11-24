@@ -8,8 +8,17 @@ import {
 import { createClient } from '@/lib/supabase/server'
 
 jest.mock('@/lib/supabase/server')
+
+// Mock Gemini AI
+const mockGenerateContent = jest.fn()
+const mockGetGenerativeModel = jest.fn()
+
 jest.mock('@google/generative-ai', () => ({
-  GoogleGenerativeAI: jest.fn(),
+  GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
+    getGenerativeModel: jest.fn(() => ({
+      generateContent: mockGenerateContent,
+    })),
+  })),
 }))
 
 const mockSupabase = {
@@ -26,7 +35,7 @@ describe('Weekly Analysis - AI Analyzer', () => {
   })
 
   describe('generateWeeklyAnalysis', () => {
-    it.skip('should fetch and analyze user workout data', async () => {
+    it('should fetch and analyze user workout data', async () => {
       const mockWorkouts = [
         {
           id: '1',
@@ -58,6 +67,7 @@ describe('Weekly Analysis - AI Analyzer', () => {
                 id: 'user1',
                 full_name: 'Test User',
                 fitness_level: 'intermediate',
+                fitness_goals: ['weight_loss'],
               },
             }),
           }
@@ -104,11 +114,246 @@ describe('Weekly Analysis - AI Analyzer', () => {
         }
       })
 
+      // Mock Gemini AI response
+      const mockAIResponse = {
+        analysis_summary: 'Great week of training! You completed 1 workout with solid effort.',
+        key_achievements: [
+          'Completed workout with 4/6 effort level',
+          'Maintained consistency',
+          'Progress toward weight loss goal',
+        ],
+        areas_for_improvement: [
+          'Consider adding more workouts per week',
+          'Try varying exercise types',
+        ],
+        recommendations: [
+          'Add 1-2 more workouts to your weekly routine',
+          'Include cardio exercises for better weight loss results',
+          'Track your nutrition alongside workouts',
+        ],
+        motivational_quote: 'Every workout is progress, Test User. Keep pushing forward!',
+      }
+
+      mockGenerateContent.mockResolvedValue({
+        response: {
+          text: () => JSON.stringify(mockAIResponse),
+        },
+      })
+
       const result = await generateWeeklyAnalysis('user1')
 
       expect(result).toHaveProperty('analysis_summary')
       expect(result).toHaveProperty('weekly_stats')
+      expect(result).toHaveProperty('key_achievements')
+      expect(result).toHaveProperty('areas_for_improvement')
+      expect(result).toHaveProperty('recommendations')
+      expect(result).toHaveProperty('motivational_quote')
       expect(result.weekly_stats.workouts_completed).toBe(1)
+      expect(result.analysis_summary).toBe(mockAIResponse.analysis_summary)
+      expect(result.key_achievements).toEqual(mockAIResponse.key_achievements)
+      expect(mockGenerateContent).toHaveBeenCalledWith(expect.stringContaining('Test User'))
+      expect(mockGenerateContent).toHaveBeenCalledWith(expect.stringContaining('Workouts Completed: 1'))
+    })
+
+    it('should handle AI response wrapped in markdown code blocks', async () => {
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
+              data: { id: 'user1', full_name: 'Test User' },
+            }),
+          }
+        }
+        if (table === 'workouts') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            gte: jest.fn().mockReturnThis(),
+            lte: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({ data: [] }),
+          }
+        }
+        if (table === 'goals') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            is: jest.fn().mockResolvedValue({ data: [] }),
+          }
+        }
+        if (table === 'body_measurements') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            lte: jest.fn().mockReturnThis(),
+            lt: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: null }),
+          }
+        }
+        if (table === 'workout_plans') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: null }),
+          }
+        }
+        return { select: jest.fn().mockReturnThis() }
+      })
+
+      const mockAIResponse = {
+        analysis_summary: 'No workouts this week.',
+        key_achievements: ['Stayed injury-free'],
+        areas_for_improvement: ['Need to start working out'],
+        recommendations: ['Schedule at least 3 workouts'],
+        motivational_quote: 'Start today!',
+      }
+
+      // AI returns JSON wrapped in markdown code block
+      mockGenerateContent.mockResolvedValue({
+        response: {
+          text: () => `\`\`\`json\n${JSON.stringify(mockAIResponse)}\n\`\`\``,
+        },
+      })
+
+      const result = await generateWeeklyAnalysis('user1')
+
+      expect(result.analysis_summary).toBe(mockAIResponse.analysis_summary)
+      expect(result.key_achievements).toEqual(mockAIResponse.key_achievements)
+    })
+
+    it('should throw error when AI returns invalid JSON', async () => {
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
+              data: { id: 'user1', full_name: 'Test User' },
+            }),
+          }
+        }
+        if (table === 'workouts') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            gte: jest.fn().mockReturnThis(),
+            lte: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({ data: [] }),
+          }
+        }
+        if (table === 'goals') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            is: jest.fn().mockResolvedValue({ data: [] }),
+          }
+        }
+        if (table === 'body_measurements') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            lt: jest.fn().mockReturnThis(),
+            lte: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: null }),
+          }
+        }
+        if (table === 'workout_plans') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: null }),
+          }
+        }
+        return { select: jest.fn().mockReturnThis() }
+      })
+
+      mockGenerateContent.mockResolvedValue({
+        response: {
+          text: () => 'This is not valid JSON',
+        },
+      })
+
+      await expect(generateWeeklyAnalysis('user1')).rejects.toThrow(
+        'Failed to parse AI analysis response'
+      )
+    })
+
+    it('should throw error when AI returns incomplete data structure', async () => {
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
+              data: { id: 'user1', full_name: 'Test User' },
+            }),
+          }
+        }
+        if (table === 'workouts') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            gte: jest.fn().mockReturnThis(),
+            lte: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({ data: [] }),
+          }
+        }
+        if (table === 'goals') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            is: jest.fn().mockResolvedValue({ data: [] }),
+          }
+        }
+        if (table === 'body_measurements') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            lt: jest.fn().mockReturnThis(),
+            lte: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: null }),
+          }
+        }
+        if (table === 'workout_plans') {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: null }),
+          }
+        }
+        return { select: jest.fn().mockReturnThis() }
+      })
+
+      // Missing required fields
+      mockGenerateContent.mockResolvedValue({
+        response: {
+          text: () =>
+            JSON.stringify({
+              analysis_summary: 'Summary',
+              // Missing other required fields
+            }),
+        },
+      })
+
+      await expect(generateWeeklyAnalysis('user1')).rejects.toThrow(
+        'Failed to parse AI analysis response'
+      )
     })
   })
 
