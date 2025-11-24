@@ -6,52 +6,39 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 
 /**
- * Get the application URL for redirects, with proper support for Vercel preview deployments.
- * Priority order:
- * 1. Origin header (ensures preview deployments work correctly)
- * 2. Referer header (fallback, contains the full URL)
- * 3. Host header + protocol (fallback if origin not available)
- * 4. VERCEL_URL environment variable (Vercel's automatic deployment URL)
- * 5. APP_URL or NEXT_PUBLIC_APP_URL (explicit configuration)
+ * Get the application URL for email redirects (signUp, resetPassword).
+ * These are triggered from server-side and need to construct URLs from environment/headers.
+ * For OAuth flows, the client should pass the origin directly.
  */
 async function getAppUrl(): Promise<string> {
   const headersList = await headers()
-  const origin = headersList.get('origin')
   const referer = headersList.get('referer')
   const host = headersList.get('host')
   const protocol = headersList.get('x-forwarded-proto') || 'https'
 
-  // Debug logging to understand what headers are available
-  console.log('[getAppUrl] Headers:', {
-    origin,
-    referer,
-    host,
-    protocol,
-    vercelUrl: process.env.VERCEL_URL,
-    appUrl: process.env.APP_URL,
-  })
-
-  // Try to extract origin from referer if origin header is not available
-  let urlFromReferer = ''
-  if (!origin && referer) {
+  // Try to extract origin from referer (most reliable for server actions)
+  if (referer) {
     try {
       const refererUrl = new URL(referer)
-      urlFromReferer = refererUrl.origin
+      return refererUrl.origin
     } catch (e) {
       console.error('[getAppUrl] Failed to parse referer:', e)
     }
   }
 
-  const result = origin ||
-    urlFromReferer ||
-    (host ? `${protocol}://${host}` : '') ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
-    process.env.APP_URL ||
+  // Fallback to host header
+  if (host) {
+    return `${protocol}://${host}`
+  }
+
+  // Last resort: environment variables
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+
+  return process.env.APP_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     'http://localhost:3000'
-
-  console.log('[getAppUrl] Resolved URL:', result)
-  return result
 }
 
 export async function signUp(formData: FormData) {
@@ -144,18 +131,13 @@ export async function updatePassword(formData: FormData) {
   redirect('/dashboard')
 }
 
-export async function signInWithGoogle(clientOrigin?: string) {
+export async function signInWithGoogle(clientOrigin: string) {
   const supabase = await createClient()
-
-  // Prioritize client-provided origin over server-detected URL
-  const appUrl = clientOrigin || await getAppUrl()
-
-  console.log('[signInWithGoogle] Using URL:', appUrl, 'from:', clientOrigin ? 'client' : 'server')
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${appUrl}/api/auth/callback`,
+      redirectTo: `${clientOrigin}/api/auth/callback`,
     },
   })
 

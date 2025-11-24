@@ -115,10 +115,13 @@ describe('Auth Actions', () => {
       })
     })
 
-    it('should fallback to origin header when no env vars are set', async () => {
+    it('should fallback to referer header when no env vars are set', async () => {
       delete process.env.APP_URL
       delete process.env.NEXT_PUBLIC_APP_URL
-      mockHeaders.get.mockReturnValue('http://localhost:3000')
+      mockHeaders.get.mockImplementation((header: string) => {
+        if (header === 'referer') return 'http://localhost:3000/signup'
+        return null
+      })
 
       mockSupabase.auth.signUp.mockResolvedValue({
         data: { user: { id: '123' } },
@@ -132,7 +135,7 @@ describe('Auth Actions', () => {
 
       await signUp(formData)
 
-      expect(mockHeaders.get).toHaveBeenCalledWith('origin')
+      expect(mockHeaders.get).toHaveBeenCalledWith('referer')
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123',
@@ -209,16 +212,33 @@ describe('Auth Actions', () => {
   })
 
   describe('signInWithGoogle', () => {
-    it('should use APP_URL when available', async () => {
-      process.env.APP_URL = 'https://goodhealth-three.vercel.app'
-      delete process.env.NEXT_PUBLIC_APP_URL
+    it('should use client-provided origin', async () => {
+      const clientOrigin = 'https://goodhealth-preview-abc123.vercel.app'
 
       mockSupabase.auth.signInWithOAuth.mockResolvedValue({
         data: { url: 'https://accounts.google.com/oauth' },
         error: null,
       })
 
-      await signInWithGoogle()
+      await signInWithGoogle(clientOrigin)
+
+      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'google',
+        options: {
+          redirectTo: 'https://goodhealth-preview-abc123.vercel.app/api/auth/callback',
+        },
+      })
+    })
+
+    it('should work with production URL', async () => {
+      const clientOrigin = 'https://goodhealth-three.vercel.app'
+
+      mockSupabase.auth.signInWithOAuth.mockResolvedValue({
+        data: { url: 'https://accounts.google.com/oauth' },
+        error: null,
+      })
+
+      await signInWithGoogle(clientOrigin)
 
       expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
         provider: 'google',
@@ -228,38 +248,16 @@ describe('Auth Actions', () => {
       })
     })
 
-    it('should fallback to NEXT_PUBLIC_APP_URL when APP_URL is not set', async () => {
-      delete process.env.APP_URL
-      process.env.NEXT_PUBLIC_APP_URL = 'https://goodhealth-three.vercel.app'
+    it('should work with localhost', async () => {
+      const clientOrigin = 'http://localhost:3000'
 
       mockSupabase.auth.signInWithOAuth.mockResolvedValue({
         data: { url: 'https://accounts.google.com/oauth' },
         error: null,
       })
 
-      await signInWithGoogle()
+      await signInWithGoogle(clientOrigin)
 
-      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://goodhealth-three.vercel.app/api/auth/callback',
-        },
-      })
-    })
-
-    it('should fallback to origin header when no env vars are set', async () => {
-      delete process.env.APP_URL
-      delete process.env.NEXT_PUBLIC_APP_URL
-      mockHeaders.get.mockReturnValue('http://localhost:3000')
-
-      mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-        data: { url: 'https://accounts.google.com/oauth' },
-        error: null,
-      })
-
-      await signInWithGoogle()
-
-      expect(mockHeaders.get).toHaveBeenCalledWith('origin')
       expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
         provider: 'google',
         options: {
@@ -268,61 +266,42 @@ describe('Auth Actions', () => {
       })
     })
 
-    it('should prefer APP_URL over NEXT_PUBLIC_APP_URL when both are set', async () => {
-      process.env.APP_URL = 'https://goodhealth-production.vercel.app'
-      process.env.NEXT_PUBLIC_APP_URL = 'https://goodhealth-staging.vercel.app'
-
-      mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-        data: { url: 'https://accounts.google.com/oauth' },
-        error: null,
-      })
-
-      await signInWithGoogle()
-
-      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://goodhealth-production.vercel.app/api/auth/callback',
-        },
-      })
-    })
-
     it('should redirect to OAuth URL when successful', async () => {
-      process.env.APP_URL = 'https://goodhealth-three.vercel.app'
+      const clientOrigin = 'https://goodhealth-three.vercel.app'
 
       mockSupabase.auth.signInWithOAuth.mockResolvedValue({
         data: { url: 'https://accounts.google.com/oauth' },
         error: null,
       })
 
-      await signInWithGoogle()
+      await signInWithGoogle(clientOrigin)
 
       expect(redirect).toHaveBeenCalledWith('https://accounts.google.com/oauth')
     })
 
     it('should return error when OAuth fails', async () => {
-      process.env.APP_URL = 'https://goodhealth-three.vercel.app'
+      const clientOrigin = 'https://goodhealth-three.vercel.app'
 
       mockSupabase.auth.signInWithOAuth.mockResolvedValue({
         data: null,
         error: { message: 'OAuth provider not configured' },
       })
 
-      const result = await signInWithGoogle()
+      const result = await signInWithGoogle(clientOrigin)
 
       expect(result).toEqual({ error: 'OAuth provider not configured' })
       expect(redirect).not.toHaveBeenCalled()
     })
 
     it('should not redirect if no URL is returned', async () => {
-      process.env.APP_URL = 'https://goodhealth-three.vercel.app'
+      const clientOrigin = 'https://goodhealth-three.vercel.app'
 
       mockSupabase.auth.signInWithOAuth.mockResolvedValue({
         data: { url: null },
         error: null,
       })
 
-      await signInWithGoogle()
+      await signInWithGoogle(clientOrigin)
 
       expect(redirect).not.toHaveBeenCalled()
     })
@@ -373,10 +352,13 @@ describe('Auth Actions', () => {
       )
     })
 
-    it('should fallback to origin header when no env vars are set', async () => {
+    it('should fallback to referer header when no env vars are set', async () => {
       delete process.env.APP_URL
       delete process.env.NEXT_PUBLIC_APP_URL
-      mockHeaders.get.mockReturnValue('http://localhost:3000')
+      mockHeaders.get.mockImplementation((header: string) => {
+        if (header === 'referer') return 'http://localhost:3000/forgot-password'
+        return null
+      })
 
       mockSupabase.auth.resetPasswordForEmail.mockResolvedValue({
         data: {},
@@ -388,7 +370,7 @@ describe('Auth Actions', () => {
 
       await resetPassword(formData)
 
-      expect(mockHeaders.get).toHaveBeenCalledWith('origin')
+      expect(mockHeaders.get).toHaveBeenCalledWith('referer')
       expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
         'test@example.com',
         {
@@ -452,163 +434,4 @@ describe('Auth Actions', () => {
     })
   })
 
-  describe('getAppUrl priority order (preview deployment fix)', () => {
-    describe('signInWithGoogle - URL priority', () => {
-      it('should prioritize origin header over all environment variables', async () => {
-        // Set all possible env vars
-        process.env.APP_URL = 'https://goodhealth-production.vercel.app'
-        process.env.NEXT_PUBLIC_APP_URL = 'https://goodhealth-staging.vercel.app'
-        process.env.VERCEL_URL = 'goodhealth-vercel.vercel.app'
-
-        // But origin header should win
-        mockHeaders.get.mockImplementation((header: string) => {
-          if (header === 'origin') return 'https://goodhealth-preview-abc123.vercel.app'
-          return null
-        })
-
-        mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-          data: { url: 'https://accounts.google.com/oauth' },
-          error: null,
-        })
-
-        await signInWithGoogle()
-
-        expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-          provider: 'google',
-          options: {
-            redirectTo: 'https://goodhealth-preview-abc123.vercel.app/api/auth/callback',
-          },
-        })
-      })
-
-      it('should use host + protocol when origin is not available', async () => {
-        process.env.APP_URL = 'https://goodhealth-production.vercel.app'
-        process.env.NEXT_PUBLIC_APP_URL = 'https://goodhealth-staging.vercel.app'
-
-        mockHeaders.get.mockImplementation((header: string) => {
-          if (header === 'origin') return null
-          if (header === 'host') return 'goodhealth-preview-xyz789.vercel.app'
-          if (header === 'x-forwarded-proto') return 'https'
-          return null
-        })
-
-        mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-          data: { url: 'https://accounts.google.com/oauth' },
-          error: null,
-        })
-
-        await signInWithGoogle()
-
-        expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-          provider: 'google',
-          options: {
-            redirectTo: 'https://goodhealth-preview-xyz789.vercel.app/api/auth/callback',
-          },
-        })
-      })
-
-      it('should use VERCEL_URL when headers are not available', async () => {
-        delete process.env.APP_URL
-        delete process.env.NEXT_PUBLIC_APP_URL
-        process.env.VERCEL_URL = 'goodhealth-preview-def456.vercel.app'
-
-        mockHeaders.get.mockReturnValue(null)
-
-        mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-          data: { url: 'https://accounts.google.com/oauth' },
-          error: null,
-        })
-
-        await signInWithGoogle()
-
-        expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-          provider: 'google',
-          options: {
-            redirectTo: 'https://goodhealth-preview-def456.vercel.app/api/auth/callback',
-          },
-        })
-      })
-
-      it('should fallback to localhost when no URL sources are available', async () => {
-        delete process.env.APP_URL
-        delete process.env.NEXT_PUBLIC_APP_URL
-        delete process.env.VERCEL_URL
-
-        mockHeaders.get.mockReturnValue(null)
-
-        mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-          data: { url: 'https://accounts.google.com/oauth' },
-          error: null,
-        })
-
-        await signInWithGoogle()
-
-        expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-          provider: 'google',
-          options: {
-            redirectTo: 'http://localhost:3000/api/auth/callback',
-          },
-        })
-      })
-    })
-
-    describe('signUp - URL priority', () => {
-      it('should prioritize origin header for preview deployments', async () => {
-        process.env.APP_URL = 'https://goodhealth-production.vercel.app'
-
-        mockHeaders.get.mockImplementation((header: string) => {
-          if (header === 'origin') return 'https://goodhealth-pr-123.vercel.app'
-          return null
-        })
-
-        mockSupabase.auth.signUp.mockResolvedValue({
-          data: { user: { id: '123' } },
-          error: null,
-        })
-
-        const formData = new FormData()
-        formData.append('email', 'test@example.com')
-        formData.append('password', 'password123')
-        formData.append('fullName', 'Test User')
-
-        await signUp(formData)
-
-        expect(mockSupabase.auth.signUp).toHaveBeenCalledWith(
-          expect.objectContaining({
-            options: expect.objectContaining({
-              emailRedirectTo: 'https://goodhealth-pr-123.vercel.app/api/auth/callback',
-            }),
-          })
-        )
-      })
-    })
-
-    describe('resetPassword - URL priority', () => {
-      it('should prioritize origin header for preview deployments', async () => {
-        process.env.APP_URL = 'https://goodhealth-production.vercel.app'
-
-        mockHeaders.get.mockImplementation((header: string) => {
-          if (header === 'origin') return 'https://goodhealth-pr-456.vercel.app'
-          return null
-        })
-
-        mockSupabase.auth.resetPasswordForEmail.mockResolvedValue({
-          data: {},
-          error: null,
-        })
-
-        const formData = new FormData()
-        formData.append('email', 'test@example.com')
-
-        await resetPassword(formData)
-
-        expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
-          'test@example.com',
-          {
-            redirectTo: 'https://goodhealth-pr-456.vercel.app/auth/update-password',
-          }
-        )
-      })
-    })
-  })
 })
