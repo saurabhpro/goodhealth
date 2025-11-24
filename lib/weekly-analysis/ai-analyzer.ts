@@ -3,6 +3,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@/lib/supabase/server'
 import { startOfWeek, endOfWeek, subWeeks, format } from 'date-fns'
+import { GEMINI_MODEL } from '@/lib/config/ai-models'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
@@ -339,7 +340,7 @@ export async function generateWeeklyAnalysis(
 
   // Call Gemini AI
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-pro',
+    model: GEMINI_MODEL,
   })
 
   const result = await model.generateContent(prompt)

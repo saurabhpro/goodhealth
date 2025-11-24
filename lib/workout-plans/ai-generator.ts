@@ -12,6 +12,7 @@ import type {
   Goal,
   Workout,
 } from '@/types'
+import { GEMINI_MODEL } from '@/lib/config/ai-models'
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
@@ -96,9 +97,9 @@ export async function generateWorkoutPlanWithAI(
     // Build the prompt
     const prompt = buildPrompt(request)
 
-    // Call Gemini 2.5 Pro
+    // Call Gemini AI
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-pro', // Using Gemini 2.5 Pro - most capable model
+      model: GEMINI_MODEL,
     })
 
     const result = await model.generateContent({

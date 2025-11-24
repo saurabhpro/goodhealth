@@ -11,7 +11,6 @@ jest.mock('@/lib/supabase/server')
 
 // Mock Gemini AI
 const mockGenerateContent = jest.fn()
-const mockGetGenerativeModel = jest.fn()
 
 jest.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
