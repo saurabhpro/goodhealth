@@ -144,9 +144,13 @@ export async function updatePassword(formData: FormData) {
   redirect('/dashboard')
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(clientOrigin?: string) {
   const supabase = await createClient()
-  const appUrl = await getAppUrl()
+
+  // Prioritize client-provided origin over server-detected URL
+  const appUrl = clientOrigin || await getAppUrl()
+
+  console.log('[signInWithGoogle] Using URL:', appUrl, 'from:', clientOrigin ? 'client' : 'server')
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
