@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import type { WorkoutPlan, WorkoutPlanSession } from '@/types'
 import { SessionDetailModal } from '@/components/workout-plans/session-detail-modal'
+import { FormattedDescription } from '@/components/workout-plans/formatted-description'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -243,38 +244,7 @@ export default function WorkoutPlanPage() {
             <div className="flex-1 mr-4">
               <h1 className="text-3xl font-bold mb-2">{plan.name}</h1>
               {plan.description && (
-                <div className="text-muted-foreground prose prose-sm">
-                  {plan.description.split('\n').map((line, i) => {
-                    // Handle bold sections like **Progression Strategy:**
-                    if (line.includes('**')) {
-                      const parts = line.split('**')
-                      return (
-                        <p key={i} className="mb-2">
-                          {parts.map((part, j) =>
-                            j % 2 === 1 ? (
-                              <strong key={j} className="font-semibold text-foreground">{part}</strong>
-                            ) : (
-                              <span key={j}>{part}</span>
-                            )
-                          )}
-                        </p>
-                      )
-                    }
-                    // Handle bullet points
-                    if (line.trim().startsWith('•')) {
-                      return (
-                        <li key={i} className="ml-4 mb-1">
-                          {line.trim().substring(1).trim()}
-                        </li>
-                      )
-                    }
-                    // Regular paragraphs
-                    if (line.trim()) {
-                      return <p key={i} className="mb-2">{line}</p>
-                    }
-                    return null
-                  })}
-                </div>
+                <FormattedDescription description={plan.description} />
               )}
             </div>
           </div>
