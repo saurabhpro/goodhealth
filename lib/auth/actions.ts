@@ -5,16 +5,35 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 
+/**
+ * Get the application URL for redirects, with proper support for Vercel preview deployments.
+ * Priority order:
+ * 1. Origin header (ensures preview deployments work correctly)
+ * 2. Host header + protocol (fallback if origin not available)
+ * 3. VERCEL_URL environment variable (Vercel's automatic deployment URL)
+ * 4. APP_URL or NEXT_PUBLIC_APP_URL (explicit configuration)
+ */
+async function getAppUrl(): Promise<string> {
+  const headersList = await headers()
+  const origin = headersList.get('origin')
+  const host = headersList.get('host')
+  const protocol = headersList.get('x-forwarded-proto') || 'https'
+
+  return origin ||
+    (host ? `${protocol}://${host}` : '') ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+    process.env.APP_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    'http://localhost:3000'
+}
+
 export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
 
   const supabase = await createClient()
-
-  // Use APP_URL (server-side) or NEXT_PUBLIC_APP_URL (client-side) for consistent redirect URLs
-  // Falls back to origin header for local development
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
+  const appUrl = await getAppUrl()
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -70,10 +89,7 @@ export async function getUser() {
 export async function resetPassword(formData: FormData) {
   const email = formData.get('email') as string
   const supabase = await createClient()
-
-  // Use APP_URL (server-side) or NEXT_PUBLIC_APP_URL (client-side) for consistent redirect URLs
-  // Falls back to origin header for local development
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
+  const appUrl = await getAppUrl()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${appUrl}/auth/update-password`,
@@ -103,10 +119,7 @@ export async function updatePassword(formData: FormData) {
 
 export async function signInWithGoogle() {
   const supabase = await createClient()
-
-  // Use APP_URL (server-side) or NEXT_PUBLIC_APP_URL (client-side) for consistent redirect URLs
-  // Falls back to origin header for local development
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
+  const appUrl = await getAppUrl()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
