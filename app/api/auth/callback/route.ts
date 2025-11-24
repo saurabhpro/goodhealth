@@ -24,9 +24,18 @@ export async function GET(request: Request) {
       } else {
         return NextResponse.redirect(`${origin}${next}`)
       }
+    } else {
+      // Log error details for debugging (you can send to monitoring service)
+      // Don't expose error details to user for security
+      return NextResponse.redirect(
+        `${origin}/auth/auth-code-error?message=${encodeURIComponent('verification_failed')}`
+      )
     }
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  return NextResponse.redirect(
+    `${origin}/auth/auth-code-error?message=${encodeURIComponent('missing_code')}`
+  )
 }
+

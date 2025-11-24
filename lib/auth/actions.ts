@@ -11,13 +11,16 @@ export async function signUp(formData: FormData) {
   const fullName = formData.get('fullName') as string
 
   const supabase = await createClient()
-  const origin = (await headers()).get('origin')
+  
+  // Use NEXT_PUBLIC_APP_URL for consistent redirect URLs
+  // Falls back to origin header for development
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/api/auth/callback`,
+      emailRedirectTo: `${appUrl}/api/auth/callback`,
       data: {
         full_name: fullName,
       },
@@ -67,10 +70,12 @@ export async function getUser() {
 export async function resetPassword(formData: FormData) {
   const email = formData.get('email') as string
   const supabase = await createClient()
-  const origin = (await headers()).get('origin')
+  
+  // Use NEXT_PUBLIC_APP_URL for consistent redirect URLs
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/update-password`,
+    redirectTo: `${appUrl}/auth/update-password`,
   })
 
   if (error) {
@@ -97,12 +102,14 @@ export async function updatePassword(formData: FormData) {
 
 export async function signInWithGoogle() {
   const supabase = await createClient()
-  const origin = (await headers()).get('origin')
+  
+  // Use NEXT_PUBLIC_APP_URL for consistent redirect URLs
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/api/auth/callback`,
+      redirectTo: `${appUrl}/api/auth/callback`,
     },
   })
 
@@ -114,3 +121,4 @@ export async function signInWithGoogle() {
     redirect(data.url)
   }
 }
+
