@@ -19,17 +19,8 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      // Use forwarded host for correct redirect on Vercel
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
 
-      const redirectUrl = forwardedHost
-        ? `${forwardedProto}://${forwardedHost}${next}`
-        : `${origin}${next}`
-
-      return NextResponse.redirect(redirectUrl)
-    } else {
+    if (error) {
       // Log error details for debugging
       console.error('Auth code exchange error:', {
         error: error.message,
@@ -41,6 +32,16 @@ export async function GET(request: Request) {
         `${origin}/auth/auth-code-error?message=${encodeURIComponent(error.message)}`
       )
     }
+
+    // Use forwarded host for correct redirect on Vercel
+    const forwardedHost = request.headers.get('x-forwarded-host')
+    const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+
+    const redirectUrl = forwardedHost
+      ? `${forwardedProto}://${forwardedHost}${next}`
+      : `${origin}${next}`
+
+    return NextResponse.redirect(redirectUrl)
   }
 
   // Return the user to an error page with instructions
