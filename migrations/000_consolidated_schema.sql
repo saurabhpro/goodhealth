@@ -1,7 +1,8 @@
 -- =====================================================
 -- CONSOLIDATED MIGRATION SCRIPT
 -- Contains complete schema with all features and optimizations
--- Last updated: 2025-11-22
+-- Last updated: 2025-11-25
+-- Includes migrations: 001, 002, 003, 004, 005
 -- =====================================================
 
 BEGIN;
@@ -30,12 +31,52 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger function for auto-creating user profile
+-- Migration 005: Improved with OAuth metadata extraction and error handling
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  user_email TEXT;
+  user_name TEXT;
+  user_avatar TEXT;
 BEGIN
-  INSERT INTO public.profiles (id, email)
-  VALUES (NEW.id, NEW.email);
+  -- Extract email from NEW record
+  user_email := COALESCE(NEW.email, NEW.raw_user_meta_data->>'email');
+
+  -- Extract name from OAuth metadata if available
+  user_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name',
+    NEW.raw_user_meta_data->>'display_name'
+  );
+
+  -- Extract avatar from OAuth metadata if available
+  user_avatar := COALESCE(
+    NEW.raw_user_meta_data->>'avatar_url',
+    NEW.raw_user_meta_data->>'picture'
+  );
+
+  -- Use INSERT ... ON CONFLICT to handle existing profiles
+  INSERT INTO public.profiles (id, email, full_name, avatar_url, created_at, updated_at)
+  VALUES (
+    NEW.id,
+    user_email,
+    user_name,
+    user_avatar,
+    NOW(),
+    NOW()
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = COALESCE(EXCLUDED.email, profiles.email),
+    full_name = COALESCE(EXCLUDED.full_name, profiles.full_name),
+    avatar_url = COALESCE(EXCLUDED.avatar_url, profiles.avatar_url),
+    updated_at = NOW();
+
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log the error but don't fail the auth operation
+    RAISE WARNING 'Error in handle_new_user trigger for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
