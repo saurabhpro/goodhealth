@@ -51,6 +51,12 @@ function WorkoutPlansContent() {
     }
   }, [])
 
+  const clearPendingJob = useCallback(() => {
+    setPendingJob(null)
+    localStorage.removeItem('pendingWorkoutPlanJob')
+    router.replace('/workout-plans')
+  }, [router])
+
   const pollJobStatus = useCallback(async (jobId: string) => {
     const pollInterval = 3000 // Poll every 3 seconds
     const maxAttempts = 60 // Max 3 minutes
@@ -69,18 +75,15 @@ function WorkoutPlansContent() {
             toast.success('Workout plan generated!', {
               description: 'Your personalized workout plan is ready'
             })
-            setPendingJob(null)
+            clearPendingJob()
             // Refresh the plans list
             fetchPlans()
-            // Clean up URL params
-            router.replace('/workout-plans')
             return
           } else if (data.status === 'failed') {
             toast.error('Plan generation failed', {
               description: data.error || 'Please try again'
             })
-            setPendingJob(null)
-            router.replace('/workout-plans')
+            clearPendingJob()
             return
           }
         }
@@ -92,8 +95,7 @@ function WorkoutPlansContent() {
           toast.error('Generation timeout', {
             description: 'The plan is still generating. Check back in a few minutes.'
           })
-          setPendingJob(null)
-          router.replace('/workout-plans')
+          clearPendingJob()
         }
       } catch (error) {
         console.error('Error polling job status:', error)
@@ -104,10 +106,24 @@ function WorkoutPlansContent() {
     }
 
     poll()
-  }, [router, fetchPlans])
+  }, [clearPendingJob, fetchPlans])
 
   useEffect(() => {
     fetchPlans()
+
+    // Check localStorage for existing pending job first
+    const storedJob = localStorage.getItem('pendingWorkoutPlanJob')
+    if (storedJob) {
+      try {
+        const job = JSON.parse(storedJob) as PendingJob
+        setPendingJob(job)
+        pollJobStatus(job.jobId)
+        return
+      } catch (error) {
+        console.error('Failed to parse stored job:', error)
+        localStorage.removeItem('pendingWorkoutPlanJob')
+      }
+    }
 
     // Check if we have a pending job from URL params
     const jobId = searchParams.get('jobId')
@@ -116,13 +132,16 @@ function WorkoutPlansContent() {
     const workoutsPerWeek = searchParams.get('workouts')
 
     if (jobId && planName) {
-      setPendingJob({
+      const job: PendingJob = {
         jobId,
         planName,
         weeksDuration: weeksDuration ? parseInt(weeksDuration) : 8,
         workoutsPerWeek: workoutsPerWeek ? parseInt(workoutsPerWeek) : 4,
-      })
+      }
 
+      setPendingJob(job)
+      // Store in localStorage for persistence
+      localStorage.setItem('pendingWorkoutPlanJob', JSON.stringify(job))
       // Start polling for the job
       pollJobStatus(jobId)
     }
