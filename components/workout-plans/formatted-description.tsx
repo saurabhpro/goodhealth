@@ -47,51 +47,113 @@ export function FormattedDescription({ description, maxLines = 5 }: FormattedDes
   const formatSectionContent = (text: string): React.ReactNode[] => {
     const elements: React.ReactNode[] = []
 
-    // Split into sentences/phrases while preserving week patterns
-    const weekPattern = /(Weeks? \d+[-–]\d+:|Weeks? \d+:)/g
-    const parts = text.split(weekPattern)
+    // Split by line breaks to process line by line
+    const lines = text.split('\n').filter(line => line.trim())
 
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i]
-      if (!part?.trim()) continue
+    let bulletGroup: string[] = []
+    let currentParagraph = ''
 
-      // Check if this is a week range header
-      const weekRegex = /^(Weeks? \d+[-–]\d+:|Weeks? \d+:)$/
-      if (weekRegex.exec(part)) {
+    for (const line of lines) {
+      const trimmed = line.trim()
+
+      // Skip standalone asterisks, empty lines, or lines with only asterisks
+      if (!trimmed || /^\*+$/.test(trimmed)) continue
+
+      // Check if this is a week range header (more flexible pattern)
+      if (/^(Weeks? \d+[-–]\d+:?|Weeks? \d+:?)/.test(trimmed)) {
+        // Flush any accumulated content
+        if (currentParagraph) {
+          elements.push(
+            <p className="mb-2 text-muted-foreground leading-relaxed">
+              {currentParagraph.trim()}
+            </p>
+          )
+          currentParagraph = ''
+        }
+        if (bulletGroup.length > 0) {
+          elements.push(
+            <ul className="list-disc ml-6 mb-3 space-y-1">
+              {bulletGroup.map((bullet, idx) => (
+                <li key={idx} className="text-muted-foreground">{bullet}</li>
+              ))}
+            </ul>
+          )
+          bulletGroup = []
+        }
+
         elements.push(
           <div className="font-medium text-foreground mt-3 mb-1">
-            {part.trim()}
+            {trimmed}
           </div>
         )
-      } else {
-        // Split by common delimiters but keep them grouped logically
-        const sentences = part
-          .split(/(?<=[.!?])\s+/)
-          .filter(s => s.trim())
+      }
+      // Check for bullet points (•, *, -, or ** at start)
+      else if (/^(\*\*?\s+|[•\-]\s+)/.test(trimmed)) {
+        // Flush any accumulated paragraph
+        if (currentParagraph) {
+          elements.push(
+            <p className="mb-2 text-muted-foreground leading-relaxed">
+              {currentParagraph.trim()}
+            </p>
+          )
+          currentParagraph = ''
+        }
 
-        for (const [idx, sentence] of sentences.entries()) {
-          const trimmed = sentence.trim()
-
-          // Skip standalone asterisks and empty content
-          if (!trimmed || trimmed === '*') continue
-
-          // Check for bullet point indicators (• or * followed by space)
-          if (trimmed.match(/^[•*]\s+/)) {
-            elements.push(
-              <li className="ml-6 mb-1 text-muted-foreground">
-                {trimmed.replace(/^[•*]\s+/, '')}
-              </li>
-            )
-          } else if (trimmed.length > 20 || (idx === 0 && i === 1)) {
-            // Regular paragraph for longer content or first sentence after a header
-            elements.push(
-              <p className="mb-2 text-muted-foreground leading-relaxed">
-                {trimmed}
-              </p>
-            )
-          }
+        // Clean up the bullet text (remove bullet markers)
+        const bulletText = trimmed.replace(/^(\*\*?\s+|[•\-]\s+)/, '').trim()
+        if (bulletText) {
+          bulletGroup.push(bulletText)
         }
       }
+      // Regular text - accumulate into paragraph
+      else {
+        // Flush any bullet group first
+        if (bulletGroup.length > 0) {
+          elements.push(
+            <ul className="list-disc ml-6 mb-3 space-y-1">
+              {bulletGroup.map((bullet, idx) => (
+                <li key={idx} className="text-muted-foreground">{bullet}</li>
+              ))}
+            </ul>
+          )
+          bulletGroup = []
+        }
+
+        // Add to current paragraph with space
+        if (currentParagraph) {
+          currentParagraph += ' ' + trimmed
+        } else {
+          currentParagraph = trimmed
+        }
+
+        // If line ends with sentence-ending punctuation, flush the paragraph
+        if (/[.!?]$/.test(trimmed)) {
+          elements.push(
+            <p className="mb-2 text-muted-foreground leading-relaxed">
+              {currentParagraph.trim()}
+            </p>
+          )
+          currentParagraph = ''
+        }
+      }
+    }
+
+    // Flush any remaining content
+    if (currentParagraph) {
+      elements.push(
+        <p className="mb-2 text-muted-foreground leading-relaxed">
+          {currentParagraph.trim()}
+        </p>
+      )
+    }
+    if (bulletGroup.length > 0) {
+      elements.push(
+        <ul className="list-disc ml-6 mb-3 space-y-1">
+          {bulletGroup.map((bullet, idx) => (
+            <li key={idx} className="text-muted-foreground">{bullet}</li>
+          ))}
+        </ul>
+      )
     }
 
     return elements

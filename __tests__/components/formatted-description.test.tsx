@@ -223,12 +223,12 @@ Rationale: This approach ensures steady progress while minimizing injury risk.`
       expect(headers.length).toBe(6)
     })
 
-    it('should handle mixed bullet styles (•, -, *)', () => {
-      const desc = '• First bullet\n- Second bullet\n* Third bullet'
+    it('should handle mixed bullet styles (•, -, *, **)', () => {
+      const desc = '• First bullet\n- Second bullet\n* Third bullet\n** Fourth bullet'
       const { container } = render(<FormattedDescription description={desc} />)
       const listItems = container.querySelectorAll('li')
-      // List items appear twice (mobile + desktop view), so at least 4 (2 views * 2+ bullets detected)
-      expect(listItems.length).toBeGreaterThanOrEqual(2)
+      // List items appear twice (mobile + desktop view), so at least 6 (2 views * 3+ bullets detected)
+      expect(listItems.length).toBeGreaterThanOrEqual(6)
     })
 
     it('should filter out standalone asterisks', () => {
@@ -299,6 +299,122 @@ Key Considerations:
         return text === '*'
       })
       expect(hasStandaloneAsterisk).toBe(false)
+    })
+
+    it('should handle double asterisk bullets (**)', () => {
+      const descWithDoubleAsterisks = `Key Considerations:
+** • Low Impact Cardio Only: All cardio is strictly non-impact.
+** Deadlift Safety: Conventional Deadlift is programmed once a week.
+** Schedule Optimization: Workouts are spaced properly.`
+
+      const { container } = render(<FormattedDescription description={descWithDoubleAsterisks} />)
+
+      // Should render as proper list items without ** visible
+      const listItems = container.querySelectorAll('li')
+      expect(listItems.length).toBeGreaterThan(0)
+
+      // Check that content is preserved but ** is removed
+      const hasLowImpact = Array.from(listItems).some(li =>
+        li.textContent?.includes('Low Impact Cardio Only')
+      )
+      const hasDeadliftSafety = Array.from(listItems).some(li =>
+        li.textContent?.includes('Deadlift Safety')
+      )
+      expect(hasLowImpact).toBe(true)
+      expect(hasDeadliftSafety).toBe(true)
+
+      // Verify ** is not visible in the rendered text
+      const allText = container.textContent || ''
+      expect(allText).not.toMatch(/\*\*/)
+    })
+
+    it('should handle real workout plan formatting', () => {
+      const realWorldDesc = `This plan is specifically designed for a 124kg male starting a deadlift journey.
+
+Progression Strategy:
+Weeks 1-2:
+Neuromuscular Adaptation - Focus on motor patterns and establishing the habit.
+
+Weeks 3-4:
+Linear Progression - We increase the Deadlift load to 35-40kg.
+
+Key Considerations:
+** • Low Impact Cardio Only: All cardio is strictly non-impact.
+*
+** Deadlift Safety: Conventional Deadlift is programmed once a week.
+*
+** Schedule Optimization: Workouts are spaced (Sun/Tue/Fri).`
+
+      const { container } = render(<FormattedDescription description={realWorldDesc} />)
+
+      // Should render section headers
+      const headers = container.querySelectorAll('h3')
+      const hasProgressionHeader = Array.from(headers).some(h =>
+        h.textContent?.includes('Progression Strategy')
+      )
+      const hasKeyConsiderations = Array.from(headers).some(h =>
+        h.textContent?.includes('Key Considerations')
+      )
+      expect(hasProgressionHeader).toBe(true)
+      expect(hasKeyConsiderations).toBe(true)
+
+      // Should render week headers
+      const weekHeaders = container.querySelectorAll('.font-medium')
+      const hasWeeks12 = Array.from(weekHeaders).some(w =>
+        w.textContent?.includes('Weeks 1-2')
+      )
+      const hasWeeks34 = Array.from(weekHeaders).some(w =>
+        w.textContent?.includes('Weeks 3-4')
+      )
+      expect(hasWeeks12).toBe(true)
+      expect(hasWeeks34).toBe(true)
+
+      // Should render bullets properly
+      const listItems = container.querySelectorAll('li')
+      expect(listItems.length).toBeGreaterThan(0)
+
+      const bullets = Array.from(listItems).map(li => li.textContent)
+      const hasLowImpact = bullets.some(text => text?.includes('Low Impact Cardio'))
+      const hasDeadliftSafety = bullets.some(text => text?.includes('Deadlift Safety'))
+      const hasSchedule = bullets.some(text => text?.includes('Schedule Optimization'))
+
+      expect(hasLowImpact).toBe(true)
+      expect(hasDeadliftSafety).toBe(true)
+      expect(hasSchedule).toBe(true)
+
+      // Verify no ** or standalone * in output
+      const allText = container.textContent || ''
+      expect(allText).not.toMatch(/\*\*/)
+
+      // Check no standalone asterisks
+      const allElements = container.querySelectorAll('p, li, h3, div')
+      const hasStandaloneAsterisk = Array.from(allElements).some(el => {
+        const text = el.textContent?.trim()
+        return text === '*'
+      })
+      expect(hasStandaloneAsterisk).toBe(false)
+    })
+
+    it('should group consecutive bullets into single list', () => {
+      const desc = `Key Considerations:
+** First bullet
+** Second bullet
+** Third bullet`
+
+      const { container } = render(<FormattedDescription description={desc} />)
+
+      // Should have list container(s)
+      const lists = container.querySelectorAll('ul')
+      expect(lists.length).toBeGreaterThan(0)
+
+      // Should have 3 list items
+      const listItems = container.querySelectorAll('li')
+      expect(listItems.length).toBeGreaterThanOrEqual(3)
+
+      // All bullets should be in proper list structure
+      const firstList = lists[0]
+      const itemsInFirstList = firstList?.querySelectorAll('li')
+      expect(itemsInFirstList?.length).toBeGreaterThanOrEqual(3)
     })
   })
 
