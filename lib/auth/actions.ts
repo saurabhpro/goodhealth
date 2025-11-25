@@ -134,18 +134,24 @@ export async function updatePassword(formData: FormData) {
 export async function signInWithGoogle(clientOrigin: string) {
   const supabase = await createClient()
 
+  const redirectUrl = `${clientOrigin}/api/auth/callback`
+  console.log('[signInWithGoogle] Client origin:', clientOrigin)
+  console.log('[signInWithGoogle] Redirect URL:', redirectUrl)
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${clientOrigin}/api/auth/callback`,
+      redirectTo: redirectUrl,
     },
   })
 
   if (error) {
+    console.error('[signInWithGoogle] OAuth error:', error)
     return { error: error.message }
   }
 
   if (data.url) {
+    console.log('[signInWithGoogle] Redirecting to Google:', data.url)
     redirect(data.url)
   }
 }
