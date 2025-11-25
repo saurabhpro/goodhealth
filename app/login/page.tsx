@@ -36,9 +36,6 @@ export default function LoginPage() {
 
     // Pass the current origin from the client to ensure correct redirect URL
     const clientOrigin = window.location.origin
-    console.log('[Login] Client origin:', clientOrigin)
-    console.log('[Login] Full URL:', window.location.href)
-
     const result = await signInWithGoogle(clientOrigin)
 
     if (result?.error) {

@@ -134,28 +134,32 @@ export async function updatePassword(formData: FormData) {
 export async function signInWithGoogle(clientOrigin: string) {
   const supabase = await createClient()
 
-  // Use a fixed production callback URL to avoid Supabase allowlist issues
-  // Pass the actual origin as a state parameter so we can redirect back correctly
-  const productionUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://goodhealth-three.vercel.app'
-  const redirectUrl = `${productionUrl}/api/auth/callback?returnTo=${encodeURIComponent(clientOrigin)}`
-
-  console.log('[signInWithGoogle] Client origin:', clientOrigin)
-  console.log('[signInWithGoogle] Redirect URL:', redirectUrl)
+  // Simple solution: Always use the client's actual origin
+  // Supabase allowlist needs to include:
+  // - https://goodhealth-three.vercel.app/** (production)
+  // - http://localhost:3000/** (local dev)
+  // - https://*-saurabhpros-projects.vercel.app/** (all preview deployments)
+  //
+  // Note: Supabase doesn't support wildcards in the UI, but you can add them via:
+  // 1. Supabase Dashboard > Authentication > URL Configuration > Additional Redirect URLs
+  // 2. Add: https://*-saurabhpros-projects.vercel.app/**
+  //
+  // If Supabase rejects wildcards, OAuth on previews won't work and you'll need to:
+  // - Manually add specific preview URLs when testing, OR
+  // - Only test OAuth on production after merging
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: redirectUrl,
+      redirectTo: `${clientOrigin}/api/auth/callback`,
     },
   })
 
   if (error) {
-    console.error('[signInWithGoogle] OAuth error:', error)
     return { error: error.message }
   }
 
   if (data.url) {
-    console.log('[signInWithGoogle] Redirecting to Google:', data.url)
     redirect(data.url)
   }
 }
