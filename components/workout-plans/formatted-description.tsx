@@ -71,13 +71,15 @@ export function FormattedDescription({ description, maxLines = 5 }: FormattedDes
 
         for (const [idx, sentence] of sentences.entries()) {
           const trimmed = sentence.trim()
-          if (!trimmed) continue
 
-          // Check for bullet point indicators
-          if (trimmed.match(/^[-•*]/)) {
+          // Skip standalone asterisks and empty content
+          if (!trimmed || trimmed === '*') continue
+
+          // Check for bullet point indicators (• or * followed by space)
+          if (trimmed.match(/^[•*]\s+/)) {
             elements.push(
               <li className="ml-6 mb-1 text-muted-foreground">
-                {trimmed.replace(/^[-•*]\s*/, '')}
+                {trimmed.replace(/^[•*]\s+/, '')}
               </li>
             )
           } else if (trimmed.length > 20 || (idx === 0 && i === 1)) {
