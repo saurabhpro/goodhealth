@@ -230,6 +230,76 @@ Rationale: This approach ensures steady progress while minimizing injury risk.`
       // List items appear twice (mobile + desktop view), so at least 4 (2 views * 2+ bullets detected)
       expect(listItems.length).toBeGreaterThanOrEqual(2)
     })
+
+    it('should filter out standalone asterisks', () => {
+      const descWithAsterisks = 'This is a paragraph.\n*\nProgression Strategy:\n*\nAnother paragraph.\n*'
+      const { container } = render(<FormattedDescription description={descWithAsterisks} />)
+
+      // Check that standalone asterisks are not rendered as text
+      const allText = container.textContent || ''
+      // Count standalone asterisks in the rendered output (should be 0)
+      const standaloneAsterisks = allText.match(/^\*$/gm)
+      expect(standaloneAsterisks).toBeNull()
+    })
+
+    it('should only treat asterisk with space as bullet point', () => {
+      const descWithBullets = `Regular paragraph text.
+* This is a proper bullet with space
+• This is another bullet with space`
+      const { container } = render(<FormattedDescription description={descWithBullets} />)
+
+      const listItems = container.querySelectorAll('li')
+      // Should find bullets with space after asterisk (appears twice in mobile + desktop)
+      const properBullets = Array.from(listItems).filter(li =>
+        li.textContent?.includes('This is a proper bullet') || li.textContent?.includes('This is another bullet')
+      )
+      expect(properBullets.length).toBeGreaterThan(0)
+
+      // Regular text should appear in paragraphs
+      const paragraphs = container.querySelectorAll('p')
+      const hasRegularText = Array.from(paragraphs).some(p =>
+        p.textContent?.includes('Regular paragraph text')
+      )
+      expect(hasRegularText).toBe(true)
+    })
+
+    it('should handle description with mixed formatting issues', () => {
+      const messyDesc = `This plan is designed for you.
+*
+Progression Strategy:
+*
+Week 1-2: Build foundation
+*
+Key Considerations:
+* Proper form
+*
+• Stay consistent`
+
+      const { container } = render(<FormattedDescription description={messyDesc} />)
+
+      // Should render headers
+      const headers = container.querySelectorAll('h3')
+      expect(headers.length).toBeGreaterThan(0)
+
+      // Should render bullet points (filtering out standalone asterisks)
+      const listItems = container.querySelectorAll('li')
+      const properFormBullet = Array.from(listItems).some(li =>
+        li.textContent?.includes('Proper form')
+      )
+      const stayConsistentBullet = Array.from(listItems).some(li =>
+        li.textContent?.includes('Stay consistent')
+      )
+      expect(properFormBullet).toBe(true)
+      expect(stayConsistentBullet).toBe(true)
+
+      // Verify standalone asterisks are filtered (check that they don't appear as visible content)
+      const allElements = container.querySelectorAll('p, li, h3, div')
+      const hasStandaloneAsterisk = Array.from(allElements).some(el => {
+        const text = el.textContent?.trim()
+        return text === '*'
+      })
+      expect(hasStandaloneAsterisk).toBe(false)
+    })
   })
 
   describe('Icons', () => {
