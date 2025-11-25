@@ -304,7 +304,7 @@ Key Considerations:
 
   describe('Icons', () => {
     it('should render ChevronDown icon in "Read more" button', () => {
-      const { container } = render(<FormattedDescription description={complexDescription} />)
+      render(<FormattedDescription description={complexDescription} />)
       const button = screen.getByText(/Read more/i).closest('button')
       const icon = button?.querySelector('svg')
       expect(icon).toBeInTheDocument()
