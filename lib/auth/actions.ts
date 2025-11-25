@@ -5,16 +5,49 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 
+/**
+ * Get the application URL for email redirects (signUp, resetPassword).
+ * These are triggered from server-side and need to construct URLs from environment/headers.
+ * For OAuth flows, the client should pass the origin directly.
+ */
+async function getAppUrl(): Promise<string> {
+  const headersList = await headers()
+  const referer = headersList.get('referer')
+  const host = headersList.get('host')
+  const protocol = headersList.get('x-forwarded-proto') || 'https'
+
+  // Try to extract origin from referer (most reliable for server actions)
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer)
+      return refererUrl.origin
+    } catch (e) {
+      console.error('[getAppUrl] Failed to parse referer:', e)
+    }
+  }
+
+  // Fallback to host header
+  if (host) {
+    return `${protocol}://${host}`
+  }
+
+  // Last resort: environment variables
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+
+  return process.env.APP_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    'http://localhost:3000'
+}
+
 export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
 
   const supabase = await createClient()
-
-  // Use APP_URL (server-side) or NEXT_PUBLIC_APP_URL (client-side) for consistent redirect URLs
-  // Falls back to origin header for local development
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
+  const appUrl = await getAppUrl()
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -70,10 +103,7 @@ export async function getUser() {
 export async function resetPassword(formData: FormData) {
   const email = formData.get('email') as string
   const supabase = await createClient()
-
-  // Use APP_URL (server-side) or NEXT_PUBLIC_APP_URL (client-side) for consistent redirect URLs
-  // Falls back to origin header for local development
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
+  const appUrl = await getAppUrl()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${appUrl}/auth/update-password`,
@@ -101,17 +131,27 @@ export async function updatePassword(formData: FormData) {
   redirect('/dashboard')
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(clientOrigin: string) {
   const supabase = await createClient()
 
-  // Use APP_URL (server-side) or NEXT_PUBLIC_APP_URL (client-side) for consistent redirect URLs
-  // Falls back to origin header for local development
-  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || (await headers()).get('origin')
+  // Simple solution: Always use the client's actual origin
+  // Supabase allowlist needs to include:
+  // - https://goodhealth-three.vercel.app/** (production)
+  // - http://localhost:3000/** (local dev)
+  // - https://*-saurabhpros-projects.vercel.app/** (all preview deployments)
+  //
+  // Note: Supabase doesn't support wildcards in the UI, but you can add them via:
+  // 1. Supabase Dashboard > Authentication > URL Configuration > Additional Redirect URLs
+  // 2. Add: https://*-saurabhpros-projects.vercel.app/**
+  //
+  // If Supabase rejects wildcards, OAuth on previews won't work and you'll need to:
+  // - Manually add specific preview URLs when testing, OR
+  // - Only test OAuth on production after merging
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${appUrl}/api/auth/callback`,
+      redirectTo: `${clientOrigin}/api/auth/callback`,
     },
   })
 

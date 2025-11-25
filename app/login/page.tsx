@@ -33,7 +33,10 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setError(null)
     setGoogleLoading(true)
-    const result = await signInWithGoogle()
+
+    // Pass the current origin from the client to ensure correct redirect URL
+    const clientOrigin = window.location.origin
+    const result = await signInWithGoogle(clientOrigin)
 
     if (result?.error) {
       setError(result.error)

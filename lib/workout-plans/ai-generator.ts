@@ -354,13 +354,20 @@ Create a detailed ${planConfig.weeksCount}-week workout plan with ${planConfig.w
       "notes": "Light session - rest Sunday (day 0)"
     }
   ],
-  "rationale": "Explain why this plan suits the user's goal and fitness level...",
-  "progressionStrategy": "Explain how the plan progresses week by week...",
+  "rationale": "Explain why this plan suits the user's goal and fitness level... (plain text, no markdown formatting)",
+  "progressionStrategy": "Explain how the plan progresses week by week... (plain text, no markdown formatting)",
   "keyConsiderations": ["Point 1", "Point 2", "Point 3"]
 }
 \`\`\`
 
 **Remember**: day field uses 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+
+**IMPORTANT FORMATTING RULES:**
+- DO NOT use standalone asterisks (*) as section separators
+- DO NOT add section headers like "Progression Strategy:" or "Key Considerations:" to rationale/progressionStrategy fields (these are added automatically)
+- Keep rationale, progressionStrategy as plain paragraphs without bullet points or asterisks
+- Use keyConsiderations array for bullet points only
+- Write naturally without markdown symbols (**, *, etc.) in the text fields
 
 **CRITICAL INSTRUCTIONS FOR WORKOUT DESCRIPTIONS:**
 

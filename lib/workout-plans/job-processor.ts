@@ -152,8 +152,15 @@ export async function processWorkoutPlanJob(jobId: string) {
     const goalType = getGoalTypeFromGoal(goal as Goal)
 
     // Create the workout plan in the database
+    // Clean up AI-generated text: remove standalone asterisks and extra whitespace
+    const cleanText = (text: string) => text
+      .split('\n')
+      .filter(line => line.trim() !== '*' && line.trim() !== '')
+      .join('\n')
+      .trim()
+
     const aiGeneratedDescription = requestData.description ||
-      `${result.plan.rationale}\n\n**Progression Strategy:**\n${result.plan.progressionStrategy}\n\n**Key Considerations:**\n${result.plan.keyConsiderations.map(c => `• ${c}`).join('\n')}`
+      `${cleanText(result.plan.rationale)}\n\n**Progression Strategy:**\n${cleanText(result.plan.progressionStrategy)}\n\n**Key Considerations:**\n${result.plan.keyConsiderations.map(c => `• ${c.replace(/^\*+\s*/, '').trim()}`).join('\n')}`
 
     const { data: workoutPlan, error: planError } = await supabase
       .from('workout_plans')
