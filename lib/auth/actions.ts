@@ -134,7 +134,11 @@ export async function updatePassword(formData: FormData) {
 export async function signInWithGoogle(clientOrigin: string) {
   const supabase = await createClient()
 
-  const redirectUrl = `${clientOrigin}/api/auth/callback`
+  // Use a fixed production callback URL to avoid Supabase allowlist issues
+  // Pass the actual origin as a state parameter so we can redirect back correctly
+  const productionUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://goodhealth-three.vercel.app'
+  const redirectUrl = `${productionUrl}/api/auth/callback?returnTo=${encodeURIComponent(clientOrigin)}`
+
   console.log('[signInWithGoogle] Client origin:', clientOrigin)
   console.log('[signInWithGoogle] Redirect URL:', redirectUrl)
 
