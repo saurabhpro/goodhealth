@@ -21,6 +21,7 @@ export async function GET() {
     .from('workout_templates')
     .select('*')
     .or(`user_id.eq.${user.id},is_public.eq.true`)
+    .is('deleted_at', null)
 
   if (error) {
     console.error('Error fetching templates:', error)

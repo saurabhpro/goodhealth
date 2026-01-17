@@ -53,6 +53,8 @@ export async function processWorkoutPlanJob(jobId: string) {
       .select('*')
       .eq('id', requestData.goalId)
       .eq('user_id', userId)
+      .eq('status', 'active')
+      .is('deleted_at', null)
       .single()
 
     if (goalError || !goal) {
@@ -78,6 +80,7 @@ export async function processWorkoutPlanJob(jobId: string) {
       .from('body_measurements')
       .select('*')
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .order('measured_at', { ascending: false })
       .limit(1)
       .single()
@@ -87,6 +90,7 @@ export async function processWorkoutPlanJob(jobId: string) {
       .from('user_workout_preferences')
       .select('*')
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .single()
 
     // Fetch recent workout history (last 30 days for exercise weight tracking)
@@ -97,6 +101,7 @@ export async function processWorkoutPlanJob(jobId: string) {
       .from('workouts')
       .select('*, exercises(*)')
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
       .order('date', { ascending: false })
 
@@ -106,6 +111,7 @@ export async function processWorkoutPlanJob(jobId: string) {
       .select('*')
       .eq('user_id', userId)
       .eq('is_active', true)
+      .is('deleted_at', null)
 
     // Build AI request with all personalization data
     const aiRequest = {

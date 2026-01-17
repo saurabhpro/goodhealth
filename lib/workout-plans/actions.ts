@@ -150,10 +150,14 @@ export async function deleteWorkoutPlan(planId: string) {
     return { error: 'Not authenticated' }
   }
 
-  // Soft delete: set deleted_at instead of hard delete
+  // Soft delete: set deleted_at and archive status for consistency
   const { error } = await supabase
     .from('workout_plans')
-    .update({ deleted_at: new Date().toISOString() })
+    .update({
+      deleted_at: new Date().toISOString(),
+      status: 'archived',
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', planId)
     .eq('user_id', user.id)
     .is('deleted_at', null) // Only delete if not already deleted

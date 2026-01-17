@@ -328,8 +328,7 @@ describe('Workout Plan Actions', () => {
         data: { user: mockUser },
       })
 
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
+      const mockUpdate = jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
               is: jest.fn().mockResolvedValue({
@@ -337,12 +336,20 @@ describe('Workout Plan Actions', () => {
               }),
             }),
           }),
-        }),
+      })
+
+      mockSupabase.from.mockReturnValue({
+        update: mockUpdate,
       })
 
       const result = await deleteWorkoutPlan('plan-123')
 
       expect(result.success).toBe(true)
+      expect(mockUpdate).toHaveBeenCalledWith({
+        deleted_at: expect.any(String),
+        status: 'archived',
+        updated_at: expect.any(String),
+      })
     })
 
     it('should return error when user is not authenticated', async () => {

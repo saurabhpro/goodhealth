@@ -79,6 +79,8 @@ export async function generateWorkoutPlan(
       .select('*')
       .eq('id', request.goalId)
       .eq('user_id', user.id)
+      .eq('status', 'active')
+      .is('deleted_at', null)
       .single()
 
     if (goalError || !goal) {
@@ -90,6 +92,7 @@ export async function generateWorkoutPlan(
       .from('workouts')
       .select('*')
       .eq('user_id', user.id)
+      .is('deleted_at', null)
       .order('date', { ascending: false })
       .limit(100)
 
@@ -116,6 +119,7 @@ export async function generateWorkoutPlan(
       .from('workout_templates')
       .select('*')
       .or(`user_id.eq.${user.id},is_public.eq.true`)
+      .is('deleted_at', null)
 
     if (templatesError || !templates || templates.length === 0) {
       return {

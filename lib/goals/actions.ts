@@ -186,6 +186,7 @@ export async function updateGoal(goalId: string, formData: FormData) {
     })
     .eq('id', goalId)
     .eq('user_id', user.id)
+    .is('deleted_at', null)
 
   if (error) {
     console.error('Update goal error:', error)
@@ -260,10 +261,14 @@ export async function deleteGoal(goalId: string) {
     return { error: 'Not authenticated' }
   }
 
-  // Soft delete: set deleted_at instead of hard delete
+  // Soft delete: set deleted_at and archive status for consistency
   const { error } = await supabase
     .from('goals')
-    .update({ deleted_at: new Date().toISOString() })
+    .update({
+      deleted_at: new Date().toISOString(),
+      status: 'archived',
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', goalId)
     .eq('user_id', user.id)
     .is('deleted_at', null) // Only delete if not already deleted
