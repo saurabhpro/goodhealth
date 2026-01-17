@@ -117,20 +117,24 @@ describe('Workout Plan Generator - Integration', () => {
       error: null,
     })
 
-    // Mock goal fetch with two .eq() calls
+    // Mock goal fetch with .eq().eq().is().single()
     const goalSingle = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
-    const goalEq2 = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalIs = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalEq3 = jest.fn().mockReturnValue({ is: goalIs })
+    const goalEq2 = jest.fn().mockReturnValue({ eq: goalEq3 })
     const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
     const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
 
-    // Mock templates fetch with .select().or()
-    const templateOr = jest.fn().mockResolvedValue({ data: mockTemplates, error: null })
+    // Mock templates fetch with .select().or().is()
+    const templateIs = jest.fn().mockResolvedValue({ data: mockTemplates, error: null })
+    const templateOr = jest.fn().mockReturnValue({ is: templateIs })
     const templateSelect = jest.fn().mockReturnValue({ or: templateOr })
 
-    // Mock workouts fetch with chaining
+    // Mock workouts fetch with .select().eq().is().order().limit()
     const workoutLimit = jest.fn().mockResolvedValue({ data: [], error: null })
     const workoutOrder = jest.fn().mockReturnValue({ limit: workoutLimit })
-    const workoutEq = jest.fn().mockReturnValue({ order: workoutOrder })
+    const workoutIs = jest.fn().mockReturnValue({ order: workoutOrder })
+    const workoutEq = jest.fn().mockReturnValue({ is: workoutIs })
     const workoutSelect = jest.fn().mockReturnValue({ eq: workoutEq })
 
     // Mock plan insert with .insert().select().single()
@@ -229,7 +233,9 @@ describe('Workout Plan Generator - Integration', () => {
       data: null,
       error: { message: 'Goal not found' },
     })
-    const goalEq2 = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalIs = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalEq3 = jest.fn().mockReturnValue({ is: goalIs })
+    const goalEq2 = jest.fn().mockReturnValue({ eq: goalEq3 })
     const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
     const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
 
@@ -256,16 +262,20 @@ describe('Workout Plan Generator - Integration', () => {
     })
 
     const goalSingle = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
-    const goalEq2 = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalIs = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalEq3 = jest.fn().mockReturnValue({ is: goalIs })
+    const goalEq2 = jest.fn().mockReturnValue({ eq: goalEq3 })
     const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
     const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
 
-    const templateOr = jest.fn().mockResolvedValue({ data: [], error: null })
+    const templateIs = jest.fn().mockResolvedValue({ data: [], error: null })
+    const templateOr = jest.fn().mockReturnValue({ is: templateIs })
     const templateSelect = jest.fn().mockReturnValue({ or: templateOr })
 
     const workoutLimit = jest.fn().mockResolvedValue({ data: [], error: null })
     const workoutOrder = jest.fn().mockReturnValue({ limit: workoutLimit })
-    const workoutEq = jest.fn().mockReturnValue({ order: workoutOrder })
+    const workoutIs = jest.fn().mockReturnValue({ order: workoutOrder })
+    const workoutEq = jest.fn().mockReturnValue({ is: workoutIs })
     const workoutSelect = jest.fn().mockReturnValue({ eq: workoutEq })
 
     mockSupabase.from.mockImplementation((table: string) => {
@@ -318,16 +328,20 @@ describe('Workout Plan Generator - Integration', () => {
     })
 
     const goalSingle = jest.fn().mockResolvedValue({ data: mockGoal, error: null })
-    const goalEq2 = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalIs = jest.fn().mockReturnValue({ single: goalSingle })
+    const goalEq3 = jest.fn().mockReturnValue({ is: goalIs })
+    const goalEq2 = jest.fn().mockReturnValue({ eq: goalEq3 })
     const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
     const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
 
-    const templateOr = jest.fn().mockResolvedValue({ data: mockTemplates, error: null })
+    const templateIs = jest.fn().mockResolvedValue({ data: mockTemplates, error: null })
+    const templateOr = jest.fn().mockReturnValue({ is: templateIs })
     const templateSelect = jest.fn().mockReturnValue({ or: templateOr })
 
     const workoutLimit = jest.fn().mockResolvedValue({ data: [], error: null })
     const workoutOrder = jest.fn().mockReturnValue({ limit: workoutLimit })
-    const workoutEq = jest.fn().mockReturnValue({ order: workoutOrder })
+    const workoutIs = jest.fn().mockReturnValue({ order: workoutOrder })
+    const workoutEq = jest.fn().mockReturnValue({ is: workoutIs })
     const workoutSelect = jest.fn().mockReturnValue({ eq: workoutEq })
 
     const planSingle = jest.fn().mockResolvedValue({
