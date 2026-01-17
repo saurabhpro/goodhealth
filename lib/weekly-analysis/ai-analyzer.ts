@@ -136,7 +136,7 @@ async function fetchWeekData(userId: string, weekStartDate: Date): Promise<Analy
     .from('goals')
     .select('*')
     .eq('user_id', userId)
-    .eq('achieved', false)
+    .eq('status', 'active')
     .is('deleted_at', null)
 
   const goal_progress: GoalProgress[] = goals
