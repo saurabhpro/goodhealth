@@ -10,16 +10,18 @@ import type { Workout, Goal, WorkoutPlan, WorkoutPlanSession } from '@/types'
 
 // Mock next/dynamic to avoid issues with lazy loading in tests
 jest.mock('next/dynamic', () => () => {
-  const MockSessionDetailModal = ({ open, onOpenChange, session }: { 
+  function MockSessionDetailModal({ open, onOpenChange, session }: { 
     open: boolean
     onOpenChange: (open: boolean) => void
     session: WorkoutPlanSession
-  }) => open ? (
-    <div data-testid="session-modal">
-      <span data-testid="modal-session-name">{session.workout_name}</span>
-      <button onClick={() => onOpenChange(false)}>Close</button>
-    </div>
-  ) : null
+  }) {
+    return open ? (
+      <div data-testid="session-modal">
+        <span data-testid="modal-session-name">{session.workout_name}</span>
+        <button onClick={() => onOpenChange(false)}>Close</button>
+      </div>
+    ) : null
+  }
   return MockSessionDetailModal
 })
 
@@ -41,7 +43,7 @@ jest.mock('next/link', () => ({
 }))
 
 // Mock fetch for API calls
-global.fetch = jest.fn()
+globalThis.fetch = jest.fn()
 
 /**
  * Type-safe mock data matching database.ts Row types exactly
@@ -178,7 +180,7 @@ const mockWeeklyAnalysis = {
 describe('DashboardContent', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    ;(globalThis.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ sessions: [], currentWeek: 1 }),
     })
@@ -326,7 +328,7 @@ describe('DashboardContent', () => {
     })
 
     it('should dismiss analysis and show quote', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValue({
+      ;(globalThis.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({}),
       })
@@ -357,7 +359,7 @@ describe('DashboardContent', () => {
         fireEvent.click(dismissButton)
 
         await waitFor(() => {
-          expect(global.fetch).toHaveBeenCalledWith(
+          expect(globalThis.fetch).toHaveBeenCalledWith(
             '/api/weekly-analysis/analysis-1/dismiss',
             { method: 'PUT' }
           )
@@ -535,7 +537,7 @@ describe('DashboardContent', () => {
 
   describe('API Interactions', () => {
     it('should call view API when viewing analysis', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValue({
+      ;(globalThis.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({}),
       })

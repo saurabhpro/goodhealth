@@ -3,6 +3,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { InsertWorkoutPlanSession, UpdateWorkoutPlanSession } from '@/types'
+import { TABLES, ERRORS } from '@/lib/constants'
+
+// Select query for session with user ownership verification
+const SESSION_WITH_OWNER_SELECT = 'plan_id, workout_plans!inner(user_id)'
 
 /**
  * Create a new plan session
@@ -15,12 +19,12 @@ export async function createPlanSession(data: InsertWorkoutPlanSession) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Verify plan belongs to user
   const { data: plan } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .select('id')
     .eq('id', data.plan_id)
     .eq('user_id', user.id)
@@ -29,11 +33,11 @@ export async function createPlanSession(data: InsertWorkoutPlanSession) {
     .single()
 
   if (!plan) {
-    return { error: 'Plan not found or access denied' }
+    return { error: ERRORS.PLAN_NOT_FOUND }
   }
 
   const { data: session, error } = await supabase
-    .from('workout_plan_sessions')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
     .insert(data)
     .select()
     .single()
@@ -58,12 +62,12 @@ export async function getWeekSessions(planId: string, weekNumber: number) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Verify plan belongs to user
   const { data: plan } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .select('id')
     .eq('id', planId)
     .eq('user_id', user.id)
@@ -72,11 +76,11 @@ export async function getWeekSessions(planId: string, weekNumber: number) {
     .single()
 
   if (!plan) {
-    return { error: 'Plan not found or access denied' }
+    return { error: ERRORS.PLAN_NOT_FOUND }
   }
 
   const { data: sessions, error } = await supabase
-    .from('workout_plan_sessions')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
     .select('*')
     .eq('plan_id', planId)
     .eq('week_number', weekNumber)
@@ -104,24 +108,24 @@ export async function updatePlanSession(sessionId: string, data: UpdateWorkoutPl
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Verify session belongs to user's plan
   const { data: session } = await supabase
-    .from('workout_plan_sessions')
-    .select('plan_id, workout_plans!inner(user_id)')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
+    .select(SESSION_WITH_OWNER_SELECT)
     .eq('id', sessionId)
     // Exclude soft-deleted records
     .is('deleted_at', null)
     .single()
 
   if (!session || (session.workout_plans as unknown as { user_id: string }).user_id !== user.id) {
-    return { error: 'Session not found or access denied' }
+    return { error: ERRORS.SESSION_NOT_FOUND }
   }
 
   const { data: updatedSession, error } = await supabase
-    .from('workout_plan_sessions')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
     .update({
       ...data,
       updated_at: new Date().toISOString(),
@@ -150,24 +154,24 @@ export async function completePlanSession(sessionId: string, workoutId: string, 
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Verify session belongs to user's plan
   const { data: session } = await supabase
-    .from('workout_plan_sessions')
-    .select('plan_id, workout_plans!inner(user_id)')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
+    .select(SESSION_WITH_OWNER_SELECT)
     .eq('id', sessionId)
     // Exclude soft-deleted records
     .is('deleted_at', null)
     .single()
 
   if (!session || (session.workout_plans as unknown as { user_id: string }).user_id !== user.id) {
-    return { error: 'Session not found or access denied' }
+    return { error: ERRORS.SESSION_NOT_FOUND }
   }
 
   const { data: updatedSession, error } = await supabase
-    .from('workout_plan_sessions')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
     .update({
       status: 'completed',
       completed_workout_id: workoutId,
@@ -199,24 +203,24 @@ export async function skipPlanSession(sessionId: string, reason?: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Verify session belongs to user's plan
   const { data: session } = await supabase
-    .from('workout_plan_sessions')
-    .select('plan_id, workout_plans!inner(user_id)')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
+    .select(SESSION_WITH_OWNER_SELECT)
     .eq('id', sessionId)
     // Exclude soft-deleted records
     .is('deleted_at', null)
     .single()
 
   if (!session || (session.workout_plans as unknown as { user_id: string }).user_id !== user.id) {
-    return { error: 'Session not found or access denied' }
+    return { error: ERRORS.SESSION_NOT_FOUND }
   }
 
   const { data: updatedSession, error } = await supabase
-    .from('workout_plan_sessions')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
     .update({
       status: 'skipped',
       notes: reason || null,
@@ -246,26 +250,26 @@ export async function deletePlanSession(sessionId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Verify session belongs to user's plan
   const { data: session } = await supabase
-    .from('workout_plan_sessions')
-    .select('plan_id, workout_plans!inner(user_id)')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
+    .select(SESSION_WITH_OWNER_SELECT)
     .eq('id', sessionId)
     // Exclude soft-deleted records
     .is('deleted_at', null)
     .single()
 
   if (!session || (session.workout_plans as unknown as { user_id: string }).user_id !== user.id) {
-    return { error: 'Session not found or access denied' }
+    return { error: ERRORS.SESSION_NOT_FOUND }
   }
 
   const planId = session.plan_id
 
   const { error } = await supabase
-    .from('workout_plan_sessions')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
     .delete()
     .eq('id', sessionId)
 
@@ -289,12 +293,12 @@ export async function getPlanStats(planId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Verify plan belongs to user
   const { data: plan } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .select('id')
     .eq('id', planId)
     .eq('user_id', user.id)
@@ -303,11 +307,11 @@ export async function getPlanStats(planId: string) {
     .single()
 
   if (!plan) {
-    return { error: 'Plan not found or access denied' }
+    return { error: ERRORS.PLAN_NOT_FOUND }
   }
 
   const { data: sessions, error } = await supabase
-    .from('workout_plan_sessions')
+    .from(TABLES.WORKOUT_PLAN_SESSIONS)
     .select('status, workout_type')
     .eq('plan_id', planId)
     // Exclude soft-deleted records

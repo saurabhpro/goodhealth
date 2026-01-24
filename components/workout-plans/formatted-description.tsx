@@ -88,7 +88,7 @@ export function FormattedDescription({ description, maxLines = 5 }: FormattedDes
         )
       }
       // Check for bullet points (•, *, -, or ** at start)
-      else if (/^(\*\*?\s+|[•\-]\s+)/.test(trimmed)) {
+      else if (/^(\*\*?\s+|[•-]\s+)/.test(trimmed)) {
         // Flush any accumulated paragraph
         if (currentParagraph) {
           elements.push(
@@ -100,7 +100,7 @@ export function FormattedDescription({ description, maxLines = 5 }: FormattedDes
         }
 
         // Clean up the bullet text (remove bullet markers)
-        const bulletText = trimmed.replace(/^(\*\*?\s+|[•\-]\s+)/, '').trim()
+        const bulletText = trimmed.replace(/^(\*\*?\s+|[•-]\s+)/, '').trim()
         if (bulletText) {
           bulletGroup.push(bulletText)
         }

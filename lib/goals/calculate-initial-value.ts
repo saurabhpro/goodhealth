@@ -3,6 +3,9 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { TABLES } from '@/lib/constants'
+
+const ERROR_FETCHING_WORKOUTS = 'Error fetching workouts:'
 
 const LBS_TO_KG = 0.453592
 const KG_TO_LBS = 2.20462
@@ -63,14 +66,14 @@ export async function calculateInitialValue(
       case 'workouts': {
         // Count total workouts
         const { data: workouts, error } = await supabase
-          .from('workouts')
+          .from(TABLES.WORKOUTS)
           .select('id')
           .eq('user_id', user.id)
           .gte('date', beginDateStr)
           .lte('date', endDateStr)
 
         if (error) {
-          console.error('Error fetching workouts:', error)
+          console.error(ERROR_FETCHING_WORKOUTS, error)
           return 0
         }
 
@@ -80,14 +83,14 @@ export async function calculateInitialValue(
       case 'minutes': {
         // Sum workout durations
         const { data: workouts, error } = await supabase
-          .from('workouts')
+          .from(TABLES.WORKOUTS)
           .select('duration_minutes')
           .eq('user_id', user.id)
           .gte('date', beginDateStr)
           .lte('date', endDateStr)
 
         if (error) {
-          console.error('Error fetching workouts:', error)
+          console.error(ERROR_FETCHING_WORKOUTS, error)
           return 0
         }
 
@@ -101,14 +104,14 @@ export async function calculateInitialValue(
       case 'days': {
         // Count unique workout days
         const { data: workouts, error } = await supabase
-          .from('workouts')
+          .from(TABLES.WORKOUTS)
           .select('date')
           .eq('user_id', user.id)
           .gte('date', beginDateStr)
           .lte('date', endDateStr)
 
         if (error) {
-          console.error('Error fetching workouts:', error)
+          console.error(ERROR_FETCHING_WORKOUTS, error)
           return 0
         }
 
@@ -124,14 +127,14 @@ export async function calculateInitialValue(
 
         // First get workout IDs in date range
         const { data: workouts, error: workoutsError } = await supabase
-          .from('workouts')
+          .from(TABLES.WORKOUTS)
           .select('id')
           .eq('user_id', user.id)
           .gte('date', beginDateStr)
           .lte('date', endDateStr)
 
         if (workoutsError || !workouts || workouts.length === 0) {
-          console.error('Error fetching workouts:', workoutsError)
+          console.error(ERROR_FETCHING_WORKOUTS, workoutsError)
           return 0
         }
 
@@ -174,14 +177,14 @@ export async function calculateInitialValue(
 
         // First get workout IDs in date range
         const { data: workouts, error: workoutsError } = await supabase
-          .from('workouts')
+          .from(TABLES.WORKOUTS)
           .select('id')
           .eq('user_id', user.id)
           .gte('date', beginDateStr)
           .lte('date', endDateStr)
 
         if (workoutsError || !workouts || workouts.length === 0) {
-          console.error('Error fetching workouts:', workoutsError)
+          console.error(ERROR_FETCHING_WORKOUTS, workoutsError)
           return 0
         }
 
@@ -199,8 +202,7 @@ export async function calculateInitialValue(
           return 0
         }
 
-        const maxReps = Math.max(...exercises.map((e: { reps: number | null }) => e.reps || 0))
-        return maxReps
+        return Math.max(...exercises.map((e: { reps: number | null }) => e.reps || 0))
       }
 
       case 'km':
@@ -210,14 +212,14 @@ export async function calculateInitialValue(
 
         // First get workout IDs in date range
         const { data: workouts, error: workoutsError } = await supabase
-          .from('workouts')
+          .from(TABLES.WORKOUTS)
           .select('id')
           .eq('user_id', user.id)
           .gte('date', beginDateStr)
           .lte('date', endDateStr)
 
         if (workoutsError || !workouts || workouts.length === 0) {
-          console.error('Error fetching workouts:', workoutsError)
+          console.error(ERROR_FETCHING_WORKOUTS, workoutsError)
           return 0
         }
 

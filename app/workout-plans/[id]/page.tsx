@@ -43,8 +43,7 @@ function getWeekStartDay(startDate: string): number {
   // Parse date carefully to avoid timezone issues
   // If the date is in ISO format (YYYY-MM-DD), add time to ensure correct day
   const date = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`)
-  const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
-  return dayOfWeek
+  return date.getDay() // 0 = Sunday, 6 = Saturday
 }
 
 function getOrderedDayNames(weekStartDay: number): { name: string; dayOfWeek: number }[] {
@@ -70,6 +69,28 @@ function getDateForDayOfWeek(startDate: string, currentWeek: number, dayOfWeek: 
   const targetDate = new Date(start)
   targetDate.setDate(start.getDate() + daysToAdd)
   return targetDate
+}
+
+function getWorkoutTypeColor(type: string): string {
+  const colors: Record<string, string> = {
+    strength: 'bg-blue-500',
+    cardio: 'bg-orange-500',
+    rest: 'bg-gray-400',
+    active_recovery: 'bg-green-500',
+    mixed: 'bg-purple-500'
+  }
+  return colors[type] || 'bg-gray-500'
+}
+
+function getWorkoutTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    strength: 'Strength',
+    cardio: 'Cardio',
+    rest: 'Rest',
+    active_recovery: 'Active Recovery',
+    mixed: 'Mixed'
+  }
+  return labels[type] || type
 }
 
 export default function WorkoutPlanPage() {
@@ -170,28 +191,6 @@ export default function WorkoutPlanPage() {
 
   function getSessionForDay(dayOfWeek: number): WorkoutPlanSession | null {
     return sessions.find(s => s.day_of_week === dayOfWeek) || null
-  }
-
-  function getWorkoutTypeColor(type: string): string {
-    const colors: Record<string, string> = {
-      strength: 'bg-blue-500',
-      cardio: 'bg-orange-500',
-      rest: 'bg-gray-400',
-      active_recovery: 'bg-green-500',
-      mixed: 'bg-purple-500'
-    }
-    return colors[type] || 'bg-gray-500'
-  }
-
-  function getWorkoutTypeLabel(type: string): string {
-    const labels: Record<string, string> = {
-      strength: 'Strength',
-      cardio: 'Cardio',
-      rest: 'Rest',
-      active_recovery: 'Active Recovery',
-      mixed: 'Mixed'
-    }
-    return labels[type] || type
   }
 
   function getStatusIcon(status: string) {

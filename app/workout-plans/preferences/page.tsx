@@ -35,6 +35,13 @@ const DAYS_OF_WEEK = [
   { value: 6, label: 'Saturday' },
 ]
 
+function toggleArrayItem<T>(array: T[], item: T): T[] {
+  if (array.includes(item)) {
+    return array.filter(i => i !== item)
+  }
+  return [...array, item]
+}
+
 export default function WorkoutPreferencesPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -98,13 +105,6 @@ export default function WorkoutPreferencesPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  function toggleArrayItem<T>(array: T[], item: T): T[] {
-    if (array.includes(item)) {
-      return array.filter(i => i !== item)
-    }
-    return [...array, item]
   }
 
   if (fetching) {

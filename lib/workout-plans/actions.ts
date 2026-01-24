@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { InsertWorkoutPlan, UpdateWorkoutPlan } from '@/types'
+import { TABLES, ERRORS, PATHS } from '@/lib/constants'
 
 /**
  * Create a new workout plan
@@ -15,11 +16,11 @@ export async function createWorkoutPlan(data: Omit<InsertWorkoutPlan, 'user_id'>
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data: plan, error } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .insert({
       ...data,
       user_id: user.id,
@@ -32,7 +33,7 @@ export async function createWorkoutPlan(data: Omit<InsertWorkoutPlan, 'user_id'>
     return { error: `Failed to create workout plan: ${error.message}` }
   }
 
-  revalidatePath('/workout-plans')
+  revalidatePath(PATHS.WORKOUT_PLANS)
   return { success: true, plan }
 }
 
@@ -52,7 +53,7 @@ export async function getWorkoutPlans() {
   }
 
   const { data: plans, error } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .select('*, goals(*)')
     .eq('user_id', user.id)
     .is('deleted_at', null) // Exclude soft-deleted plans
@@ -77,11 +78,11 @@ export async function getWorkoutPlan(planId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data: plan, error } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .select(`
       *,
       goals(*),
@@ -112,11 +113,11 @@ export async function updateWorkoutPlan(planId: string, data: UpdateWorkoutPlan)
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data: plan, error } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .update({
       ...data,
       updated_at: new Date().toISOString(),
@@ -131,7 +132,7 @@ export async function updateWorkoutPlan(planId: string, data: UpdateWorkoutPlan)
     return { error: `Failed to update workout plan: ${error.message}` }
   }
 
-  revalidatePath('/workout-plans')
+  revalidatePath(PATHS.WORKOUT_PLANS)
   revalidatePath(`/workout-plans/${planId}`)
   return { success: true, plan }
 }
@@ -147,12 +148,12 @@ export async function deleteWorkoutPlan(planId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Soft delete: set deleted_at and archive status for consistency
   const { error } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .update({
       deleted_at: new Date().toISOString(),
       status: 'archived',
@@ -167,7 +168,7 @@ export async function deleteWorkoutPlan(planId: string) {
     return { error: error.message }
   }
 
-  revalidatePath('/workout-plans')
+  revalidatePath(PATHS.WORKOUT_PLANS)
   return { success: true }
 }
 
@@ -182,12 +183,12 @@ export async function activateWorkoutPlan(planId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Check if there's already an active plan
   const { data: activePlans } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .select('id')
     .eq('user_id', user.id)
     .eq('status', 'active')
@@ -201,7 +202,7 @@ export async function activateWorkoutPlan(planId: string) {
   }
 
   const { data: plan, error } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .update({
       status: 'active',
       started_at: new Date().toISOString(),
@@ -217,7 +218,7 @@ export async function activateWorkoutPlan(planId: string) {
     return { error: `Failed to activate workout plan: ${error.message}` }
   }
 
-  revalidatePath('/workout-plans')
+  revalidatePath(PATHS.WORKOUT_PLANS)
   revalidatePath(`/workout-plans/${planId}`)
   return { success: true, plan }
 }
@@ -233,11 +234,11 @@ export async function completeWorkoutPlan(planId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data: plan, error } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .update({
       status: 'completed',
       completed_at: new Date().toISOString(),
@@ -253,7 +254,7 @@ export async function completeWorkoutPlan(planId: string) {
     return { error: `Failed to complete workout plan: ${error.message}` }
   }
 
-  revalidatePath('/workout-plans')
+  revalidatePath(PATHS.WORKOUT_PLANS)
   revalidatePath(`/workout-plans/${planId}`)
   return { success: true, plan }
 }
@@ -269,11 +270,11 @@ export async function deactivateWorkoutPlan(planId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data: plan, error } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .update({
       status: 'archived',
       updated_at: new Date().toISOString(),
@@ -288,7 +289,7 @@ export async function deactivateWorkoutPlan(planId: string) {
     return { error: `Failed to deactivate workout plan: ${error.message}` }
   }
 
-  revalidatePath('/workout-plans')
+  revalidatePath(PATHS.WORKOUT_PLANS)
   revalidatePath(`/workout-plans/${planId}`)
   revalidatePath('/dashboard')
   return { success: true, plan }
@@ -311,7 +312,7 @@ export async function getCurrentWeekSessions() {
 
   // Find active plan
   const { data: activePlan } = await supabase
-    .from('workout_plans')
+    .from(TABLES.WORKOUT_PLANS)
     .select('id, started_at, weeks_duration')
     .eq('user_id', user.id)
     .or('status.eq.active,status.eq.draft')

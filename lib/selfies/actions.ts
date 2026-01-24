@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { TABLES, ERRORS } from '@/lib/constants'
 
 const BUCKET_NAME = 'workout-selfies'
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -33,7 +34,7 @@ export async function uploadWorkoutSelfie(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Validate file
@@ -51,7 +52,7 @@ export async function uploadWorkoutSelfie(
 
   // Verify workout belongs to user
   const { data: workout, error: workoutError } = await supabase
-    .from('workouts')
+    .from(TABLES.WORKOUTS)
     .select('id')
     .eq('id', workoutId)
     .eq('user_id', user.id)
@@ -65,7 +66,7 @@ export async function uploadWorkoutSelfie(
 
   // Check if a selfie already exists for this workout (limit: 1 per workout)
   const { data: existingSelfies, error: checkError } = await supabase
-    .from('workout_selfies')
+    .from(TABLES.SELFIES)
     .select('id, file_path')
     .eq('workout_id', workoutId)
     .eq('user_id', user.id)
@@ -83,7 +84,7 @@ export async function uploadWorkoutSelfie(
       // Keep file in storage but soft delete from database (for recovery)
       // Soft delete from database
       await supabase
-        .from('workout_selfies')
+        .from(TABLES.SELFIES)
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', existingSelfie.id)
         .is('deleted_at', null)
@@ -111,7 +112,7 @@ export async function uploadWorkoutSelfie(
 
     // Create database record
     const { data: selfie, error: dbError } = await supabase
-      .from('workout_selfies')
+      .from(TABLES.SELFIES)
       .insert({
         workout_id: workoutId,
         user_id: user.id,
@@ -156,7 +157,7 @@ export async function getWorkoutSelfies(workoutId: string) {
   }
 
   const { data: selfies, error } = await supabase
-    .from('workout_selfies')
+    .from(TABLES.SELFIES)
     .select('*')
     .eq('workout_id', workoutId)
     .eq('user_id', user.id)
@@ -212,12 +213,12 @@ export async function deleteWorkoutSelfie(selfieId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Get selfie record to get the file path
   const { data: selfie, error: fetchError } = await supabase
-    .from('workout_selfies')
+    .from(TABLES.SELFIES)
     .select('file_path, workout_id')
     .eq('id', selfieId)
     .eq('user_id', user.id)
@@ -232,7 +233,7 @@ export async function deleteWorkoutSelfie(selfieId: string) {
   // Keep file in storage for potential recovery, only soft delete from database
   // Soft delete from database
   const { error: dbError } = await supabase
-    .from('workout_selfies')
+    .from(TABLES.SELFIES)
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', selfieId)
     .eq('user_id', user.id)
@@ -259,11 +260,11 @@ export async function updateSelfieCaption(selfieId: string, caption: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data: selfie, error } = await supabase
-    .from('workout_selfies')
+    .from(TABLES.SELFIES)
     .update({ caption })
     .eq('id', selfieId)
     .eq('user_id', user.id)
@@ -295,7 +296,7 @@ export async function getRecentSelfies(limit: number = 10) {
   }
 
   const { data: selfies, error } = await supabase
-    .from('workout_selfies')
+    .from(TABLES.SELFIES)
     .select(`
       *,
       workouts:workout_id (

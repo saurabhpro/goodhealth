@@ -12,6 +12,12 @@ jest.mock('next/navigation', () => ({
   redirect: jest.fn(),
 }))
 
+// Test fixtures - not real credentials
+const TEST_EMAIL = 'test@example.com'
+const TEST_PASSWORD = 'password123' // sonarjs/no-hardcoded-passwords - this is a test fixture
+const TEST_USER_NAME = 'Test User'
+const TEST_APP_URL = 'https://goodhealth-three.vercel.app'
+
 const mockSupabase = {
   auth: {
     signUp: jest.fn(),
@@ -60,7 +66,7 @@ describe('Auth Actions', () => {
 
   describe('signUp', () => {
     it('should use APP_URL when available', async () => {
-      process.env.APP_URL = 'https://goodhealth-three.vercel.app'
+      process.env.APP_URL = TEST_APP_URL
       delete process.env.NEXT_PUBLIC_APP_URL
 
       mockSupabase.auth.signUp.mockResolvedValue({
@@ -69,19 +75,19 @@ describe('Auth Actions', () => {
       })
 
       const formData = new FormData()
-      formData.append('email', 'test@example.com')
-      formData.append('password', 'password123')
-      formData.append('fullName', 'Test User')
+      formData.append('email', TEST_EMAIL)
+      formData.append('password', TEST_PASSWORD)
+      formData.append('fullName', TEST_USER_NAME)
 
       await signUp(formData)
 
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
+        email: TEST_EMAIL,
+        password: TEST_PASSWORD,
         options: {
-          emailRedirectTo: 'https://goodhealth-three.vercel.app/api/auth/callback',
+          emailRedirectTo: `${TEST_APP_URL}/api/auth/callback`,
           data: {
-            full_name: 'Test User',
+            full_name: TEST_USER_NAME,
           },
         },
       })
@@ -89,7 +95,7 @@ describe('Auth Actions', () => {
 
     it('should fallback to NEXT_PUBLIC_APP_URL when APP_URL is not set', async () => {
       delete process.env.APP_URL
-      process.env.NEXT_PUBLIC_APP_URL = 'https://goodhealth-three.vercel.app'
+      process.env.NEXT_PUBLIC_APP_URL = TEST_APP_URL
 
       mockSupabase.auth.signUp.mockResolvedValue({
         data: { user: { id: '123' } },
@@ -97,19 +103,19 @@ describe('Auth Actions', () => {
       })
 
       const formData = new FormData()
-      formData.append('email', 'test@example.com')
-      formData.append('password', 'password123')
-      formData.append('fullName', 'Test User')
+      formData.append('email', TEST_EMAIL)
+      formData.append('password', TEST_PASSWORD)
+      formData.append('fullName', TEST_USER_NAME)
 
       await signUp(formData)
 
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
+        email: TEST_EMAIL,
+        password: TEST_PASSWORD,
         options: {
-          emailRedirectTo: 'https://goodhealth-three.vercel.app/api/auth/callback',
+          emailRedirectTo: `${TEST_APP_URL}/api/auth/callback`,
           data: {
-            full_name: 'Test User',
+            full_name: TEST_USER_NAME,
           },
         },
       })
@@ -118,8 +124,9 @@ describe('Auth Actions', () => {
     it('should fallback to referer header when no env vars are set', async () => {
       delete process.env.APP_URL
       delete process.env.NEXT_PUBLIC_APP_URL
+      const localUrl = 'http://localhost:3000'
       mockHeaders.get.mockImplementation((header: string) => {
-        if (header === 'referer') return 'http://localhost:3000/signup'
+        if (header === 'referer') return `${localUrl}/signup`
         return null
       })
 
@@ -129,20 +136,20 @@ describe('Auth Actions', () => {
       })
 
       const formData = new FormData()
-      formData.append('email', 'test@example.com')
-      formData.append('password', 'password123')
-      formData.append('fullName', 'Test User')
+      formData.append('email', TEST_EMAIL)
+      formData.append('password', TEST_PASSWORD)
+      formData.append('fullName', TEST_USER_NAME)
 
       await signUp(formData)
 
       expect(mockHeaders.get).toHaveBeenCalledWith('referer')
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
+        email: TEST_EMAIL,
+        password: TEST_PASSWORD,
         options: {
-          emailRedirectTo: 'http://localhost:3000/api/auth/callback',
+          emailRedirectTo: `${localUrl}/api/auth/callback`,
           data: {
-            full_name: 'Test User',
+            full_name: TEST_USER_NAME,
           },
         },
       })

@@ -50,7 +50,7 @@ export function MotivationalQuote() {
   // Get a consistent quote for the day based on date
   const quote = useMemo(() => {
     const today = new Date().toDateString()
-    const hash = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const hash = today.split('').reduce((acc, char) => acc + (char.codePointAt(0) ?? 0), 0)
     const index = hash % quotes.length
     return quotes[index]
   }, [])

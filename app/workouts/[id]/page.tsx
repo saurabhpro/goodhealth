@@ -44,7 +44,7 @@ interface Workout {
 const effortLabels = ['', 'Very Easy', 'Easy', 'Moderate', 'Hard', 'Very Hard', 'Maximum']
 const effortColors = ['', 'bg-green-500', 'bg-green-600', 'bg-yellow-500', 'bg-orange-600', 'bg-red-600', 'bg-red-800']
 
-export default async function WorkoutDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WorkoutDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params
   const user = await getUser()
 

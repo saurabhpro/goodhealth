@@ -183,16 +183,13 @@ export function selectTemplateWithRotation(
 
   // Monday/Wednesday/Friday: Strength focus for muscle building
   // Tuesday/Thursday/Saturday: Can be cardio or mixed
-  if (goalAnalysis.goalType === 'muscle_building') {
-    if ([1, 3, 5].includes(dayOfWeek)) {
-      // Strength days
-      availableTemplates = filterTemplatesByType(templates, false, 0.5)
-    }
-  } else if (goalAnalysis.goalType === 'weight_loss') {
-    if ([2, 4, 6].includes(dayOfWeek)) {
-      // Cardio days
-      availableTemplates = filterTemplatesByType(templates, true, 0.6)
-    }
+  // Filter templates based on goal type and day of week
+  if (goalAnalysis.goalType === 'muscle_building' && [1, 3, 5].includes(dayOfWeek)) {
+    // Strength days for muscle building
+    availableTemplates = filterTemplatesByType(templates, false, 0.5)
+  } else if (goalAnalysis.goalType === 'weight_loss' && [2, 4, 6].includes(dayOfWeek)) {
+    // Cardio days for weight loss
+    availableTemplates = filterTemplatesByType(templates, true, 0.6)
   }
 
   // If filtering left us with no templates, use all

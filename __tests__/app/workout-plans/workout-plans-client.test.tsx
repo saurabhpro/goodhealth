@@ -60,10 +60,10 @@ const mockFetch = jest.fn().mockImplementation(() =>
     json: () => Promise.resolve([]),
   })
 )
-global.fetch = mockFetch
+globalThis.fetch = mockFetch
 
 // Mock confirm
-global.confirm = jest.fn()
+globalThis.confirm = jest.fn()
 
 // Import component AFTER mocks are set up
 import { WorkoutPlansClient } from '@/app/workout-plans/client'
@@ -311,7 +311,7 @@ describe('WorkoutPlansClient', () => {
 
   describe('Delete Functionality', () => {
     it('should confirm before deleting a plan', async () => {
-      ;(global.confirm as jest.Mock).mockReturnValue(false)
+      ;(globalThis.confirm as jest.Mock).mockReturnValue(false)
 
       await act(async () => {
         render(<WorkoutPlansClient initialPlans={mockPlans} />)
@@ -325,12 +325,12 @@ describe('WorkoutPlansClient', () => {
         await act(async () => {
           fireEvent.click(deleteButtons[0])
         })
-        expect(global.confirm).toHaveBeenCalledWith('Are you sure you want to delete this workout plan?')
+        expect(globalThis.confirm).toHaveBeenCalledWith('Are you sure you want to delete this workout plan?')
       }
     })
 
     it('should delete plan when confirmed', async () => {
-      ;(global.confirm as jest.Mock).mockReturnValue(true)
+      ;(globalThis.confirm as jest.Mock).mockReturnValue(true)
       mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
 
       await act(async () => {
@@ -356,7 +356,7 @@ describe('WorkoutPlansClient', () => {
     })
 
     it('should show success toast after deletion', async () => {
-      ;(global.confirm as jest.Mock).mockReturnValue(true)
+      ;(globalThis.confirm as jest.Mock).mockReturnValue(true)
       mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
 
       await act(async () => {

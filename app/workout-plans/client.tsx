@@ -29,7 +29,7 @@ interface PendingJob {
 }
 
 interface WorkoutPlansClientProps {
-  initialPlans: WorkoutPlan[]
+  readonly initialPlans: WorkoutPlan[]
 }
 
 export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
@@ -132,8 +132,8 @@ export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
       const job: PendingJob = {
         jobId,
         planName,
-        weeksDuration: weeksDuration ? parseInt(weeksDuration) : 8,
-        workoutsPerWeek: workoutsPerWeek ? parseInt(workoutsPerWeek) : 4,
+        weeksDuration: weeksDuration ? Number.parseInt(weeksDuration, 10) : 8,
+        workoutsPerWeek: workoutsPerWeek ? Number.parseInt(workoutsPerWeek, 10) : 4,
       }
 
       setPendingJob(job)
@@ -228,7 +228,6 @@ export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
       {pendingJob && (
         <div className="mb-6">
           <AIGeneratingPlaceholder
-            planName={pendingJob.planName}
             weeksDuration={pendingJob.weeksDuration}
             workoutsPerWeek={pendingJob.workoutsPerWeek}
           />
@@ -254,8 +253,8 @@ export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan) => {
-            // Mock progress data - in real app, fetch from API
-            const progress = 0 // TODO: Calculate from sessions
+            // TODO: Calculate progress from sessions
+            const progress = 0
 
             return (
               <Card

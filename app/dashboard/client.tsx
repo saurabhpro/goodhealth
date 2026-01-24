@@ -53,12 +53,12 @@ interface WeeklyAnalysis {
 }
 
 interface DashboardContentProps {
-  initialWorkouts: Workout[]
-  initialGoals: Goal[]
-  initialPlans: WorkoutPlan[]
-  initialWeekSessions: WorkoutPlanSession[]
-  initialCurrentWeek: number
-  initialWeeklyAnalysis: WeeklyAnalysis | null
+  readonly initialWorkouts: Workout[]
+  readonly initialGoals: Goal[]
+  readonly initialPlans: WorkoutPlan[]
+  readonly initialWeekSessions: WorkoutPlanSession[]
+  readonly initialCurrentWeek: number
+  readonly initialWeeklyAnalysis: WeeklyAnalysis | null
 }
 
 function getStatusIcon(status: string) {
@@ -76,8 +76,7 @@ function getStatusIcon(status: string) {
 
 function getWeekStartDay(startDate: string): number {
   const date = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`)
-  const dayOfWeek = date.getDay()
-  return dayOfWeek
+  return date.getDay()
 }
 
 function getOrderedDayNames(weekStartDay: number): { name: string; dayOfWeek: number }[] {
@@ -102,6 +101,14 @@ function getDateForDayOfWeek(startDate: string, currentWeek: number, dayOfWeek: 
   const targetDate = new Date(start)
   targetDate.setDate(start.getDate() + daysToAdd)
   return targetDate
+}
+
+async function markAnalysisAsViewed(id: string) {
+  try {
+    await fetch(`/api/weekly-analysis/${id}/view`, { method: 'PUT' })
+  } catch (error) {
+    console.error('Error marking analysis as viewed:', error)
+  }
 }
 
 export function DashboardContent({
@@ -130,14 +137,6 @@ export function DashboardContent({
       }
     } catch (error) {
       console.error('Error refreshing sessions:', error)
-    }
-  }
-
-  async function handleViewAnalysis(id: string) {
-    try {
-      await fetch(`/api/weekly-analysis/${id}/view`, { method: 'PUT' })
-    } catch (error) {
-      console.error('Error marking analysis as viewed:', error)
     }
   }
 
@@ -198,7 +197,7 @@ export function DashboardContent({
         <WeeklyAnalysisCard
           analysis={weeklyAnalysis}
           onDismiss={handleDismissAnalysis}
-          onView={handleViewAnalysis}
+          onView={markAnalysisAsViewed}
           isLoading={false}
         />
       )}

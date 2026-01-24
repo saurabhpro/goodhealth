@@ -14,7 +14,28 @@ import {
   generateMultiWeekPlan,
   applyProgressiveOverload,
   type GoalType,
+  type GoalAnalysis,
 } from './planning'
+
+/**
+ * Adjusts workout frequency based on difficulty preference
+ */
+function adjustDifficultyRecommendations(
+  goalAnalysis: GoalAnalysis,
+  adjustDifficulty?: 'easier' | 'harder' | 'maintain'
+): void {
+  if (adjustDifficulty === 'easier') {
+    goalAnalysis.recommendations.workoutsPerWeek = Math.max(
+      3,
+      goalAnalysis.recommendations.workoutsPerWeek - 1
+    )
+  } else if (adjustDifficulty === 'harder') {
+    goalAnalysis.recommendations.workoutsPerWeek = Math.min(
+      6,
+      goalAnalysis.recommendations.workoutsPerWeek + 1
+    )
+  }
+}
 
 export interface GeneratePlanRequest {
   goalId: string
@@ -348,17 +369,7 @@ export async function regenerateWorkoutPlan(
     const goalAnalysis = analyzeGoal(plan.goals as unknown as Goal, workoutHistory)
 
     // Adjust intensity if requested
-    if (adjustDifficulty === 'easier') {
-      goalAnalysis.recommendations.workoutsPerWeek = Math.max(
-        3,
-        goalAnalysis.recommendations.workoutsPerWeek - 1
-      )
-    } else if (adjustDifficulty === 'harder') {
-      goalAnalysis.recommendations.workoutsPerWeek = Math.min(
-        6,
-        goalAnalysis.recommendations.workoutsPerWeek + 1
-      )
-    }
+    adjustDifficultyRecommendations(goalAnalysis, adjustDifficulty)
 
     // Generate new schedules for the specified weeks
     const weeksToGenerate = toWeek - fromWeek + 1

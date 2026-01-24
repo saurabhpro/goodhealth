@@ -19,6 +19,12 @@ import { toast } from 'sonner'
 import { Check, X, Calendar, Clock, Target, Repeat, Weight, Play } from 'lucide-react'
 import type { WorkoutPlanSession } from '@/types'
 
+const ERROR_FAILED_TO_UPDATE = 'Failed to update session'
+
+function showRescheduleComingSoon() {
+  toast.info('Reschedule feature coming soon!')
+}
+
 interface SessionDetailModalProps {
   session: WorkoutPlanSession
   open: boolean
@@ -59,10 +65,10 @@ export function SessionDetailModal({
         onUpdate?.()
         onOpenChange(false)
       } else {
-        toast.error('Failed to update session')
+        toast.error(ERROR_FAILED_TO_UPDATE)
       }
     } catch {
-      toast.error('Failed to update session')
+      toast.error(ERROR_FAILED_TO_UPDATE)
     } finally {
       setLoading(false)
     }
@@ -82,17 +88,13 @@ export function SessionDetailModal({
         onUpdate?.()
         onOpenChange(false)
       } else {
-        toast.error('Failed to update session')
+        toast.error(ERROR_FAILED_TO_UPDATE)
       }
     } catch {
-      toast.error('Failed to update session')
+      toast.error(ERROR_FAILED_TO_UPDATE)
     } finally {
       setLoading(false)
     }
-  }
-
-  async function handleReschedule() {
-    toast.info('Reschedule feature coming soon!')
   }
 
   const exercises = Array.isArray(session.exercises) ? session.exercises : []
@@ -271,7 +273,7 @@ export function SessionDetailModal({
             </Button>
             <Button
               variant="outline"
-              onClick={handleReschedule}
+              onClick={showRescheduleComingSoon}
               disabled={loading}
             >
               <Calendar className="mr-2 h-4 w-4" />

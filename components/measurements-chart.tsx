@@ -41,6 +41,50 @@ const METRICS: MetricConfig[] = [
   { key: 'bicep_right', label: 'Bicep (R)', unit: 'cm', color: '#ffa07a', betterWhenDecreasing: false },
 ]
 
+/**
+ * Determines if a change is positive based on the metric's characteristics
+ */
+function calculateIsPositiveChange(
+  change: number,
+  betterWhenDecreasing: boolean | undefined
+): boolean | null {
+  if (betterWhenDecreasing === true) {
+    return change < 0 // For weight/body fat, decrease is good
+  }
+  if (betterWhenDecreasing === false) {
+    return change > 0 // For muscle/biceps, increase is good
+  }
+  return null // Neutral metrics
+}
+
+interface CustomTooltipProps {
+  readonly active?: boolean
+  readonly payload?: ReadonlyArray<{ payload: { fullDate: string; value: number | null } }>
+  readonly currentMetric: MetricConfig
+}
+
+function CustomTooltip({ active, payload, currentMetric }: CustomTooltipProps) {
+  if (active && payload?.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-background border rounded-lg p-3 shadow-lg">
+        <p className="text-sm font-medium mb-1">
+          {new Date(data.fullDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </p>
+        <p className="text-sm">
+          <span className="font-semibold">{currentMetric.label}:</span>{' '}
+          {data.value?.toFixed(1)} {currentMetric.unit}
+        </p>
+      </div>
+    )
+  }
+  return null
+}
+
 export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartProps>) {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('weight')
 
@@ -75,11 +119,7 @@ export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartPr
     const min = Math.min(...values)
 
     // Determine if the change is "good" based on metric type
-    const isPositiveChange = currentMetric.betterWhenDecreasing === true
-      ? change < 0  // For weight/body fat, decrease is good
-      : currentMetric.betterWhenDecreasing === false
-      ? change > 0  // For muscle/biceps, increase is good
-      : null        // Neutral metrics
+    const isPositiveChange = calculateIsPositiveChange(change, currentMetric.betterWhenDecreasing)
 
     return {
       latest,
@@ -205,27 +245,9 @@ export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartPr
                     }}
                   />
                   <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload?.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-background border rounded-lg p-3 shadow-lg">
-                            <p className="text-sm font-medium mb-1">
-                              {new Date(data.fullDate).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">{currentMetric.label}:</span>{' '}
-                              {data.value?.toFixed(1)} {currentMetric.unit}
-                            </p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
+                    content={({ active, payload }) => (
+                      <CustomTooltip active={active} payload={payload} currentMetric={currentMetric} />
+                    )}
                   />
                   <Legend />
                   <Line
