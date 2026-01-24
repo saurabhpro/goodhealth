@@ -228,7 +228,6 @@ export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
       {pendingJob && (
         <div className="mb-6">
           <AIGeneratingPlaceholder
-            planName={pendingJob.planName}
             weeksDuration={pendingJob.weeksDuration}
             workoutsPerWeek={pendingJob.workoutsPerWeek}
           />
