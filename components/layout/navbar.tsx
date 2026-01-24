@@ -107,9 +107,9 @@ export function Navbar() {
                 {/* Desktop User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="Open user menu">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.user_metadata?.avatar_url} />
+                        <AvatarImage src={user.user_metadata?.avatar_url} alt="" />
                         <AvatarFallback>
                           {user.email?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
@@ -148,7 +148,7 @@ export function Navbar() {
                 {/* Mobile Menu */}
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                   <SheetTrigger asChild className="lg:hidden">
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" aria-label="Open navigation menu">
                       <Menu className="h-5 w-5" />
                     </Button>
                   </SheetTrigger>
