@@ -254,7 +254,7 @@ export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan) => {
-            // Progress will be calculated from completed sessions when API is implemented
+            // TODO: Calculate progress from sessions
             const progress = 0
 
             return (

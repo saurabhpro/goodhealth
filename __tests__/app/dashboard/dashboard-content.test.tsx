@@ -10,16 +10,18 @@ import type { Workout, Goal, WorkoutPlan, WorkoutPlanSession } from '@/types'
 
 // Mock next/dynamic to avoid issues with lazy loading in tests
 jest.mock('next/dynamic', () => () => {
-  return ({ open, onOpenChange, session }: { 
+  function MockSessionDetailModal({ open, onOpenChange, session }: { 
     open: boolean
     onOpenChange: (open: boolean) => void
     session: WorkoutPlanSession
-  }) => open ? (
-    <div data-testid="session-modal">
-      <span data-testid="modal-session-name">{session.workout_name}</span>
-      <button onClick={() => onOpenChange(false)}>Close</button>
-    </div>
-  ) : null
+  }) {
+    return open ? (
+      <div data-testid="session-modal">
+        <span data-testid="modal-session-name">{session.workout_name}</span>
+        <button onClick={() => onOpenChange(false)}>Close</button>
+      </div>
+    ) : null
+  }
   return MockSessionDetailModal
 })
 
