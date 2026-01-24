@@ -517,6 +517,12 @@ flowchart TD
 - Encrypted at rest (Supabase default)
 - HTTPS only in production
 
+### Accessibility
+- **Main landmark** in root layout (`<main id="main-content">`)
+- **ARIA labels** on icon-only buttons (menu, avatar)
+- **Alt text** on all images (including workout selfies)
+- **Semantic HTML** with proper heading hierarchy
+
 ## Application Features
 
 ### Core Features
@@ -645,12 +651,14 @@ flowchart TD
 ## Performance Considerations
 
 ### Frontend
+- **Server/Client Component Split** - Data-heavy pages use Server Components for initial data fetching, Client Components for interactivity (see [Component Architecture](#server--client-component-pattern))
 - **Server-side rendering** for SEO and initial page load
 - **Client-side navigation** (Next.js App Router with prefetching)
 - **Turbopack** for faster development builds
 - **Image optimization** (next/image with WebP/AVIF, responsive sizes)
 - **PWA caching** with aggressive front-end nav caching
 - **React** with improved concurrency features
+- **Dynamic imports** for lazy-loading modals and heavy components
 
 ### Backend
 - **Database connection pooling** via Supabase
@@ -697,6 +705,7 @@ flowchart TD
 - **Framework:** Jest with jsdom environment
 - **Library:** Testing Library (React, DOM, User Events)
 - **Coverage:** Tracked with Codecov
+- **Server/Client Split Testing:** Client Components (`client.tsx`) are tested with mocked initial props, simulating server-fetched data
 - **Commands:**
   - `yarn test` - Run tests
   - `yarn test:watch` - Watch mode
@@ -719,6 +728,76 @@ flowchart TD
 - **AI Responses:** Logged in workout_plan_generation_jobs (request_data, ai_response_data)
 
 ## Code Organization
+
+### Server / Client Component Pattern
+
+Data-heavy pages follow a **Server/Client Component split** pattern for optimal performance:
+
+```
+app/{page}/
+├── page.tsx    # Server Component - fetches data before rendering
+└── client.tsx  # Client Component - handles interactivity (state, effects, events)
+```
+
+**Why this pattern?**
+
+| Aspect | Client-only (before) | Server/Client split (after) |
+|--------|---------------------|----------------------------|
+| Initial render | "Loading..." spinner | Instant content |
+| Data fetching | Client-side waterfall | Server-side parallel |
+| Time to Interactive | Delayed by fetch | Immediate |
+| SEO | Empty until JS loads | Full content indexed |
+| Bundle size | Includes fetch logic | Smaller client bundle |
+
+**Pages using this pattern:**
+
+| Page | Server Component (`page.tsx`) | Client Component (`client.tsx`) |
+|------|------------------------------|--------------------------------|
+| `/dashboard` | Fetches workouts, goals, plans, sessions, analysis | Modal interactions, dismiss analysis, session selection |
+| `/workout-plans` | Fetches workout plans | Job polling for AI generation, delete, navigation |
+
+**Naming Convention:**
+
+Following Next.js conventions for special files:
+
+```
+app/
+├── page.tsx       # Route entry (Server Component)
+├── layout.tsx     # Shared layout
+├── loading.tsx    # Loading UI
+├── error.tsx      # Error boundary
+└── client.tsx     # Interactive UI (our convention for Client Components)
+```
+
+**Implementation Example:**
+
+```typescript
+// page.tsx - Server Component (no 'use client')
+import { getWorkoutPlans } from '@/lib/workout-plans/actions'
+import { WorkoutPlansClient } from './client'
+
+export default async function WorkoutPlansPage() {
+  const { plans } = await getWorkoutPlans()  // Server-side fetch
+  return <WorkoutPlansClient initialPlans={plans || []} />
+}
+
+// client.tsx - Client Component
+'use client'
+import { useState, useEffect } from 'react'
+
+export function WorkoutPlansClient({ initialPlans }) {
+  const [plans, setPlans] = useState(initialPlans)  // Hydrate with server data
+  // ... interactive logic (polling, delete, etc.)
+}
+```
+
+**Key Principles:**
+
+1. **Server Components** handle data fetching - no `useState`, `useEffect`, or browser APIs
+2. **Client Components** handle interactivity - marked with `'use client'` directive
+3. **Props flow down** - Server Component passes initial data as props to Client Component
+4. **Client state hydrates** from server data - `useState(initialData)` pattern
+5. **Subsequent fetches** can still happen client-side for real-time updates (e.g., job polling)
 
 ### Application Layer Architecture
 
@@ -816,12 +895,16 @@ goodhealth/
 │   │   ├── weekly-analysis/       # AI analysis
 │   │   └── images/[...path]/      # Image optimization
 │   ├── dashboard/                 # Main dashboard
+│   │   ├── page.tsx               # Server Component (data fetching)
+│   │   └── client.tsx             # Client Component (interactivity)
 │   ├── workouts/                  # Workout tracking
 │   │   ├── new/                   # Log workout
 │   │   └── [id]/                  # View/edit workout
 │   ├── goals/                     # Goal management
 │   ├── measurements/              # Body measurements
 │   ├── workout-plans/             # Workout plans
+│   │   ├── page.tsx               # Server Component (data fetching)
+│   │   ├── client.tsx             # Client Component (job polling, interactivity)
 │   │   ├── new/                   # Generate plan
 │   │   ├── preferences/           # Set preferences
 │   │   ├── templates/             # Template library
@@ -930,9 +1013,12 @@ goodhealth/
 - `lib/supabase/server.ts` - Server-side Supabase client (SSR, cookies)
 
 **Entry Points:**
-- `app/layout.tsx` - Root layout with authentication wrapper
+- `app/layout.tsx` - Root layout with authentication wrapper, main landmark
 - `app/page.tsx` - Landing page
-- `app/dashboard/page.tsx` - Main dashboard (triggers weekly analysis)
+- `app/dashboard/page.tsx` - Main dashboard Server Component (fetches data)
+- `app/dashboard/client.tsx` - Dashboard Client Component (triggers weekly analysis, modal interactions)
+- `app/workout-plans/page.tsx` - Workout plans Server Component
+- `app/workout-plans/client.tsx` - Workout plans Client Component (job polling)
 
 **API Documentation:**
 - `docs/api/openapi.yaml` - OpenAPI specification (22 operationIds)
