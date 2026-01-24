@@ -716,8 +716,72 @@ flowchart TD
 - **Jobs:**
   1. **Test:** Lint + Jest with coverage → Codecov upload
   2. **Build:** Next.js build with Supabase env vars
+  3. **SonarCloud:** Code quality analysis → SonarCloud dashboard
 - **Node Version:** >=22.0.0 (aligns with package.json requirement)
-- **Badges:** CI status, Codecov, MIT License
+- **Badges:** CI status, Codecov, SonarCloud Quality Gate, MIT License
+
+### SonarCloud Integration
+
+SonarCloud provides continuous code quality and security analysis.
+
+**Dashboard:** https://sonarcloud.io/project/overview?id=saurabhpro_goodhealth
+
+#### Setup Steps
+
+1. **Create SonarCloud Account:**
+   - Sign up at https://sonarcloud.io with your GitHub account
+   - Import your repository
+
+2. **Generate Token:**
+   - Go to https://sonarcloud.io/account/security
+   - Generate a new token (type: User Token)
+   - Copy the token value
+
+3. **Add GitHub Secret:**
+   - Go to your repo → Settings → Secrets and variables → Actions
+   - Add new secret: `SONAR_TOKEN` with the token value
+
+4. **Project Configuration (`sonar-project.properties`):**
+   ```properties
+   sonar.projectKey=saurabhpro_goodhealth
+   sonar.organization=saurabhpro
+   sonar.projectName=GoodHealth
+
+   # Source code location
+   sonar.sources=app,components,lib
+   sonar.tests=__tests__
+   sonar.test.inclusions=**/*.test.ts,**/*.test.tsx
+
+   # Exclusions
+   sonar.exclusions=**/node_modules/**,**/*.config.*,**/migrations/**,**/*.d.ts
+
+   # Coverage reports
+   sonar.typescript.lcov.reportPaths=coverage/lcov.info
+   sonar.javascript.lcov.reportPaths=coverage/lcov.info
+   ```
+
+5. **CI Workflow:** The `sonarcloud` job in `.github/workflows/ci.yml` runs analysis on every push/PR
+
+#### Running Locally
+
+```bash
+# Install sonar-scanner (via npx)
+npx sonar-scanner \
+  -Dsonar.host.url=https://sonarcloud.io \
+  -Dsonar.token=YOUR_TOKEN \
+  -Dsonar.projectKey=saurabhpro_goodhealth \
+  -Dsonar.organization=saurabhpro
+```
+
+#### Quality Rules
+
+The project uses ESLint with `eslint-plugin-sonarjs` for local linting that mirrors SonarCloud rules:
+- Cognitive complexity threshold: 25
+- Cyclomatic complexity threshold: 15
+- Nested ternaries: Allowed (disabled rule)
+- Duplicate strings: Warning
+
+See `eslint.config.mjs` for full configuration.
 
 ## Monitoring & Logging
 
