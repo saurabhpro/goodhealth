@@ -760,18 +760,18 @@ SonarCloud provides continuous code quality and security analysis.
    sonar.javascript.lcov.reportPaths=coverage/lcov.info
    ```
 
-5. **CI Workflow:** The `sonarcloud` job in `.github/workflows/ci.yml` runs analysis on every push/PR
+5. **CI Workflow:** The `sonarcloud` job in `.github/workflows/ci.yml` runs analysis on every push/PR using `SonarSource/sonarqube-scan-action@v6`
 
 #### Running Locally
 
 ```bash
-# Install sonar-scanner (via npx)
+# Using npx (reads from sonar-project.properties)
 npx sonar-scanner \
   -Dsonar.host.url=https://sonarcloud.io \
-  -Dsonar.token=YOUR_TOKEN \
-  -Dsonar.projectKey=saurabhpro_goodhealth \
-  -Dsonar.organization=saurabhpro
+  -Dsonar.token=YOUR_TOKEN
 ```
+
+Note: `sonar.projectKey` and `sonar.organization` are read from `sonar-project.properties`.
 
 #### Quality Rules
 
