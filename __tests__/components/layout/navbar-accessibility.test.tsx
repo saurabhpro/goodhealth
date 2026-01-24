@@ -81,6 +81,7 @@ describe('Navbar Accessibility', () => {
           className="relative h-8 w-8 rounded-full"
         >
           <span className="avatar">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="https://example.com/avatar.jpg" alt="" />
           </span>
         </button>
@@ -94,6 +95,7 @@ describe('Navbar Accessibility', () => {
     it('should have decorative alt on avatar image', () => {
       const { container } = render(
         <button aria-label="Open user menu">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="https://example.com/avatar.jpg" alt="" />
         </button>
       )

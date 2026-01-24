@@ -26,6 +26,7 @@ jest.mock('next/dynamic', () => () => {
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
+  // eslint-disable-next-line @next/next/no-img-element
   default: (props: { src: string; alt: string }) => (
     <img src={props.src} alt={props.alt} data-testid="mock-image" />
   ),
