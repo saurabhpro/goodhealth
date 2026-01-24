@@ -2,7 +2,7 @@ import { getWorkouts } from '@/lib/workouts/actions'
 import { getGoals } from '@/lib/goals/actions'
 import { getWorkoutPlans } from '@/lib/workout-plans/actions'
 import { createClient } from '@/lib/supabase/server'
-import { DashboardContent } from './dashboard-content'
+import { DashboardContent } from './client'
 import type { WorkoutPlanSession } from '@/types'
 
 // Server-side data fetching for optimal performance
