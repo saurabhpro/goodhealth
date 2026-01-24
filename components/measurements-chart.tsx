@@ -59,7 +59,7 @@ function calculateIsPositiveChange(
 
 interface CustomTooltipProps {
   readonly active?: boolean
-  readonly payload?: Array<{ payload: { fullDate: string; value: number | null } }>
+  readonly payload?: ReadonlyArray<{ payload: { fullDate: string; value: number | null } }>
   readonly currentMetric: MetricConfig
 }
 
