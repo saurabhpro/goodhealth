@@ -18,6 +18,42 @@ import type { Goal } from '@/types'
 
 type PlanStep = 'goal' | 'configure' | 'review'
 
+function getGoalType(goal: Goal): string {
+  const title = goal.title.toLowerCase()
+  const desc = goal.description?.toLowerCase() || ''
+
+  if (title.includes('weight loss') || desc.includes('lose weight') || title.includes('cut')) {
+    return 'weight_loss'
+  }
+  if (title.includes('muscle') || title.includes('bulk') || desc.includes('build muscle')) {
+    return 'muscle_building'
+  }
+  if (title.includes('endurance') || title.includes('cardio') || title.includes('running')) {
+    return 'endurance'
+  }
+  return 'general_fitness'
+}
+
+function getGoalTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    weight_loss: 'Weight Loss',
+    muscle_building: 'Muscle Building',
+    endurance: 'Endurance',
+    general_fitness: 'General Fitness'
+  }
+  return labels[type] || 'General Fitness'
+}
+
+function getGoalTypeColor(type: string): string {
+  const colors: Record<string, string> = {
+    weight_loss: 'bg-orange-500',
+    muscle_building: 'bg-blue-500',
+    endurance: 'bg-green-500',
+    general_fitness: 'bg-purple-500'
+  }
+  return colors[type] || 'bg-gray-500'
+}
+
 export default function NewWorkoutPlanPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<PlanStep>('goal')
@@ -138,42 +174,6 @@ export default function NewWorkoutPlanPage() {
 
 
   const stepProgress = currentStep === 'goal' ? 33 : currentStep === 'configure' ? 66 : 100
-
-  function getGoalType(goal: Goal): string {
-    const title = goal.title.toLowerCase()
-    const desc = goal.description?.toLowerCase() || ''
-
-    if (title.includes('weight loss') || desc.includes('lose weight') || title.includes('cut')) {
-      return 'weight_loss'
-    }
-    if (title.includes('muscle') || title.includes('bulk') || desc.includes('build muscle')) {
-      return 'muscle_building'
-    }
-    if (title.includes('endurance') || title.includes('cardio') || title.includes('running')) {
-      return 'endurance'
-    }
-    return 'general_fitness'
-  }
-
-  function getGoalTypeLabel(type: string): string {
-    const labels: Record<string, string> = {
-      weight_loss: 'Weight Loss',
-      muscle_building: 'Muscle Building',
-      endurance: 'Endurance',
-      general_fitness: 'General Fitness'
-    }
-    return labels[type] || 'General Fitness'
-  }
-
-  function getGoalTypeColor(type: string): string {
-    const colors: Record<string, string> = {
-      weight_loss: 'bg-orange-500',
-      muscle_building: 'bg-blue-500',
-      endurance: 'bg-green-500',
-      general_fitness: 'bg-purple-500'
-    }
-    return colors[type] || 'bg-gray-500'
-  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

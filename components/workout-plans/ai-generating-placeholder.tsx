@@ -6,7 +6,6 @@ import { Sparkles, Brain, Dumbbell, Calendar } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface AIGeneratingPlaceholderProps {
-  readonly planName?: string
   readonly weeksDuration?: number
   readonly workoutsPerWeek?: number
 }

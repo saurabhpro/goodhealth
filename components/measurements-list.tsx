@@ -47,6 +47,50 @@ function calculateTrend(current: number | null, previous: number | null): 'up' |
   return diff > 0 ? 'up' : 'down'
 }
 
+/**
+ * Determines if a trend direction is positive for a given measurement field.
+ * @returns true = good, false = bad, null = neutral
+ */
+function getIsPositiveTrend(
+  trend: 'up' | 'down' | 'stable',
+  fieldName?: string
+): boolean | null {
+  if (!fieldName) return null
+  
+  const betterWhenDecreasing = BETTER_WHEN_DECREASING[fieldName]
+  
+  // Fields where decrease is good (weight, body fat, waist)
+  if (betterWhenDecreasing === true) {
+    return trend === 'down'
+  }
+  
+  // Fields where increase is good (muscle, biceps, chest)
+  if (betterWhenDecreasing === false) {
+    return trend === 'up'
+  }
+  
+  // Neutral fields
+  return null
+}
+
+/**
+ * Determines the color class for a trend indicator.
+ */
+function getTrendColor(
+  trend: 'up' | 'down' | 'stable',
+  isPositiveTrend: boolean | null
+): string {
+  if (trend === 'stable') {
+    return 'text-muted-foreground'
+  }
+  
+  if (isPositiveTrend === null) {
+    return 'text-blue-600' // Neutral color
+  }
+  
+  return isPositiveTrend ? 'text-green-600' : 'text-red-600'
+}
+
 function TrendIndicator({
   trend,
   value,
@@ -58,21 +102,8 @@ function TrendIndicator({
 }>) {
   if (trend === 'none') return null
 
-  // Determine if this trend is positive for health
-  const betterWhenDecreasing = fieldName ? BETTER_WHEN_DECREASING[fieldName] : undefined
-  const isPositiveTrend = betterWhenDecreasing === true
-    ? trend === 'down'  // Decrease is good (weight, body fat, waist)
-    : betterWhenDecreasing === false
-    ? trend === 'up'    // Increase is good (muscle, biceps, chest)
-    : null              // Neutral
-
-  const color = trend === 'stable'
-    ? 'text-muted-foreground'
-    : isPositiveTrend === null
-    ? (trend === 'up' ? 'text-blue-600' : 'text-blue-600') // Neutral color
-    : isPositiveTrend
-    ? 'text-green-600'  // Good change
-    : 'text-red-600'    // Bad change
+  const isPositiveTrend = getIsPositiveTrend(trend, fieldName)
+  const color = getTrendColor(trend, isPositiveTrend)
 
   return (
     <span className="inline-flex items-center gap-1 text-xs ml-2">

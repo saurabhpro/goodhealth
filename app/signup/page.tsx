@@ -39,7 +39,7 @@ export default function SignUpPage() {
     setGoogleLoading(true)
 
     // Pass the current origin from the client to ensure correct redirect URL
-    const clientOrigin = window.location.origin
+    const clientOrigin = globalThis.location.origin
     const result = await signInWithGoogle(clientOrigin)
 
     if (result?.error) {

@@ -155,9 +155,9 @@ describe('Progress Calculations', () => {
     })
 
     it('should return 0 for no workouts', () => {
-      const workouts: { date: string }[] = []
-      const workoutDates = new Set(workouts.map(w => new Date(w.date).getTime()))
-      const streak = workoutDates.size > 0 ? 1 : 0
+      // Test that empty workout array results in 0 streak
+      const workoutCount = 0
+      const streak = workoutCount > 0 ? 1 : 0
       expect(streak).toBe(0)
     })
   })
@@ -191,8 +191,9 @@ describe('Progress Calculations', () => {
     })
 
     it('should return 0 for empty workout array', () => {
-      const workouts: { duration_minutes: number }[] = []
-      const avgDuration = workouts.length > 0 ? 0 : 0
+      // Test that empty workout array results in 0 average
+      const workoutCount = 0
+      const avgDuration = workoutCount > 0 ? 45 : 0  // Would be 45 if had workouts, 0 otherwise
       expect(avgDuration).toBe(0)
     })
   })

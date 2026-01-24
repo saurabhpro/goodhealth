@@ -41,7 +41,7 @@ jest.mock('next/link', () => ({
 }))
 
 // Mock fetch for API calls
-global.fetch = jest.fn()
+globalThis.fetch = jest.fn()
 
 /**
  * Type-safe mock data matching database.ts Row types exactly
@@ -178,7 +178,7 @@ const mockWeeklyAnalysis = {
 describe('DashboardContent', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    ;(globalThis.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ sessions: [], currentWeek: 1 }),
     })
@@ -326,7 +326,7 @@ describe('DashboardContent', () => {
     })
 
     it('should dismiss analysis and show quote', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValue({
+      ;(globalThis.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({}),
       })
@@ -357,7 +357,7 @@ describe('DashboardContent', () => {
         fireEvent.click(dismissButton)
 
         await waitFor(() => {
-          expect(global.fetch).toHaveBeenCalledWith(
+          expect(globalThis.fetch).toHaveBeenCalledWith(
             '/api/weekly-analysis/analysis-1/dismiss',
             { method: 'PUT' }
           )
@@ -535,7 +535,7 @@ describe('DashboardContent', () => {
 
   describe('API Interactions', () => {
     it('should call view API when viewing analysis', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValue({
+      ;(globalThis.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({}),
       })

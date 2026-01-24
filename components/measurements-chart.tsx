@@ -41,6 +41,34 @@ const METRICS: MetricConfig[] = [
   { key: 'bicep_right', label: 'Bicep (R)', unit: 'cm', color: '#ffa07a', betterWhenDecreasing: false },
 ]
 
+interface CustomTooltipProps {
+  readonly active?: boolean
+  readonly payload?: Array<{ payload: { fullDate: string; value: number | null } }>
+  readonly currentMetric: MetricConfig
+}
+
+function CustomTooltip({ active, payload, currentMetric }: CustomTooltipProps) {
+  if (active && payload?.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-background border rounded-lg p-3 shadow-lg">
+        <p className="text-sm font-medium mb-1">
+          {new Date(data.fullDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </p>
+        <p className="text-sm">
+          <span className="font-semibold">{currentMetric.label}:</span>{' '}
+          {data.value?.toFixed(1)} {currentMetric.unit}
+        </p>
+      </div>
+    )
+  }
+  return null
+}
+
 export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartProps>) {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('weight')
 
@@ -205,27 +233,9 @@ export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartPr
                     }}
                   />
                   <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload?.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-background border rounded-lg p-3 shadow-lg">
-                            <p className="text-sm font-medium mb-1">
-                              {new Date(data.fullDate).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-semibold">{currentMetric.label}:</span>{' '}
-                              {data.value?.toFixed(1)} {currentMetric.unit}
-                            </p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
+                    content={({ active, payload }) => (
+                      <CustomTooltip active={active} payload={payload} currentMetric={currentMetric} />
+                    )}
                   />
                   <Legend />
                   <Line

@@ -29,7 +29,7 @@ interface PendingJob {
 }
 
 interface WorkoutPlansClientProps {
-  initialPlans: WorkoutPlan[]
+  readonly initialPlans: WorkoutPlan[]
 }
 
 export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
@@ -132,8 +132,8 @@ export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
       const job: PendingJob = {
         jobId,
         planName,
-        weeksDuration: weeksDuration ? parseInt(weeksDuration) : 8,
-        workoutsPerWeek: workoutsPerWeek ? parseInt(workoutsPerWeek) : 4,
+        weeksDuration: weeksDuration ? Number.parseInt(weeksDuration, 10) : 8,
+        workoutsPerWeek: workoutsPerWeek ? Number.parseInt(workoutsPerWeek, 10) : 4,
       }
 
       setPendingJob(job)

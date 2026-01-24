@@ -19,6 +19,10 @@ import { toast } from 'sonner'
 import { Check, X, Calendar, Clock, Target, Repeat, Weight, Play } from 'lucide-react'
 import type { WorkoutPlanSession } from '@/types'
 
+function showRescheduleComingSoon() {
+  toast.info('Reschedule feature coming soon!')
+}
+
 interface SessionDetailModalProps {
   session: WorkoutPlanSession
   open: boolean
@@ -89,10 +93,6 @@ export function SessionDetailModal({
     } finally {
       setLoading(false)
     }
-  }
-
-  async function handleReschedule() {
-    toast.info('Reschedule feature coming soon!')
   }
 
   const exercises = Array.isArray(session.exercises) ? session.exercises : []
@@ -271,7 +271,7 @@ export function SessionDetailModal({
             </Button>
             <Button
               variant="outline"
-              onClick={handleReschedule}
+              onClick={showRescheduleComingSoon}
               disabled={loading}
             >
               <Calendar className="mr-2 h-4 w-4" />
