@@ -7,6 +7,8 @@ import { GEMINI_MODEL } from '@/lib/config/ai-models'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
+const DATE_FORMAT = 'yyyy-MM-dd'
+
 interface WeeklyStats {
   workouts_completed: number
   total_duration_minutes: number
@@ -101,8 +103,8 @@ async function fetchWeekData(userId: string, weekStartDate: Date): Promise<Analy
     .from('workouts')
     .select('*, exercises(*)')
     .eq('user_id', userId)
-    .gte('date', format(weekStartDate, 'yyyy-MM-dd'))
-    .lte('date', format(weekEndDate, 'yyyy-MM-dd'))
+    .gte('date', format(weekStartDate, DATE_FORMAT))
+    .lte('date', format(weekEndDate, DATE_FORMAT))
     .is('deleted_at', null)
     .order('date', { ascending: false })
 
@@ -374,8 +376,8 @@ export async function saveWeeklyAnalysis(
     .upsert(
       {
         user_id: userId,
-        week_start_date: format(weekStartDate, 'yyyy-MM-dd'),
-        week_end_date: format(weekEndDate, 'yyyy-MM-dd'),
+        week_start_date: format(weekStartDate, DATE_FORMAT),
+        week_end_date: format(weekEndDate, DATE_FORMAT),
         analysis_summary: analysis.analysis_summary,
         key_achievements: analysis.key_achievements,
         areas_for_improvement: analysis.areas_for_improvement,

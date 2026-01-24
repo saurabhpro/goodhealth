@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { calculateGoalStatus } from './progress'
+import { TABLES, ERRORS, PATHS } from '@/lib/constants'
 
 export async function createGoal(formData: FormData) {
   const supabase = await createClient()
@@ -13,7 +14,7 @@ export async function createGoal(formData: FormData) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Extract goal data
@@ -51,7 +52,7 @@ export async function createGoal(formData: FormData) {
 
   // Create goal
   const { data: goal, error: goalError } = await supabase
-    .from('goals')
+    .from(TABLES.GOALS)
     .insert({
       user_id: user.id,
       title,
@@ -75,7 +76,7 @@ export async function createGoal(formData: FormData) {
   console.log('Goal created:', goal)
 
   // Revalidate the goals page to show new data
-  revalidatePath('/goals')
+  revalidatePath(PATHS.GOALS)
 
   return { success: true, goalId: goal.id }
 }
@@ -95,7 +96,7 @@ export async function getGoals() {
   console.log('Fetching goals for user:', user.id)
 
   const { data: goals, error } = await supabase
-    .from('goals')
+    .from(TABLES.GOALS)
     .select('*')
     .eq('user_id', user.id)
     // Exclude soft-deleted records
@@ -120,12 +121,12 @@ export async function updateGoal(goalId: string, formData: FormData) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Get the existing goal to retrieve initial_value
   const { data: existingGoal } = await supabase
-    .from('goals')
+    .from(TABLES.GOALS)
     .select('initial_value')
     .eq('id', goalId)
     .eq('user_id', user.id)
@@ -172,7 +173,7 @@ export async function updateGoal(goalId: string, formData: FormData) {
   const achieved = status === 'completed'
 
   const { error } = await supabase
-    .from('goals')
+    .from(TABLES.GOALS)
     .update({
       title,
       description,
@@ -193,7 +194,7 @@ export async function updateGoal(goalId: string, formData: FormData) {
     return { error: `Failed to update goal: ${error.message}` }
   }
 
-  revalidatePath('/goals')
+  revalidatePath(PATHS.GOALS)
   return { success: true }
 }
 
@@ -205,12 +206,12 @@ export async function updateGoalProgress(goalId: string, currentValue: number) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Get the goal to check status
   const { data: goal } = await supabase
-    .from('goals')
+    .from(TABLES.GOALS)
     .select('initial_value, target_value, target_date')
     .eq('id', goalId)
     // Exclude soft-deleted records
@@ -232,7 +233,7 @@ export async function updateGoalProgress(goalId: string, currentValue: number) {
   const achieved = status === 'completed'
 
   const { error } = await supabase
-    .from('goals')
+    .from(TABLES.GOALS)
     .update({
       current_value: currentValue,
       achieved,
@@ -246,7 +247,7 @@ export async function updateGoalProgress(goalId: string, currentValue: number) {
     return { error: error.message }
   }
 
-  revalidatePath('/goals')
+  revalidatePath(PATHS.GOALS)
   return { success: true }
 }
 
@@ -258,12 +259,12 @@ export async function deleteGoal(goalId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Soft delete: set deleted_at and archive status for consistency
   const { error } = await supabase
-    .from('goals')
+    .from(TABLES.GOALS)
     .update({
       deleted_at: new Date().toISOString(),
       status: 'archived',
@@ -277,6 +278,6 @@ export async function deleteGoal(goalId: string) {
     return { error: error.message }
   }
 
-  revalidatePath('/goals')
+  revalidatePath(PATHS.GOALS)
   return { success: true }
 }

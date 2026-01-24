@@ -15,6 +15,7 @@ import type {
   InsertWorkoutTemplate,
   UpdateWorkoutTemplate,
 } from '@/types'
+import { TABLES, ERRORS, PATHS } from '@/lib/constants'
 
 // ============================================================================
 // USER PREFERENCES ACTIONS
@@ -34,11 +35,11 @@ export async function getUserPreferences(): Promise<{
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data, error } = await supabase
-    .from('user_workout_preferences')
+    .from(TABLES.USER_WORKOUT_PREFERENCES)
     .select('*')
     .eq('user_id', user.id)
     .single()
@@ -71,11 +72,11 @@ export async function upsertUserPreferences(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data, error } = await supabase
-    .from('user_workout_preferences')
+    .from(TABLES.USER_WORKOUT_PREFERENCES)
     .upsert(
       {
         ...preferences,
@@ -93,7 +94,7 @@ export async function upsertUserPreferences(
     return { error: `Failed to save preferences: ${error.message}` }
   }
 
-  revalidatePath('/workout-plans')
+  revalidatePath(PATHS.WORKOUT_PLANS)
   revalidatePath('/workout-plans/preferences')
 
   return { preferences: data }
@@ -115,11 +116,11 @@ export async function updateUserPreferences(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data, error } = await supabase
-    .from('user_workout_preferences')
+    .from(TABLES.USER_WORKOUT_PREFERENCES)
     .update(updates)
     .eq('user_id', user.id)
     .select()
@@ -130,7 +131,7 @@ export async function updateUserPreferences(
     return { error: `Failed to update preferences: ${error.message}` }
   }
 
-  revalidatePath('/workout-plans')
+  revalidatePath(PATHS.WORKOUT_PLANS)
   revalidatePath('/workout-plans/preferences')
 
   return { preferences: data }
@@ -157,7 +158,7 @@ export async function getUserTemplates(options?: {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   let query = supabase
@@ -202,7 +203,7 @@ export async function getUserTemplate(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data, error } = await supabase
@@ -238,7 +239,7 @@ export async function createUserTemplate(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data, error } = await supabase
@@ -278,7 +279,7 @@ export async function updateUserTemplate(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   const { data, error } = await supabase
@@ -313,7 +314,7 @@ export async function deleteUserTemplate(templateId: string): Promise<{
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Soft delete: set deleted_at instead of hard delete
@@ -347,7 +348,7 @@ export async function incrementTemplateUsage(templateId: string): Promise<{
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // First get current times_used

@@ -19,4 +19,13 @@ export const ERRORS = {
   SESSION_NOT_FOUND: 'Session not found or access denied',
   GOAL_NOT_FOUND: 'Goal not found or access denied',
   WORKOUT_NOT_FOUND: 'Workout not found or access denied',
+  SELFIE_NOT_FOUND: 'Selfie not found',
+} as const
+
+// Revalidation paths
+export const PATHS = {
+  WORKOUT_PLANS: '/workout-plans',
+  GOALS: '/goals',
+  WORKOUTS: '/workouts',
+  DASHBOARD: '/dashboard',
 } as const

@@ -5,6 +5,9 @@ import { revalidatePath } from 'next/cache'
 import type { InsertWorkoutPlanSession, UpdateWorkoutPlanSession } from '@/types'
 import { TABLES, ERRORS } from '@/lib/constants'
 
+// Select query for session with user ownership verification
+const SESSION_WITH_OWNER_SELECT = 'plan_id, workout_plans!inner(user_id)'
+
 /**
  * Create a new plan session
  */
@@ -111,7 +114,7 @@ export async function updatePlanSession(sessionId: string, data: UpdateWorkoutPl
   // Verify session belongs to user's plan
   const { data: session } = await supabase
     .from(TABLES.WORKOUT_PLAN_SESSIONS)
-    .select('plan_id, workout_plans!inner(user_id)')
+    .select(SESSION_WITH_OWNER_SELECT)
     .eq('id', sessionId)
     // Exclude soft-deleted records
     .is('deleted_at', null)
@@ -157,7 +160,7 @@ export async function completePlanSession(sessionId: string, workoutId: string, 
   // Verify session belongs to user's plan
   const { data: session } = await supabase
     .from(TABLES.WORKOUT_PLAN_SESSIONS)
-    .select('plan_id, workout_plans!inner(user_id)')
+    .select(SESSION_WITH_OWNER_SELECT)
     .eq('id', sessionId)
     // Exclude soft-deleted records
     .is('deleted_at', null)
@@ -206,7 +209,7 @@ export async function skipPlanSession(sessionId: string, reason?: string) {
   // Verify session belongs to user's plan
   const { data: session } = await supabase
     .from(TABLES.WORKOUT_PLAN_SESSIONS)
-    .select('plan_id, workout_plans!inner(user_id)')
+    .select(SESSION_WITH_OWNER_SELECT)
     .eq('id', sessionId)
     // Exclude soft-deleted records
     .is('deleted_at', null)
@@ -253,7 +256,7 @@ export async function deletePlanSession(sessionId: string) {
   // Verify session belongs to user's plan
   const { data: session } = await supabase
     .from(TABLES.WORKOUT_PLAN_SESSIONS)
-    .select('plan_id, workout_plans!inner(user_id)')
+    .select(SESSION_WITH_OWNER_SELECT)
     .eq('id', sessionId)
     // Exclude soft-deleted records
     .is('deleted_at', null)

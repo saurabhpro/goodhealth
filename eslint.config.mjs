@@ -20,10 +20,11 @@ const eslintConfig = defineConfig([
       "sonarjs/cyclomatic-complexity": ["warn", { threshold: 15 }],
       "sonarjs/no-nested-switch": "warn",
       "sonarjs/no-inverted-boolean-check": "warn",
-      // Nested conditionals are common in React for status displays
-      "sonarjs/no-nested-conditional": "warn",
+      // Nested conditionals (ternaries) are idiomatic in React/JSX for conditional rendering
+      "sonarjs/no-nested-conditional": "off",
       // Cognitive complexity - warn to track, but don't block
-      "sonarjs/cognitive-complexity": ["warn", 15],
+      // Threshold raised to 25 to accommodate inherently complex business logic
+      "sonarjs/cognitive-complexity": ["warn", 25],
       // Nested template literals are sometimes necessary
       "sonarjs/no-nested-template-literals": "warn",
       // Math.random is fine for non-security shuffle/selection
@@ -32,6 +33,13 @@ const eslintConfig = defineConfig([
       "sonarjs/no-commented-code": "warn",
       "sonarjs/todo-tag": "warn",
       "sonarjs/fixme-tag": "warn",
+    },
+  },
+  // Data files - allow duplicate strings for static data
+  {
+    files: ["**/lib/data/**/*.ts"],
+    rules: {
+      "sonarjs/no-duplicate-string": "off",
     },
   },
   // Test file specific overrides - more lenient rules

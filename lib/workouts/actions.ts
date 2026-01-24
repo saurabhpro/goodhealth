@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { syncGoalProgress } from '@/lib/goals/sync'
+import { TABLES, ERRORS, PATHS } from '@/lib/constants'
 
 interface ExerciseInput {
   name: string
@@ -27,7 +28,7 @@ export async function createWorkout(formData: FormData) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Extract workout data
@@ -49,7 +50,7 @@ export async function createWorkout(formData: FormData) {
 
   // Create workout
   const { data: workout, error: workoutError } = await supabase
-    .from('workouts')
+    .from(TABLES.WORKOUTS)
     .insert({
       user_id: user.id,
       name,
@@ -122,7 +123,7 @@ export async function createWorkout(formData: FormData) {
   await syncGoalProgress(user.id)
 
   // Revalidate the workouts page to show new data
-  revalidatePath('/workouts')
+  revalidatePath(PATHS.WORKOUTS)
   revalidatePath('/goals')
   revalidatePath('/progress')
   if (sessionId) {
@@ -147,7 +148,7 @@ export async function getWorkouts() {
   console.log('Fetching workouts for user:', user.id)
 
   const { data: workouts, error } = await supabase
-    .from('workouts')
+    .from(TABLES.WORKOUTS)
     .select(`
       *,
       exercises (*),
@@ -202,7 +203,7 @@ export async function updateWorkout(workoutId: string, formData: FormData) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Extract workout data
@@ -223,7 +224,7 @@ export async function updateWorkout(workoutId: string, formData: FormData) {
 
   // Update workout
   const { error: workoutError } = await supabase
-    .from('workouts')
+    .from(TABLES.WORKOUTS)
     .update({
       name,
       date,
@@ -287,7 +288,7 @@ export async function updateWorkout(workoutId: string, formData: FormData) {
   // Sync goal progress (workouts, minutes, days)
   await syncGoalProgress(user.id)
 
-  revalidatePath('/workouts')
+  revalidatePath(PATHS.WORKOUTS)
   revalidatePath(`/workouts/${workoutId}`)
   revalidatePath('/goals')
   revalidatePath('/progress')
@@ -302,12 +303,12 @@ export async function deleteWorkout(workoutId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Soft delete: set deleted_at instead of hard delete
   const { error } = await supabase
-    .from('workouts')
+    .from(TABLES.WORKOUTS)
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', workoutId)
     .eq('user_id', user.id)
@@ -320,7 +321,7 @@ export async function deleteWorkout(workoutId: string) {
   // Sync goal progress (workouts, minutes, days)
   await syncGoalProgress(user.id)
 
-  revalidatePath('/workouts')
+  revalidatePath(PATHS.WORKOUTS)
   revalidatePath('/goals')
   revalidatePath('/progress')
   return { success: true }
@@ -334,12 +335,12 @@ export async function deleteExercise(exerciseId: string, workoutId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: 'Not authenticated' }
+    return { error: ERRORS.NOT_AUTHENTICATED }
   }
 
   // Verify the exercise belongs to a workout owned by the user
   const { data: workout, error: workoutError } = await supabase
-    .from('workouts')
+    .from(TABLES.WORKOUTS)
     .select('id')
     .eq('id', workoutId)
     .eq('user_id', user.id)

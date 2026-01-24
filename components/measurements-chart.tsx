@@ -41,6 +41,22 @@ const METRICS: MetricConfig[] = [
   { key: 'bicep_right', label: 'Bicep (R)', unit: 'cm', color: '#ffa07a', betterWhenDecreasing: false },
 ]
 
+/**
+ * Determines if a change is positive based on the metric's characteristics
+ */
+function calculateIsPositiveChange(
+  change: number,
+  betterWhenDecreasing: boolean | undefined
+): boolean | null {
+  if (betterWhenDecreasing === true) {
+    return change < 0 // For weight/body fat, decrease is good
+  }
+  if (betterWhenDecreasing === false) {
+    return change > 0 // For muscle/biceps, increase is good
+  }
+  return null // Neutral metrics
+}
+
 interface CustomTooltipProps {
   readonly active?: boolean
   readonly payload?: Array<{ payload: { fullDate: string; value: number | null } }>
@@ -103,11 +119,7 @@ export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartPr
     const min = Math.min(...values)
 
     // Determine if the change is "good" based on metric type
-    const isPositiveChange = currentMetric.betterWhenDecreasing === true
-      ? change < 0  // For weight/body fat, decrease is good
-      : currentMetric.betterWhenDecreasing === false
-      ? change > 0  // For muscle/biceps, increase is good
-      : null        // Neutral metrics
+    const isPositiveChange = calculateIsPositiveChange(change, currentMetric.betterWhenDecreasing)
 
     return {
       latest,
