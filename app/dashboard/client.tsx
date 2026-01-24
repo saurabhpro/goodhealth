@@ -76,8 +76,7 @@ function getStatusIcon(status: string) {
 
 function getWeekStartDay(startDate: string): number {
   const date = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`)
-  const dayOfWeek = date.getDay()
-  return dayOfWeek
+  return date.getDay()
 }
 
 function getOrderedDayNames(weekStartDay: number): { name: string; dayOfWeek: number }[] {

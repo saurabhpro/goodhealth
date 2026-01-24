@@ -29,16 +29,14 @@ export async function POST(
       .eq('deleted_at', null)
     
 
-    if (activePlans && activePlans.length > 0) {
-      // Check if it's not the current plan
-      if (!activePlans.some(p => p.id === planId)) {
-        return NextResponse.json(
-          {
-            error: `You already have an active plan: "${activePlans[0].name}". Please complete or archive it before activating another plan.`
-          },
-          { status: 409 }
-        )
-      }
+    // Check if there's an active plan that isn't the current one
+    if (activePlans && activePlans.length > 0 && !activePlans.some(p => p.id === planId)) {
+      return NextResponse.json(
+        {
+          error: `You already have an active plan: "${activePlans[0].name}". Please complete or archive it before activating another plan.`
+        },
+        { status: 409 }
+      )
     }
 
     // Activate the plan

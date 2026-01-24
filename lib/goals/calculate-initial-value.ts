@@ -199,8 +199,7 @@ export async function calculateInitialValue(
           return 0
         }
 
-        const maxReps = Math.max(...exercises.map((e: { reps: number | null }) => e.reps || 0))
-        return maxReps
+        return Math.max(...exercises.map((e: { reps: number | null }) => e.reps || 0))
       }
 
       case 'km':

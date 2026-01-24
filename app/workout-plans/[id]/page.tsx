@@ -43,8 +43,7 @@ function getWeekStartDay(startDate: string): number {
   // Parse date carefully to avoid timezone issues
   // If the date is in ISO format (YYYY-MM-DD), add time to ensure correct day
   const date = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00`)
-  const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
-  return dayOfWeek
+  return date.getDay() // 0 = Sunday, 6 = Saturday
 }
 
 function getOrderedDayNames(weekStartDay: number): { name: string; dayOfWeek: number }[] {

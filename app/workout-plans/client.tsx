@@ -254,8 +254,8 @@ export function WorkoutPlansClient({ initialPlans }: WorkoutPlansClientProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan) => {
-            // Mock progress data - in real app, fetch from API
-            const progress = 0 // TODO: Calculate from sessions
+            // Progress will be calculated from completed sessions when API is implemented
+            const progress = 0
 
             return (
               <Card
