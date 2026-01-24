@@ -54,13 +54,13 @@ const localStorageMock = {
 Object.defineProperty(window, 'localStorage', { value: localStorageMock })
 
 // Mock fetch - return immediately to prevent polling loops
-const mockFetch = jest.fn(() => 
+const mockFetch = jest.fn().mockImplementation(() => 
   Promise.resolve({
     ok: true,
     json: () => Promise.resolve([]),
   })
 )
-global.fetch = mockFetch as jest.Mock
+global.fetch = mockFetch
 
 // Mock confirm
 global.confirm = jest.fn()
@@ -331,7 +331,7 @@ describe('WorkoutPlansClient', () => {
 
     it('should delete plan when confirmed', async () => {
       ;(global.confirm as jest.Mock).mockReturnValue(true)
-      mockFetch.mockResolvedValue({ ok: true })
+      mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
 
       await act(async () => {
         render(<WorkoutPlansClient initialPlans={mockPlans} />)
@@ -357,7 +357,7 @@ describe('WorkoutPlansClient', () => {
 
     it('should show success toast after deletion', async () => {
       ;(global.confirm as jest.Mock).mockReturnValue(true)
-      mockFetch.mockResolvedValue({ ok: true })
+      mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
 
       await act(async () => {
         render(<WorkoutPlansClient initialPlans={mockPlans} />)

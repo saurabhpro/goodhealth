@@ -26,10 +26,10 @@ jest.mock('next/dynamic', () => () => {
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
-  // eslint-disable-next-line @next/next/no-img-element
-  default: (props: { src: string; alt: string }) => (
-    <img src={props.src} alt={props.alt} data-testid="mock-image" />
-  ),
+  default: (props: { src: string; alt: string }) => {
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    return <img {...props} data-testid="mock-image" />
+  },
 }))
 
 // Mock next/link
@@ -43,6 +43,9 @@ jest.mock('next/link', () => ({
 // Mock fetch for API calls
 global.fetch = jest.fn()
 
+/**
+ * Type-safe mock data matching database.ts Row types exactly
+ */
 const mockWorkouts: Workout[] = [
   {
     id: '1',
@@ -54,7 +57,6 @@ const mockWorkouts: Workout[] = [
     effort_level: 6,
     created_at: '2024-01-20T08:00:00Z',
     updated_at: '2024-01-20T08:00:00Z',
-    deleted_at: null,
   },
   {
     id: '2',
@@ -66,7 +68,6 @@ const mockWorkouts: Workout[] = [
     effort_level: 8,
     created_at: '2024-01-19T10:00:00Z',
     updated_at: '2024-01-19T10:00:00Z',
-    deleted_at: null,
   },
 ]
 
@@ -97,12 +98,14 @@ const mockPlans: WorkoutPlan[] = [
     description: '4 week intensive',
     weeks_duration: 4,
     workouts_per_week: 4,
+    avg_workout_duration: 45,
+    goal_type: 'weight_loss',
     status: 'active',
     goal_id: '1',
     started_at: '2024-01-15',
+    completed_at: null,
     created_at: '2024-01-15T00:00:00Z',
     updated_at: '2024-01-15T00:00:00Z',
-    deleted_at: null,
   },
 ]
 
@@ -112,30 +115,42 @@ const mockWeekSessions: WorkoutPlanSession[] = [
     plan_id: 'plan-1',
     week_number: 1,
     day_of_week: 1, // Monday
+    day_name: 'Monday',
+    session_order: 1,
     workout_name: 'Chest & Triceps',
     workout_type: 'strength',
-    description: 'Push day focus',
+    workout_template_id: null,
     exercises: [],
+    muscle_groups: ['chest', 'triceps'],
+    intensity_level: 'moderate',
     estimated_duration: 60,
     status: 'scheduled',
+    completed_workout_id: null,
+    completed_at: null,
+    notes: 'Push day focus',
     created_at: '2024-01-15T00:00:00Z',
     updated_at: '2024-01-15T00:00:00Z',
-    deleted_at: null,
   },
   {
     id: 'session-2',
     plan_id: 'plan-1',
     week_number: 1,
     day_of_week: 3, // Wednesday
+    day_name: 'Wednesday',
+    session_order: 2,
     workout_name: 'Back & Biceps',
     workout_type: 'strength',
-    description: 'Pull day focus',
+    workout_template_id: null,
     exercises: [],
+    muscle_groups: ['back', 'biceps'],
+    intensity_level: 'moderate',
     estimated_duration: 55,
     status: 'completed',
+    completed_workout_id: null,
+    completed_at: '2024-01-17T10:00:00Z',
+    notes: 'Pull day focus',
     created_at: '2024-01-15T00:00:00Z',
     updated_at: '2024-01-17T00:00:00Z',
-    deleted_at: null,
   },
 ]
 
@@ -383,15 +398,21 @@ describe('DashboardContent', () => {
           plan_id: 'plan-1',
           week_number: 1,
           day_of_week: 0, // Sunday
+          day_name: 'Sunday',
+          session_order: 0,
           workout_name: 'Rest',
           workout_type: 'rest',
-          description: null,
+          workout_template_id: null,
           exercises: [],
+          muscle_groups: null,
+          intensity_level: null,
           estimated_duration: null,
           status: 'scheduled',
+          completed_workout_id: null,
+          completed_at: null,
+          notes: null,
           created_at: '2024-01-15T00:00:00Z',
           updated_at: '2024-01-15T00:00:00Z',
-          deleted_at: null,
         },
       ]
 
@@ -422,8 +443,6 @@ describe('DashboardContent', () => {
       const today = new Date()
       const yesterday = new Date(today)
       yesterday.setDate(yesterday.getDate() - 1)
-      const twoDaysAgo = new Date(today)
-      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
 
       const consecutiveWorkouts: Workout[] = [
         { ...mockWorkouts[0], date: today.toISOString().split('T')[0] },
