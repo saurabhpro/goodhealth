@@ -5,7 +5,7 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { DashboardContent } from '@/app/dashboard/dashboard-content'
+import { DashboardContent } from '@/app/dashboard/client'
 import type { Workout, Goal, WorkoutPlan, WorkoutPlanSession } from '@/types'
 
 // Mock next/dynamic to avoid issues with lazy loading in tests
