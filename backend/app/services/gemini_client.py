@@ -1,11 +1,11 @@
-"""Google Gemini AI client wrapper."""
+"""Google Gemini AI client wrapper using the new google-genai SDK."""
 
 import json
 import logging
 from typing import Any, Optional
 
-import google.generativeai as genai
-from google.generativeai.types import GenerationConfig
+from google import genai
+from google.genai import types
 
 from app.config import get_settings
 
@@ -22,9 +22,8 @@ class GeminiClient:
         if not settings.gemini_api_key:
             raise ValueError("GEMINI_API_KEY must be set in environment")
         
-        genai.configure(api_key=settings.gemini_api_key)
+        self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model_name = settings.gemini_model
-        self.model = genai.GenerativeModel(self.model_name)
 
     async def generate_content(
         self,
@@ -50,16 +49,17 @@ class GeminiClient:
             Exception: If generation fails
         """
         try:
-            generation_config = GenerationConfig(
+            config = types.GenerateContentConfig(
                 temperature=temperature,
                 top_k=top_k,
                 top_p=top_p,
                 max_output_tokens=max_tokens,
             )
 
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=generation_config,
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=config,
             )
 
             return response.text

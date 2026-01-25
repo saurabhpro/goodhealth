@@ -82,7 +82,6 @@ Edit `backend/.env`:
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your-service-role-key
-SUPABASE_JWT_SECRET=your-jwt-secret
 
 # Google Gemini AI
 GEMINI_API_KEY=your-gemini-api-key
@@ -125,7 +124,6 @@ In Supabase Dashboard → Project Settings → API:
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_ANON_KEY` | anon / public |
 | `SUPABASE_SERVICE_KEY` | service_role |
-| `SUPABASE_JWT_SECRET` | JWT Secret |
 
 ### Storage Setup
 
@@ -239,7 +237,8 @@ yarn build:skip-lint  # Skip linting temporarily
 ### AI features not working
 
 1. Verify `GEMINI_API_KEY` is valid
-2. Test the key:
+2. Ensure you're using the new `google-genai` SDK (not the deprecated `google-generativeai`)
+3. Test the key:
    ```bash
    curl -H "x-goog-api-key: YOUR_KEY" \
      "https://generativelanguage.googleapis.com/v1/models"

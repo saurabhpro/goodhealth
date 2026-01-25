@@ -1,6 +1,9 @@
 """Workout plans API routes."""
 
-from fastapi import APIRouter, HTTPException
+from typing import Any, Optional
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from app.dependencies import CurrentUser, Database
 from app.models.workout_plan import (
@@ -18,6 +21,168 @@ from app.services.ai_plan_generator import AIPlanGenerator
 from app.services.workout_plans_crud import WorkoutPlansCrudService
 
 router = APIRouter()
+
+
+# ============ Response Models ============
+
+
+class PreferencesResponse(BaseModel):
+    """Response model for user preferences."""
+
+    preferences: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class TemplatesResponse(BaseModel):
+    """Response model for workout templates."""
+
+    templates: Optional[list[dict[str, Any]]] = None
+    template: Optional[dict[str, Any]] = None
+    template_id: Optional[str] = None
+    error: Optional[str] = None
+
+
+# ============ Preferences Routes (MUST be before {plan_id}) ============
+
+
+@router.get("/workout-plans/preferences", response_model=PreferencesResponse)
+async def get_user_preferences(
+    user_id: CurrentUser,
+    db: Database,
+) -> PreferencesResponse:
+    """Get user workout preferences.
+    
+    Args:
+        user_id: Current authenticated user
+        db: Database client
+        
+    Returns:
+        PreferencesResponse with user preferences
+    """
+    response = db.table("user_workout_preferences").select(
+        "*"
+    ).eq("user_id", user_id).maybe_single().execute()
+    
+    return PreferencesResponse(preferences=response.data)
+
+
+@router.put("/workout-plans/preferences", response_model=PreferencesResponse)
+async def upsert_user_preferences(
+    preferences: dict[str, Any],
+    user_id: CurrentUser,
+    db: Database,
+) -> PreferencesResponse:
+    """Create or update user workout preferences.
+    
+    Args:
+        preferences: Preference data to upsert
+        user_id: Current authenticated user
+        db: Database client
+        
+    Returns:
+        PreferencesResponse with updated preferences
+    """
+    # Add user_id to preferences
+    preferences["user_id"] = user_id
+    
+    response = db.table("user_workout_preferences").upsert(
+        preferences,
+        on_conflict="user_id"
+    ).execute()
+    
+    if not response.data:
+        raise HTTPException(status_code=400, detail="Failed to save preferences")
+    
+    return PreferencesResponse(preferences=response.data[0] if response.data else None)
+
+
+# ============ Templates Routes (MUST be before {plan_id}) ============
+
+
+@router.get("/workout-plans/templates", response_model=TemplatesResponse)
+async def get_user_templates(
+    user_id: CurrentUser,
+    db: Database,
+    is_active: Optional[bool] = Query(None),
+) -> TemplatesResponse:
+    """Get user workout templates.
+    
+    Args:
+        user_id: Current authenticated user
+        db: Database client
+        is_active: Optional filter for active templates
+        
+    Returns:
+        TemplatesResponse with user templates
+    """
+    query = db.table("workout_templates").select("*").eq("user_id", user_id).is_(
+        "deleted_at", "null"
+    )
+    
+    if is_active is not None:
+        query = query.eq("is_active", is_active)
+    
+    response = query.order("created_at", desc=True).execute()
+    
+    return TemplatesResponse(templates=response.data or [])
+
+
+@router.post("/workout-plans/templates", response_model=TemplatesResponse)
+async def create_user_template(
+    template: dict[str, Any],
+    user_id: CurrentUser,
+    db: Database,
+) -> TemplatesResponse:
+    """Create a new workout template.
+    
+    Args:
+        template: Template data
+        user_id: Current authenticated user
+        db: Database client
+        
+    Returns:
+        TemplatesResponse with created template
+    """
+    # Add user_id to template
+    template["user_id"] = user_id
+    
+    response = db.table("workout_templates").insert(template).execute()
+    
+    if not response.data:
+        raise HTTPException(status_code=400, detail="Failed to create template")
+    
+    return TemplatesResponse(
+        template=response.data[0] if response.data else None,
+        template_id=response.data[0]["id"] if response.data else None
+    )
+
+
+@router.delete("/workout-plans/templates/{template_id}", response_model=TemplatesResponse)
+async def delete_user_template(
+    template_id: str,
+    user_id: CurrentUser,
+    db: Database,
+) -> TemplatesResponse:
+    """Soft delete a workout template.
+    
+    Args:
+        template_id: Template ID to delete
+        user_id: Current authenticated user
+        db: Database client
+        
+    Returns:
+        TemplatesResponse with success status
+    """
+    from datetime import datetime
+    
+    response = db.table("workout_templates").update({
+        "deleted_at": datetime.now().isoformat(),
+    }).eq("id", template_id).eq("user_id", user_id).execute()
+    
+    if not response.data:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    return TemplatesResponse(template_id=template_id)
 
 
 # ============ CRUD Operations ============
@@ -89,6 +254,42 @@ async def get_current_week_sessions(
         sessions=result.get("sessions", []),
         current_week=result.get("current_week", 1),
     )
+
+
+@router.get("/workout-plans/{plan_id}/week/{week_number}")
+async def get_plan_week_sessions(
+    plan_id: str,
+    week_number: int,
+    user_id: CurrentUser,
+    db: Database,
+) -> dict[str, Any]:
+    """Get sessions for a specific week of a workout plan.
+    
+    Args:
+        plan_id: The plan ID
+        week_number: The week number (1-based)
+        user_id: Current authenticated user
+        db: Database client
+        
+    Returns:
+        Dict with sessions for the week
+    """
+    # Verify user owns this plan
+    plan_response = db.table("workout_plans").select("id").eq(
+        "id", plan_id
+    ).eq("user_id", user_id).maybe_single().execute()
+    
+    if not plan_response.data:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Get sessions for this week
+    sessions_response = db.table("workout_plan_sessions").select(
+        "*"
+    ).eq("plan_id", plan_id).eq("week_number", week_number).is_(
+        "deleted_at", "null"
+    ).order("day_of_week").execute()
+    
+    return {"sessions": sessions_response.data or []}
 
 
 @router.get("/workout-plans/{plan_id}")

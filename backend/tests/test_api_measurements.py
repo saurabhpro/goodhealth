@@ -5,20 +5,25 @@ from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.dependencies import get_db, get_current_user_id
 
 
 @pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
+def mock_db():
+    """Create mock database."""
+    return MagicMock()
 
 
 @pytest.fixture
-def mock_auth():
-    """Mock authentication middleware."""
-    with patch("app.dependencies.get_current_user_id") as mock:
-        mock.return_value = "test-user-123"
-        yield mock
+def client(mock_db):
+    """Create test client with mocked dependencies."""
+    app.dependency_overrides[get_db] = lambda: mock_db
+    app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
+    
+    with TestClient(app) as test_client:
+        yield test_client
+    
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -33,17 +38,20 @@ def mock_measurements_service():
 class TestCreateMeasurement:
     """Tests for POST /api/measurements."""
 
-    def test_create_measurement_success(
-        self, client, mock_auth, mock_measurements_service
-    ):
+    def test_create_measurement_success(self, client, mock_measurements_service):
         """Test successful measurement creation."""
         mock_measurements_service.create_measurement = AsyncMock(
             return_value={
                 "success": True,
-                "data": {
+                "measurement": {
                     "id": "measurement-123",
+                    "user_id": "test-user-123",
                     "weight": 75.5,
                     "body_fat_percentage": 15.0,
+                    "measured_at": "2024-01-15T10:00:00Z",
+                    "created_at": "2024-01-15T10:00:00Z",
+                    "updated_at": "2024-01-15T10:00:00Z",
+                    "deleted_at": None,
                 },
             }
         )
@@ -62,7 +70,7 @@ class TestCreateMeasurement:
         data = response.json()
         assert data["success"] is True
 
-    def test_create_measurement_invalid_values(self, client, mock_auth):
+    def test_create_measurement_invalid_values(self, client):
         """Test measurement creation with invalid values."""
         response = client.post(
             "/api/measurements",
@@ -78,14 +86,28 @@ class TestCreateMeasurement:
 class TestGetMeasurements:
     """Tests for GET /api/measurements."""
 
-    def test_get_measurements_success(
-        self, client, mock_auth, mock_measurements_service
-    ):
+    def test_get_measurements_success(self, client, mock_measurements_service):
         """Test successful measurements list retrieval."""
         mock_measurements_service.get_measurements = AsyncMock(
             return_value=[
-                {"id": "m-1", "weight": 75.0, "measured_at": "2024-01-15"},
-                {"id": "m-2", "weight": 74.5, "measured_at": "2024-01-08"},
+                {
+                    "id": "m-1",
+                    "user_id": "test-user-123",
+                    "weight": 75.0,
+                    "measured_at": "2024-01-15T10:00:00Z",
+                    "created_at": "2024-01-15T10:00:00Z",
+                    "updated_at": "2024-01-15T10:00:00Z",
+                    "deleted_at": None,
+                },
+                {
+                    "id": "m-2",
+                    "user_id": "test-user-123",
+                    "weight": 74.5,
+                    "measured_at": "2024-01-08T10:00:00Z",
+                    "created_at": "2024-01-08T10:00:00Z",
+                    "updated_at": "2024-01-08T10:00:00Z",
+                    "deleted_at": None,
+                },
             ]
         )
 
@@ -102,12 +124,18 @@ class TestGetMeasurements:
 class TestGetLatestMeasurement:
     """Tests for GET /api/measurements/latest."""
 
-    def test_get_latest_measurement_success(
-        self, client, mock_auth, mock_measurements_service
-    ):
+    def test_get_latest_measurement_success(self, client, mock_measurements_service):
         """Test successful latest measurement retrieval."""
         mock_measurements_service.get_latest_measurement = AsyncMock(
-            return_value={"id": "m-1", "weight": 75.0}
+            return_value={
+                "id": "m-1",
+                "user_id": "test-user-123",
+                "weight": 75.0,
+                "measured_at": "2024-01-15T10:00:00Z",
+                "created_at": "2024-01-15T10:00:00Z",
+                "updated_at": "2024-01-15T10:00:00Z",
+                "deleted_at": None,
+            }
         )
 
         response = client.get(
@@ -119,9 +147,7 @@ class TestGetLatestMeasurement:
         data = response.json()
         assert data["measurement"] is not None
 
-    def test_get_latest_measurement_none(
-        self, client, mock_auth, mock_measurements_service
-    ):
+    def test_get_latest_measurement_none(self, client, mock_measurements_service):
         """Test when no measurements exist."""
         mock_measurements_service.get_latest_measurement = AsyncMock(
             return_value=None
@@ -140,9 +166,7 @@ class TestGetLatestMeasurement:
 class TestDeleteMeasurement:
     """Tests for DELETE /api/measurements/{measurement_id}."""
 
-    def test_delete_measurement_success(
-        self, client, mock_auth, mock_measurements_service
-    ):
+    def test_delete_measurement_success(self, client, mock_measurements_service):
         """Test successful measurement deletion."""
         mock_measurements_service.delete_measurement = AsyncMock(
             return_value={"success": True}

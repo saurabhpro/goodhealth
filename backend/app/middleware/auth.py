@@ -3,7 +3,7 @@
 import logging
 from typing import Optional
 
-import jwt
+import httpx
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 class JWTAuthMiddleware(BaseHTTPMiddleware):
     """Middleware to extract and verify Supabase JWT tokens.
     
+    Uses Supabase's auth.getUser() API to verify tokens.
     Attaches user_id to request.state if token is valid.
     Does not block requests - authentication is enforced at route level.
     """
@@ -37,53 +38,63 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
 
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header[7:]  # Remove "Bearer " prefix
-            user_id = self._verify_token(token)
+            user_id = await self._verify_token_with_supabase(token)
 
         # Attach user_id to request state (may be None if not authenticated)
         request.state.user_id = user_id
 
         return await call_next(request)
 
-    def _verify_token(self, token: str) -> Optional[str]:
-        """Verify JWT token and extract user_id.
+    async def _verify_token_with_supabase(self, token: str) -> Optional[str]:
+        """Verify JWT token using Supabase's auth.getUser() API.
+        
+        This is more reliable than manual JWT verification as it:
+        - Handles key rotation automatically
+        - Validates token hasn't been revoked
+        - Works with both HS256 and ES256 tokens
         
         Args:
-            token: The JWT token string
+            token: The JWT access token string
             
         Returns:
             User ID if token is valid, None otherwise
         """
         settings = get_settings()
 
-        if not settings.supabase_jwt_secret:
-            logger.warning("SUPABASE_JWT_SECRET not configured")
+        if not settings.supabase_url:
+            print("[AUTH] ERROR: SUPABASE_URL not configured")
             return None
 
         try:
-            # Decode the JWT token
-            # Supabase uses HS256 algorithm
-            payload = jwt.decode(
-                token,
-                settings.supabase_jwt_secret,
-                algorithms=["HS256"],
-                audience="authenticated",
-            )
+            # Call Supabase auth.getUser() endpoint
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{settings.supabase_url}/auth/v1/user",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "apikey": settings.supabase_service_key,
+                    },
+                    timeout=10.0,
+                )
 
-            # Extract user_id from 'sub' claim
-            user_id = payload.get("sub")
-            
-            if not user_id:
-                logger.warning("Token missing 'sub' claim")
+            if response.status_code == 200:
+                user_data = response.json()
+                user_id = user_data.get("id")
+                if user_id:
+                    print(f"[AUTH] Authenticated user: {user_id}")
+                    return user_id
+                print("[AUTH] User data missing 'id'")
+                return None
+            elif response.status_code == 401:
+                print("[AUTH] Token is invalid or expired")
+                return None
+            else:
+                print(f"[AUTH] Supabase auth error: {response.status_code}")
                 return None
 
-            return user_id
-
-        except jwt.ExpiredSignatureError:
-            logger.debug("Token has expired")
-            return None
-        except jwt.InvalidTokenError as e:
-            logger.debug(f"Invalid token: {e}")
+        except httpx.TimeoutException:
+            print("[AUTH] Supabase auth request timed out")
             return None
         except Exception as e:
-            logger.error(f"Unexpected error verifying token: {e}")
+            print(f"[AUTH] Unexpected error verifying token: {e}")
             return None

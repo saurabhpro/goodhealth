@@ -5,20 +5,25 @@ from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.dependencies import get_db, get_current_user_id
 
 
 @pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
+def mock_db():
+    """Create mock database."""
+    return MagicMock()
 
 
 @pytest.fixture
-def mock_auth():
-    """Mock authentication middleware."""
-    with patch("app.dependencies.get_current_user_id") as mock:
-        mock.return_value = "test-user-123"
-        yield mock
+def client(mock_db):
+    """Create test client with mocked dependencies."""
+    app.dependency_overrides[get_db] = lambda: mock_db
+    app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
+    
+    with TestClient(app) as test_client:
+        yield test_client
+    
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -33,7 +38,7 @@ def mock_goals_service():
 class TestCreateGoal:
     """Tests for POST /api/goals."""
 
-    def test_create_goal_success(self, client, mock_auth, mock_goals_service):
+    def test_create_goal_success(self, client, mock_goals_service):
         """Test successful goal creation."""
         mock_goals_service.create_goal = AsyncMock(
             return_value={"success": True, "goal_id": "goal-123"}
@@ -56,7 +61,7 @@ class TestCreateGoal:
         assert data["success"] is True
         assert data["goal_id"] == "goal-123"
 
-    def test_create_goal_invalid_date(self, client, mock_auth, mock_goals_service):
+    def test_create_goal_invalid_date(self, client, mock_goals_service):
         """Test goal creation with past target date."""
         mock_goals_service.create_goal = AsyncMock(
             return_value={"success": False, "error": "Target date cannot be in the past"}
@@ -79,23 +84,41 @@ class TestCreateGoal:
 class TestGetGoals:
     """Tests for GET /api/goals."""
 
-    def test_get_goals_success(self, client, mock_auth, mock_goals_service):
+    def test_get_goals_success(self, client, mock_goals_service):
         """Test successful goals list retrieval."""
         mock_goals_service.get_goals = AsyncMock(
             return_value=[
                 {
                     "id": "goal-1",
+                    "user_id": "test-user-123",
                     "title": "Goal 1",
+                    "description": "First goal",
+                    "initial_value": 0,
                     "target_value": 50,
                     "current_value": 25,
                     "unit": "km",
+                    "target_date": None,
+                    "achieved": False,
+                    "status": "active",
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "updated_at": "2024-01-15T00:00:00Z",
+                    "deleted_at": None,
                 },
                 {
                     "id": "goal-2",
+                    "user_id": "test-user-123",
                     "title": "Goal 2",
+                    "description": "Second goal",
+                    "initial_value": 0,
                     "target_value": 100,
                     "current_value": 50,
                     "unit": "workouts",
+                    "target_date": None,
+                    "achieved": False,
+                    "status": "active",
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "updated_at": "2024-01-15T00:00:00Z",
+                    "deleted_at": None,
                 },
             ]
         )
@@ -113,7 +136,7 @@ class TestGetGoals:
 class TestUpdateGoalProgress:
     """Tests for PUT /api/goals/{goal_id}/progress."""
 
-    def test_update_progress_success(self, client, mock_auth, mock_goals_service):
+    def test_update_progress_success(self, client, mock_goals_service):
         """Test successful goal progress update."""
         mock_goals_service.update_goal_progress = AsyncMock(
             return_value={"success": True}
@@ -133,7 +156,7 @@ class TestUpdateGoalProgress:
 class TestDeleteGoal:
     """Tests for DELETE /api/goals/{goal_id}."""
 
-    def test_delete_goal_success(self, client, mock_auth, mock_goals_service):
+    def test_delete_goal_success(self, client, mock_goals_service):
         """Test successful goal deletion."""
         mock_goals_service.delete_goal = AsyncMock(
             return_value={"success": True}

@@ -58,7 +58,6 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your-service-role-key
-SUPABASE_JWT_SECRET=your-jwt-secret
 
 # Google Gemini AI
 GEMINI_API_KEY=your-api-key
@@ -125,15 +124,36 @@ GEMINI_MODEL=gemini-3.0-flash
 ## Testing
 
 ```bash
-# Run all tests
+# Run all tests (80 tests)
 pytest
 
 # With coverage
 pytest --cov=app --cov-report=html
 
+# Verbose output
+pytest -v
+
 # Specific test file
 pytest tests/test_api_workouts.py
+
+# Run workout plans tests
+pytest tests/test_api_workout_plans.py
+
+# Run selfies tests
+pytest tests/test_api_selfies.py
 ```
+
+### Test Coverage
+
+Tests cover all major API endpoints:
+- `test_api_workouts.py` - Workout CRUD operations
+- `test_api_goals.py` - Goals management
+- `test_api_measurements.py` - Body measurements
+- `test_api_profiles.py` - User profiles
+- `test_api_workout_plans.py` - Workout plans, preferences, templates
+- `test_api_selfies.py` - Selfie uploads and signed URLs
+- `test_goal_sync.py` - Goal progress synchronization
+- `test_unit_converter.py` - Unit conversion utilities
 
 ## Code Quality
 

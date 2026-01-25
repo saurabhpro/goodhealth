@@ -153,3 +153,25 @@ async def get_recent_selfies(
     selfies = await service.get_recent_selfies(user_id, limit)
     
     return SelfieListResponse(selfies=selfies)
+
+
+@router.get("/selfies/url", response_model=SelfieUrlResponse)
+async def get_selfie_url(
+    path: str,
+    user_id: CurrentUser,
+    db: Database,
+) -> SelfieUrlResponse:
+    """Get a signed URL for viewing a selfie.
+    
+    Args:
+        path: The file path in storage
+        user_id: Current authenticated user (for auth check)
+        db: Database client
+        
+    Returns:
+        SelfieUrlResponse with signed URL
+    """
+    service = SelfiesService(db)
+    url = await service.get_signed_url(path)
+    
+    return SelfieUrlResponse(url=url)

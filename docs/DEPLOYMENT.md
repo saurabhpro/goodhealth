@@ -40,7 +40,6 @@ In Railway Dashboard → Variables, add:
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your-service-role-key
-SUPABASE_JWT_SECRET=your-jwt-secret
 
 # Google Gemini AI
 GEMINI_API_KEY=your-gemini-api-key
@@ -50,7 +49,6 @@ GEMINI_MODEL=gemini-3.0-flash
 **Where to find these values:**
 - **SUPABASE_URL**: Supabase Dashboard → Settings → API
 - **SUPABASE_SERVICE_KEY**: Supabase Dashboard → Settings → API → service_role key
-- **SUPABASE_JWT_SECRET**: Supabase Dashboard → Settings → API → JWT Secret
 - **GEMINI_API_KEY**: Google AI Studio → Get API Key
 
 #### 4. Generate Public URL
@@ -160,7 +158,6 @@ Click **Deploy**. Vercel will build and deploy automatically.
 |----------|----------|-------------|
 | `SUPABASE_URL` | Yes | Supabase project URL |
 | `SUPABASE_SERVICE_KEY` | Yes | Service role key (full access) |
-| `SUPABASE_JWT_SECRET` | Yes | For JWT verification |
 | `GEMINI_API_KEY` | Yes | Google AI API key |
 | `GEMINI_MODEL` | No | Default: `gemini-3.0-flash` |
 

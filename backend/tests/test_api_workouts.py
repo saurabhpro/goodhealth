@@ -5,20 +5,25 @@ from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.dependencies import get_db, get_current_user_id
 
 
 @pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
+def mock_db():
+    """Create mock database."""
+    return MagicMock()
 
 
 @pytest.fixture
-def mock_auth():
-    """Mock authentication middleware."""
-    with patch("app.dependencies.get_current_user_id") as mock:
-        mock.return_value = "test-user-123"
-        yield mock
+def client(mock_db):
+    """Create test client with mocked dependencies."""
+    app.dependency_overrides[get_db] = lambda: mock_db
+    app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
+    
+    with TestClient(app) as test_client:
+        yield test_client
+    
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -33,7 +38,7 @@ def mock_workouts_service():
 class TestCreateWorkout:
     """Tests for POST /api/workouts."""
 
-    def test_create_workout_success(self, client, mock_auth, mock_workouts_service):
+    def test_create_workout_success(self, client, mock_workouts_service):
         """Test successful workout creation."""
         mock_workouts_service.create_workout = AsyncMock(
             return_value={"success": True, "workout_id": "workout-123"}
@@ -57,7 +62,7 @@ class TestCreateWorkout:
         assert data["success"] is True
         assert data["workout_id"] == "workout-123"
 
-    def test_create_workout_missing_name(self, client, mock_auth):
+    def test_create_workout_missing_name(self, client):
         """Test workout creation with missing required field."""
         response = client.post(
             "/api/workouts",
@@ -73,21 +78,35 @@ class TestCreateWorkout:
 class TestGetWorkouts:
     """Tests for GET /api/workouts."""
 
-    def test_get_workouts_success(self, client, mock_auth, mock_workouts_service):
+    def test_get_workouts_success(self, client, mock_workouts_service):
         """Test successful workout list retrieval."""
         mock_workouts_service.get_workouts = AsyncMock(
             return_value=[
                 {
                     "id": "workout-1",
+                    "user_id": "test-user-123",
                     "name": "Workout 1",
                     "date": "2024-01-15",
+                    "duration_minutes": 60,
+                    "description": None,
+                    "effort_level": 4,
+                    "created_at": "2024-01-15T10:00:00Z",
+                    "updated_at": "2024-01-15T10:00:00Z",
+                    "deleted_at": None,
                     "exercises": [],
                     "workout_selfies": [],
                 },
                 {
                     "id": "workout-2",
+                    "user_id": "test-user-123",
                     "name": "Workout 2",
                     "date": "2024-01-14",
+                    "duration_minutes": 45,
+                    "description": None,
+                    "effort_level": 3,
+                    "created_at": "2024-01-14T10:00:00Z",
+                    "updated_at": "2024-01-14T10:00:00Z",
+                    "deleted_at": None,
                     "exercises": [],
                     "workout_selfies": [],
                 },
@@ -103,7 +122,7 @@ class TestGetWorkouts:
         data = response.json()
         assert len(data["workouts"]) == 2
 
-    def test_get_workouts_with_limit(self, client, mock_auth, mock_workouts_service):
+    def test_get_workouts_with_limit(self, client, mock_workouts_service):
         """Test workout list with limit parameter."""
         mock_workouts_service.get_workouts = AsyncMock(return_value=[])
 
@@ -114,19 +133,57 @@ class TestGetWorkouts:
 
         assert response.status_code == 200
 
+    def test_get_workouts_empty(self, client, mock_workouts_service):
+        """Test empty workout list."""
+        mock_workouts_service.get_workouts = AsyncMock(return_value=[])
+
+        response = client.get(
+            "/api/workouts",
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["workouts"] == []
+
 
 class TestGetWorkout:
     """Tests for GET /api/workouts/{workout_id}."""
 
-    def test_get_workout_success(self, client, mock_auth, mock_workouts_service):
+    def test_get_workout_success(self, client, mock_workouts_service):
         """Test successful single workout retrieval."""
         mock_workouts_service.get_workout = AsyncMock(
             return_value={
                 "id": "workout-123",
+                "user_id": "test-user-123",
                 "name": "Test Workout",
                 "date": "2024-01-15",
+                "duration_minutes": 60,
+                "description": "A great workout",
+                "effort_level": 4,
+                "created_at": "2024-01-15T10:00:00Z",
+                "updated_at": "2024-01-15T10:00:00Z",
+                "deleted_at": None,
                 "exercises": [
-                    {"name": "Squat", "sets": 3, "reps": 10}
+                    {
+                        "id": "exercise-1",
+                        "workout_id": "workout-123",
+                        "name": "Squat",
+                        "exercise_type": "strength",
+                        "sets": 3,
+                        "reps": 10,
+                        "weight": 100,
+                        "weight_unit": "kg",
+                        "duration_minutes": None,
+                        "distance": None,
+                        "distance_unit": "km",
+                        "speed": None,
+                        "calories": None,
+                        "resistance_level": None,
+                        "incline": None,
+                        "notes": None,
+                        "created_at": "2024-01-15T10:00:00Z",
+                    }
                 ],
             }
         )
@@ -140,8 +197,9 @@ class TestGetWorkout:
         data = response.json()
         assert data["id"] == "workout-123"
         assert data["name"] == "Test Workout"
+        assert len(data["exercises"]) == 1
 
-    def test_get_workout_not_found(self, client, mock_auth, mock_workouts_service):
+    def test_get_workout_not_found(self, client, mock_workouts_service):
         """Test workout not found."""
         mock_workouts_service.get_workout = AsyncMock(return_value=None)
 
@@ -156,7 +214,7 @@ class TestGetWorkout:
 class TestUpdateWorkout:
     """Tests for PUT /api/workouts/{workout_id}."""
 
-    def test_update_workout_success(self, client, mock_auth, mock_workouts_service):
+    def test_update_workout_success(self, client, mock_workouts_service):
         """Test successful workout update."""
         mock_workouts_service.update_workout = AsyncMock(
             return_value={"success": True}
@@ -179,7 +237,7 @@ class TestUpdateWorkout:
 class TestDeleteWorkout:
     """Tests for DELETE /api/workouts/{workout_id}."""
 
-    def test_delete_workout_success(self, client, mock_auth, mock_workouts_service):
+    def test_delete_workout_success(self, client, mock_workouts_service):
         """Test successful workout deletion."""
         mock_workouts_service.delete_workout = AsyncMock(
             return_value={"success": True}

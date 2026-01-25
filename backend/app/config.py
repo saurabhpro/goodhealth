@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     debug: bool = False
     api_prefix: str = "/api"
 
-    # CORS Settings
+    # CORS Settings (JSON array in .env)
     cors_origins: list[str] = [
         "http://localhost:3000",
         "https://goodhealth.vercel.app",
@@ -32,7 +32,6 @@ class Settings(BaseSettings):
     # Supabase
     supabase_url: str = ""
     supabase_service_key: str = ""  # Service key for backend operations
-    supabase_jwt_secret: str = ""  # JWT secret for token verification
 
 
 @lru_cache

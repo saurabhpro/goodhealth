@@ -13,9 +13,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: ".",
-  },
+  turbopack: {},
   reactStrictMode: true,
   experimental: {
     serverActions: {
