@@ -1,0 +1,10 @@
+# Railpack configuration for Railway deployment
+
+[build]
+language = "python"
+
+[build.python]
+version = "3.12"
+
+[start]
+cmd = "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
