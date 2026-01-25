@@ -1,8 +1,5 @@
 """Goals API routes."""
 
-import logging
-import sys
-
 from fastapi import APIRouter, HTTPException
 
 from app.dependencies import CurrentUser, Database
@@ -19,14 +16,6 @@ from app.models.goal import (
 from app.services.goal_sync import GoalSyncService
 from app.services.goals_crud import GoalsCrudService
 from app.utils.supabase_client import get_supabase_client
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
-logger = logging.getLogger("api.goals")
 
 router = APIRouter()
 
@@ -76,18 +65,8 @@ async def get_goals(
     Returns:
         GoalListResponse with list of goals
     """
-    logger.info(f"[GOALS] GET /goals - user_id: {user_id}")
-
     service = GoalsCrudService(db)
     goals = await service.get_goals(user_id)
-
-    logger.info(f"[GOALS] Found {len(goals)} goals for user {user_id}")
-    if goals:
-        for g in goals[:3]:  # Log first 3 goals
-            title = g.get("title", "N/A") if isinstance(g, dict) else g.title
-            goal_id = g.get("id", "N/A") if isinstance(g, dict) else g.id
-            logger.info(f"[GOALS]   - {title} (id: {goal_id})")
-
     return GoalListResponse(goals=goals)
 
 

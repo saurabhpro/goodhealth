@@ -1,7 +1,6 @@
 """Goals CRUD service."""
 
 import logging
-import sys
 from datetime import datetime
 from typing import Any
 
@@ -9,13 +8,7 @@ from supabase import Client
 
 from app.models.goal import Goal, GoalCreate, GoalProgressUpdate, GoalUpdate
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
-logger = logging.getLogger("service.goals_crud")
+logger = logging.getLogger(__name__)
 
 # Error messages
 ERROR_GOAL_NOT_FOUND = "Goal not found"
@@ -129,33 +122,16 @@ class GoalsCrudService:
         Returns:
             List of goals
         """
-        logger.info(f"[DB] Querying goals table for user_id: {user_id}")
-        logger.info(f"[DB] Query: SELECT * FROM goals WHERE user_id='{user_id}' AND deleted_at IS NULL")
+        response = (
+            self.supabase.table("goals")
+            .select("*")
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .order("created_at", desc=True)
+            .execute()
+        )
 
-        try:
-            response = (
-                self.supabase.table("goals")
-                .select("*")
-                .eq("user_id", user_id)
-                .is_("deleted_at", "null")
-                .order("created_at", desc=True)
-                .execute()
-            )
-
-            logger.info(f"[DB] Query successful, returned {len(response.data) if response.data else 0} rows")
-
-            if response.data:
-                logger.info(f"[DB] First goal: {response.data[0].get('title', 'N/A')} (id: {response.data[0].get('id', 'N/A')})")
-            else:
-                logger.info(f"[DB] No goals found for user {user_id}")
-                # Try a count query to see if RLS is blocking
-                logger.info("[DB] Checking if goals exist without user filter (RLS test)...")
-
-            return response.data or []
-
-        except Exception as e:
-            logger.error(f"[DB] Query failed with error: {e}")
-            raise
+        return response.data or []
 
     async def get_goal(self, user_id: str, goal_id: str) -> Goal | None:
         """Get a single goal by ID.
