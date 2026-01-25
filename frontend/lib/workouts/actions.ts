@@ -94,19 +94,21 @@ export async function getWorkouts(): Promise<{ workouts: Workout[] }> {
 interface Exercise {
   id: string;
   name: string;
-  exercise_type: string;
-  sets?: number;
-  reps?: number;
-  weight?: number;
-  weight_unit?: string;
-  duration_minutes?: number;
-  distance?: number;
-  distance_unit?: string;
-  speed?: number;
-  calories?: number;
-  resistance_level?: number;
-  incline?: number;
-  notes?: string;
+  exercise_type: string | null;
+  sets: number | null;
+  reps: number | null;
+  weight: number | null;
+  weight_unit: string | null;
+  duration_minutes: number | null;
+  distance: number | null;
+  distance_unit: string | null;
+  speed: number | null;
+  calories: number | null;
+  resistance_level: number | null;
+  incline: number | null;
+  notes: string | null;
+  created_at: string;
+  workout_id: string;
 }
 
 interface WorkoutWithExercises extends Workout {
