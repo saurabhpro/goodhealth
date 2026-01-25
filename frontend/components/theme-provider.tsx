@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/lib/auth/hooks'
 
 export type Theme = 'light' | 'dark' | 'system'
@@ -44,27 +43,26 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return stored || 'default'
   })
 
-  // Load preferences from database when user is available
+  // Load preferences from API when user is available
   useEffect(() => {
     if (!user) return
 
     const loadPreferences = async () => {
       try {
-        const supabase = createClient()
-        const { data } = await supabase
-          .from('profiles')
-          .select('theme, accent_theme')
-          .eq('id', user.id)
-          .single()
+        const response = await fetch('/api/profile')
+        if (!response.ok) return
+        
+        const data = await response.json()
+        const profile = data.profile
 
-        if (data) {
-          if (data.theme) {
-            setThemeState(data.theme as Theme)
-            globalThis.localStorage.setItem('theme', data.theme)
+        if (profile) {
+          if (profile.theme) {
+            setThemeState(profile.theme as Theme)
+            globalThis.localStorage.setItem('theme', profile.theme)
           }
-          if (data.accent_theme) {
-            setAccentThemeState(data.accent_theme as AccentTheme)
-            globalThis.localStorage.setItem('accentTheme', data.accent_theme)
+          if (profile.accent_theme) {
+            setAccentThemeState(profile.accent_theme as AccentTheme)
+            globalThis.localStorage.setItem('accentTheme', profile.accent_theme)
           }
         }
       } catch (err) {
@@ -135,16 +133,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (globalThis.localStorage !== undefined) {
       globalThis.localStorage.setItem('theme', newTheme)
     }
-    // Save to database
+    // Save to API
     if (user) {
-      const supabase = createClient()
-      supabase
-        .from('profiles')
-        .update({ theme: newTheme })
-        .eq('id', user.id)
-        .then(({ error }) => {
-          if (error) console.error('Failed to save theme preference:', error)
-        })
+      fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: newTheme }),
+      }).catch((error) => {
+        console.error('Failed to save theme preference:', error)
+      })
     }
   }, [user])
 
@@ -153,16 +150,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (globalThis.localStorage !== undefined) {
       globalThis.localStorage.setItem('accentTheme', newAccent)
     }
-    // Save to database
+    // Save to API
     if (user) {
-      const supabase = createClient()
-      supabase
-        .from('profiles')
-        .update({ accent_theme: newAccent })
-        .eq('id', user.id)
-        .then(({ error }) => {
-          if (error) console.error('Failed to save accent theme preference:', error)
-        })
+      fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accent_theme: newAccent }),
+      }).catch((error) => {
+        console.error('Failed to save accent theme preference:', error)
+      })
     }
   }, [user])
 

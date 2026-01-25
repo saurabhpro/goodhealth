@@ -91,6 +91,42 @@ export async function getWorkouts(): Promise<{ workouts: Workout[] }> {
   return { workouts: response.data?.workouts || [] };
 }
 
+interface Exercise {
+  id: string;
+  name: string;
+  exercise_type: string;
+  sets?: number;
+  reps?: number;
+  weight?: number;
+  weight_unit?: string;
+  duration_minutes?: number;
+  distance?: number;
+  distance_unit?: string;
+  speed?: number;
+  calories?: number;
+  resistance_level?: number;
+  incline?: number;
+  notes?: string;
+}
+
+interface WorkoutWithExercises extends Workout {
+  exercises: Exercise[];
+}
+
+export async function getWorkout(
+  workoutId: string
+): Promise<{ workout: WorkoutWithExercises | null; error?: string }> {
+  const response = await apiGet<WorkoutWithExercises>(
+    `/api/workouts/${workoutId}`
+  );
+
+  if (!response.success) {
+    return { workout: null, error: response.error || "Failed to fetch workout" };
+  }
+
+  return { workout: response.data || null };
+}
+
 export async function updateWorkout(workoutId: string, formData: FormData) {
   const exercisesJson = formData.get("exercises") as string;
   const exercises = parseExercises(exercisesJson);

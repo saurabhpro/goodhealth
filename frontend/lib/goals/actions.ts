@@ -40,6 +40,18 @@ export async function getGoals(): Promise<{ goals: Goal[] }> {
   return { goals: response.data?.goals || [] };
 }
 
+export async function getGoal(
+  goalId: string
+): Promise<{ goal: Goal | null; error?: string }> {
+  const response = await apiGet<Goal>(`/api/goals/${goalId}`);
+
+  if (!response.success) {
+    return { goal: null, error: response.error || "Failed to fetch goal" };
+  }
+
+  return { goal: response.data || null };
+}
+
 export async function updateGoal(goalId: string, formData: FormData) {
   const data: Record<string, unknown> = {};
 

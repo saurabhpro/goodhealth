@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getUser } from '@/lib/auth/actions'
-import { createClient } from '@/lib/supabase/server'
+import { getGoal } from '@/lib/goals/actions'
 import { GoalEditForm } from '@/components/goal-edit-form'
 
 // Force dynamic rendering
@@ -14,15 +14,8 @@ export default async function EditGoalPage({ params }: Readonly<{ params: Promis
     redirect('/login')
   }
 
-  const supabase = await createClient()
-
-  // Fetch the goal
-  const { data: goal, error } = await supabase
-    .from('goals')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single()
+  // Fetch the goal via Python backend
+  const { goal, error } = await getGoal(id)
 
   if (error || !goal) {
     redirect('/goals')

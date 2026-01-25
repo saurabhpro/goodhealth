@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getUser } from '@/lib/auth/actions'
-import { createClient } from '@/lib/supabase/server'
+import { getWorkout } from '@/lib/workouts/actions'
 import { WorkoutSelfieDisplay } from '@/components/workout-selfie-display'
 import { WorkoutActions } from '@/components/workout-actions'
 import { ExerciseActions } from '@/components/exercise-actions'
@@ -52,26 +52,14 @@ export default async function WorkoutDetailPage({ params }: Readonly<{ params: P
     redirect('/login')
   }
 
-  const supabase = await createClient()
-
-  // Fetch workout with exercises
-  const { data: workout, error } = await supabase
-    .from('workouts')
-    .select(`
-      *,
-      exercises (*)
-    `)
-    .eq('id', id)
-    .eq('user_id', user.id)
-    // Exclude soft-deleted records
-    .is('deleted_at', null)
-    .single()
+  // Fetch workout with exercises via Python backend
+  const { workout, error } = await getWorkout(id)
 
   if (error || !workout) {
     notFound()
   }
 
-  const typedWorkout = workout as unknown as Workout
+  const typedWorkout = workout as Workout
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
