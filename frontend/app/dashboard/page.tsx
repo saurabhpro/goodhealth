@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase/server'
 import { DashboardContent } from './client'
 import type { WorkoutPlanSession } from '@/types'
 
+// Force dynamic rendering - this page uses cookies for auth
+export const dynamic = 'force-dynamic'
+
 // Server-side data fetching for optimal performance
 async function getCurrentWeekSessions() {
   const supabase = await createClient()
