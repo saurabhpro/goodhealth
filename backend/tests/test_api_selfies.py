@@ -5,27 +5,26 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from app.dependencies import get_current_user_id, get_db
 from app.main import app
 
 
 @pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
+def mock_db():
+    """Create mock database."""
+    return MagicMock()
 
 
 @pytest.fixture
-def mock_auth():
-    """Mock authentication middleware and dependencies."""
-    # Mock the middleware's token verification
-    with patch(
-        "app.middleware.auth.JWTAuthMiddleware._verify_token_with_supabase"
-    ) as mock_verify:
-        mock_verify.return_value = "test-user-123"
-        # Also mock the dependency for safety
-        with patch("app.dependencies.get_current_user_id") as mock_dep:
-            mock_dep.return_value = "test-user-123"
-            yield mock_verify
+def client(mock_db):
+    """Create test client with mocked dependencies."""
+    app.dependency_overrides[get_db] = lambda: mock_db
+    app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -40,7 +39,7 @@ def mock_selfies_service():
 class TestGetSelfieUrl:
     """Tests for GET /api/selfies/url."""
 
-    def test_get_selfie_url_success(self, client, mock_auth, mock_selfies_service):
+    def test_get_selfie_url_success(self, client, mock_selfies_service):
         """Test successful URL generation."""
         mock_selfies_service.get_signed_url = AsyncMock(
             return_value="https://storage.example.com/signed-url?token=abc123"
@@ -56,7 +55,7 @@ class TestGetSelfieUrl:
         assert "url" in data
         assert data["url"] == "https://storage.example.com/signed-url?token=abc123"
 
-    def test_get_selfie_url_not_found(self, client, mock_auth, mock_selfies_service):
+    def test_get_selfie_url_not_found(self, client, mock_selfies_service):
         """Test URL generation for missing file."""
         mock_selfies_service.get_signed_url = AsyncMock(return_value=None)
 
@@ -69,7 +68,7 @@ class TestGetSelfieUrl:
         data = response.json()
         assert data["url"] is None
 
-    def test_get_selfie_url_missing_path(self, client, mock_auth):
+    def test_get_selfie_url_missing_path(self, client):
         """Test URL generation without path parameter."""
         response = client.get(
             "/api/selfies/url",
@@ -78,17 +77,18 @@ class TestGetSelfieUrl:
 
         assert response.status_code == 422  # Validation error
 
-    def test_get_selfie_url_unauthorized(self, client):
+    def test_get_selfie_url_unauthorized(self):
         """Test unauthorized access."""
-        response = client.get("/api/selfies/url?path=some/path.jpg")
-
-        assert response.status_code == 401
+        # Create client without mocked auth
+        with TestClient(app) as test_client:
+            response = test_client.get("/api/selfies/url?path=some/path.jpg")
+            assert response.status_code == 401
 
 
 class TestGetWorkoutSelfie:
     """Tests for GET /api/workouts/{workout_id}/selfie."""
 
-    def test_get_workout_selfie_success(self, client, mock_auth, mock_selfies_service):
+    def test_get_workout_selfie_success(self, client, mock_selfies_service):
         """Test successful selfie retrieval."""
         mock_selfies_service.get_workout_selfies = AsyncMock(
             return_value=[
@@ -120,7 +120,7 @@ class TestGetWorkoutSelfie:
         assert len(data["selfies"]) == 1
         assert data["selfies"][0]["id"] == "selfie-123"
 
-    def test_get_workout_selfie_none(self, client, mock_auth, mock_selfies_service):
+    def test_get_workout_selfie_none(self, client, mock_selfies_service):
         """Test workout with no selfie."""
         mock_selfies_service.get_workout_selfies = AsyncMock(return_value=[])
 
@@ -137,7 +137,7 @@ class TestGetWorkoutSelfie:
 class TestDeleteSelfie:
     """Tests for DELETE /api/selfies/{selfie_id}."""
 
-    def test_delete_selfie_success(self, client, mock_auth, mock_selfies_service):
+    def test_delete_selfie_success(self, client, mock_selfies_service):
         """Test successful selfie deletion."""
         mock_selfies_service.delete_selfie = AsyncMock(return_value={"success": True})
 
@@ -150,7 +150,7 @@ class TestDeleteSelfie:
         data = response.json()
         assert data["success"] is True
 
-    def test_delete_selfie_not_found(self, client, mock_auth, mock_selfies_service):
+    def test_delete_selfie_not_found(self, client, mock_selfies_service):
         """Test deleting non-existent selfie."""
         mock_selfies_service.delete_selfie = AsyncMock(
             return_value={"success": False, "error": "Selfie not found"}
@@ -167,7 +167,7 @@ class TestDeleteSelfie:
 class TestUpdateSelfieCaption:
     """Tests for PUT /api/selfies/{selfie_id}/caption."""
 
-    def test_update_caption_success(self, client, mock_auth, mock_selfies_service):
+    def test_update_caption_success(self, client, mock_selfies_service):
         """Test successful caption update."""
         mock_selfies_service.update_caption = AsyncMock(return_value={"success": True})
 
@@ -181,7 +181,7 @@ class TestUpdateSelfieCaption:
         data = response.json()
         assert data["success"] is True
 
-    def test_update_caption_empty(self, client, mock_auth, mock_selfies_service):
+    def test_update_caption_empty(self, client, mock_selfies_service):
         """Test updating caption to empty string."""
         mock_selfies_service.update_caption = AsyncMock(return_value={"success": True})
 
@@ -197,7 +197,7 @@ class TestUpdateSelfieCaption:
 class TestGetRecentSelfies:
     """Tests for GET /api/selfies/recent."""
 
-    def test_get_recent_selfies_success(self, client, mock_auth, mock_selfies_service):
+    def test_get_recent_selfies_success(self, client, mock_selfies_service):
         """Test successful recent selfies retrieval."""
         mock_selfies_service.get_recent_selfies = AsyncMock(
             return_value=[
@@ -241,9 +241,7 @@ class TestGetRecentSelfies:
         data = response.json()
         assert len(data["selfies"]) == 2
 
-    def test_get_recent_selfies_with_limit(
-        self, client, mock_auth, mock_selfies_service
-    ):
+    def test_get_recent_selfies_with_limit(self, client, mock_selfies_service):
         """Test recent selfies with custom limit."""
         mock_selfies_service.get_recent_selfies = AsyncMock(return_value=[])
 
