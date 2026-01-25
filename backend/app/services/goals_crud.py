@@ -131,7 +131,7 @@ class GoalsCrudService:
         """
         logger.info(f"[DB] Querying goals table for user_id: {user_id}")
         logger.info(f"[DB] Query: SELECT * FROM goals WHERE user_id='{user_id}' AND deleted_at IS NULL")
-        
+
         try:
             response = (
                 self.supabase.table("goals")
@@ -141,18 +141,18 @@ class GoalsCrudService:
                 .order("created_at", desc=True)
                 .execute()
             )
-            
+
             logger.info(f"[DB] Query successful, returned {len(response.data) if response.data else 0} rows")
-            
+
             if response.data:
                 logger.info(f"[DB] First goal: {response.data[0].get('title', 'N/A')} (id: {response.data[0].get('id', 'N/A')})")
             else:
                 logger.info(f"[DB] No goals found for user {user_id}")
                 # Try a count query to see if RLS is blocking
                 logger.info("[DB] Checking if goals exist without user filter (RLS test)...")
-                
+
             return response.data or []
-            
+
         except Exception as e:
             logger.error(f"[DB] Query failed with error: {e}")
             raise

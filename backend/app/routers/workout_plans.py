@@ -8,14 +8,6 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from app.dependencies import CurrentUser, Database
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
-logger = logging.getLogger("api.workout_plans")
 from app.models.workout_plan import (
     AIGeneratedPlanResponse,
     AIGenerationRequest,
@@ -28,6 +20,14 @@ from app.models.workout_plan import (
 )
 from app.services.ai_plan_generator import AIPlanGenerator
 from app.services.workout_plans_crud import WorkoutPlansCrudService
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger("api.workout_plans")
 
 router = APIRouter()
 
@@ -255,10 +255,10 @@ async def get_workout_plans(
         WorkoutPlanListResponse with list of plans
     """
     logger.info(f"[PLANS] GET /workout-plans - user_id: {user_id}")
-    
+
     service = WorkoutPlansCrudService(db)
     plans = await service.get_plans(user_id)
-    
+
     logger.info(f"[PLANS] Found {len(plans)} workout plans for user {user_id}")
     if plans:
         for p in plans[:3]:  # Log first 3 plans

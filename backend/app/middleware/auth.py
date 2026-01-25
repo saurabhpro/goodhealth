@@ -36,9 +36,9 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         """Process the request and extract user info from JWT."""
         path = request.url.path
         method = request.method
-        
+
         logger.info(f"[REQUEST] {method} {path}")
-        
+
         # Skip auth for public paths
         if path in self.PUBLIC_PATHS:
             logger.info(f"[AUTH] Skipping auth for public path: {path}")
@@ -60,7 +60,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
 
         # Attach user_id to request state (may be None if not authenticated)
         request.state.user_id = user_id
-        
+
         if user_id:
             logger.info(f"[AUTH] Request authenticated for user: {user_id}")
         else:
@@ -87,11 +87,11 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         if not settings.supabase_url:
             logger.error("[AUTH] SUPABASE_URL not configured!")
             return None
-            
+
         if not settings.supabase_service_key:
             logger.error("[AUTH] SUPABASE_SERVICE_KEY not configured!")
             return None
-            
+
         logger.info(f"[AUTH] Verifying token with Supabase at {settings.supabase_url}")
         api_key_preview = f"{settings.supabase_service_key[:15]}..." if settings.supabase_service_key else "NOT SET"
         logger.info(f"[AUTH] Using API key: {api_key_preview}")
