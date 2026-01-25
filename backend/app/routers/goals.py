@@ -1,8 +1,19 @@
 """Goals API routes."""
 
+import logging
+import sys
+
 from fastapi import APIRouter, HTTPException
 
 from app.dependencies import CurrentUser, Database
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger("api.goals")
 from app.models.goal import (
     Goal,
     GoalCreate,
@@ -65,8 +76,15 @@ async def get_goals(
     Returns:
         GoalListResponse with list of goals
     """
+    logger.info(f"[GOALS] GET /goals - user_id: {user_id}")
+    
     service = GoalsCrudService(db)
     goals = await service.get_goals(user_id)
+    
+    logger.info(f"[GOALS] Found {len(goals)} goals for user {user_id}")
+    if goals:
+        for g in goals[:3]:  # Log first 3 goals
+            logger.info(f"[GOALS]   - {g.title} (id: {g.id})")
 
     return GoalListResponse(goals=goals)
 
