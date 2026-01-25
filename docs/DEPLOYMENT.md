@@ -23,16 +23,28 @@ GoodHealth uses a split deployment model:
 1. Go to [railway.com](https://railway.com) and sign in with GitHub
 2. Click **New Project** → **Deploy from GitHub repo**
 3. Select your `goodhealth` repository
-4. Railway will auto-detect the Dockerfile in `backend/`
 
-#### 2. Configure Root Directory
+#### 2. Configure Root Directory (IMPORTANT)
 
-In Railway Dashboard → Service Settings:
-- **Root Directory**: `backend`
-- **Build Command**: (auto-detected from Dockerfile)
-- **Start Command**: (auto-detected from Dockerfile)
+Since this is a monorepo, you **must** set the root directory:
 
-#### 3. Set Environment Variables
+1. Click on your service → **Settings**
+2. Under **Source** section, find **Root Directory**
+3. Set it to: `backend`
+4. Save the changes
+
+> **Note**: This step is critical! Without it, Railway will detect the root `package.json` and try to build the frontend instead of the Python backend.
+
+#### 3. Builder Configuration
+
+Railway uses **Railpack** to auto-detect and build Python projects. The configuration is in:
+- `railway.json` (repo root) - specifies Railpack builder and root directory
+- `backend/railpack.toml` - Python version and start command
+- `backend/Procfile` - web process command
+
+No Dockerfile is needed - Railpack handles everything automatically.
+
+#### 4. Set Environment Variables
 
 In Railway Dashboard → Variables, add:
 
@@ -48,49 +60,54 @@ GEMINI_MODEL=gemini-3.0-flash
 
 **Where to find these values:**
 - **SUPABASE_URL**: Supabase Dashboard → Settings → API
-- **SUPABASE_SERVICE_KEY**: Supabase Dashboard → Settings → API → service_role key
+- **SUPABASE_SERVICE_KEY**: Supabase Dashboard → Settings → API → service_role key (NOT the anon key!)
 - **GEMINI_API_KEY**: Google AI Studio → Get API Key
 
-#### 4. Generate Public URL
+#### 5. Generate Public URL
 
 1. Go to Settings → Networking
 2. Click **Generate Domain**
 3. Copy the URL (e.g., `https://goodhealth-backend.up.railway.app`)
 
-#### 5. Verify Deployment
+#### 6. Verify Deployment
 
 ```bash
 curl https://your-railway-url.up.railway.app/health
 # Should return: {"status": "healthy"}
 ```
 
-### Dockerfile Reference
+### Configuration Files Reference
 
-The backend uses this Dockerfile (`backend/Dockerfile`):
+**`railway.json`** (repo root):
+```json
+{
+  "build": {
+    "builder": "RAILPACK",
+    "rootDirectory": "backend"
+  },
+  "deploy": {
+    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30
+  }
+}
+```
 
-```dockerfile
-FROM python:3.13-slim
+**`backend/railpack.toml`**:
+```toml
+[build]
+language = "python"
 
-WORKDIR /app
+[build.python]
+version = "3.12"
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+[start]
+cmd = "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+```
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY app/ ./app/
-
-RUN useradd --create-home appuser && chown -R appuser:appuser /app
-USER appuser
-
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/health')" || exit 1
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+**`backend/Procfile`**:
+```
+web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 ---
@@ -157,7 +174,7 @@ Click **Deploy**. Vercel will build and deploy automatically.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `SUPABASE_URL` | Yes | Supabase project URL |
-| `SUPABASE_SERVICE_KEY` | Yes | Service role key (full access) |
+| `SUPABASE_SERVICE_KEY` | Yes | Service role key (full access, bypasses RLS) |
 | `GEMINI_API_KEY` | Yes | Google AI API key |
 | `GEMINI_MODEL` | No | Default: `gemini-3.0-flash` |
 
@@ -169,6 +186,17 @@ Click **Deploy**. Vercel will build and deploy automatically.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Public anon key |
 | `NEXT_PUBLIC_APP_URL` | Yes | Frontend URL (for OAuth redirect) |
 | `PYTHON_API_URL` | Yes | Railway backend URL |
+
+### GitHub Actions (CI)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | For build |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | For build |
+| `NEXT_PUBLIC_APP_URL` | Yes | For build |
+| `PYTHON_API_URL` | Yes | For build |
+| `SONAR_TOKEN` | No | SonarCloud analysis |
+| `CODECOV_TOKEN` | No | Code coverage reports |
 
 ---
 
@@ -287,17 +315,21 @@ jobs:
 
 ## Troubleshooting
 
+### Railway Building Frontend Instead of Backend
+
+**Symptom**: Railway runs `yarn build` and tries to build frontend
+
+**Fix**: 
+1. Go to Railway Dashboard → Your Service → Settings
+2. Set **Root Directory** to `backend`
+3. Redeploy
+
 ### Backend Not Responding
 
 1. Check Railway deployment logs
-2. Verify environment variables are set
+2. Verify environment variables are set correctly
 3. Check `/health` endpoint
-4. Verify Dockerfile builds locally:
-   ```bash
-   cd backend
-   docker build -t goodhealth-backend .
-   docker run -p 8000:8000 --env-file .env goodhealth-backend
-   ```
+4. Verify Root Directory is set to `backend`
 
 ### Frontend Build Fails
 
@@ -310,7 +342,13 @@ jobs:
 
 1. Verify `NEXT_PUBLIC_APP_URL` matches Vercel URL
 2. Check Supabase Auth settings (redirect URLs)
-3. Verify `SUPABASE_JWT_SECRET` matches Supabase
+3. Add your Vercel URL to Supabase Auth → URL Configuration → Redirect URLs
+
+### API Returns Empty Data
+
+1. Verify `SUPABASE_SERVICE_KEY` is the **service_role** key (starts with `eyJ...`), NOT the anon key
+2. Check Railway logs for authentication errors
+3. Verify the backend can connect to Supabase
 
 ### AI Features Failing
 
