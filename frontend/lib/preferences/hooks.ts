@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/lib/auth/hooks'
 import type { Theme, AccentTheme } from '@/components/theme-provider'
 
@@ -35,7 +34,7 @@ export function usePreferences() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  // Load preferences from database
+  // Load preferences from API
   useEffect(() => {
     const loadPreferences = async () => {
       if (!user) {
@@ -45,19 +44,17 @@ export function usePreferences() {
       }
 
       try {
-        const supabase = createClient()
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('theme, accent_theme, weight_unit, distance_unit, notification_preferences')
-          .eq('id', user.id)
-          .single()
-
-        if (fetchError) {
-          console.error('Error fetching preferences:', fetchError)
+        const response = await fetch('/api/profile')
+        
+        if (!response.ok) {
+          console.error('Error fetching preferences:', response.statusText)
           setPreferences(DEFAULT_PREFERENCES)
           setLoading(false)
           return
         }
+
+        const result = await response.json()
+        const data = result.profile
 
         if (data) {
           setPreferences({
@@ -80,7 +77,7 @@ export function usePreferences() {
     loadPreferences()
   }, [user])
 
-  // Save preferences to database
+  // Save preferences to API
   const savePreferences = useCallback(
     async (newPreferences: Partial<UserPreferences>) => {
       if (!user) {
@@ -90,7 +87,6 @@ export function usePreferences() {
       }
 
       try {
-        const supabase = createClient()
         const updateData: Record<string, unknown> = {}
 
         if (newPreferences.theme !== undefined) {
@@ -109,20 +105,21 @@ export function usePreferences() {
           updateData.notification_preferences = newPreferences.notificationPreferences
         }
 
-        console.log('Updating preferences for user:', user.id, 'with data:', updateData)
+        console.log('Updating preferences with data:', updateData)
 
-        const { data, error: updateError } = await supabase
-          .from('profiles')
-          .update(updateData)
-          .eq('id', user.id)
-          .select()
+        const response = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData),
+        })
 
-        if (updateError) {
-          console.error('Supabase update error:', updateError)
-          throw updateError
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to update preferences')
         }
 
-        console.log('Preferences updated successfully:', data)
+        const result = await response.json()
+        console.log('Preferences updated successfully:', result)
 
         // Update local state
         setPreferences((prev) => ({ ...prev, ...newPreferences }))
