@@ -2,8 +2,5 @@
   "buildCommand": "cd frontend && yarn build",
   "outputDirectory": "frontend/.next",
   "installCommand": "cd frontend && yarn install",
-  "framework": "nextjs",
-  "env": {
-    "PYTHON_API_URL": "@python_api_url"
-  }
+  "framework": "nextjs"
 }
