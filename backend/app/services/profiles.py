@@ -30,11 +30,11 @@ class ProfilesService:
             self.supabase.table("profiles")
             .select("*")
             .eq("id", user_id)
-            .single()
+            .maybe_single()
             .execute()
         )
 
-        return response.data if response.data else None
+        return response.data
 
     async def update_profile(self, user_id: str, data: ProfileUpdate) -> dict[str, Any]:
         """Update user profile.
