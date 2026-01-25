@@ -2,127 +2,193 @@
  * Unit tests for goal actions
  */
 
-import { updateGoal, deleteGoal } from '@/lib/goals/actions'
-import { createClient } from '@/lib/supabase/server'
-import { calculateGoalStatus } from '@/lib/goals/progress'
+import {
+  createGoal,
+  getGoals,
+  updateGoal,
+  updateGoalProgress,
+  deleteGoal,
+} from "@/lib/goals/actions";
+import * as apiClient from "@/lib/api/client";
 
-jest.mock('next/cache', () => ({
+jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
-}))
+}));
 
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(),
-}))
+jest.mock("@/lib/api/client", () => ({
+  apiGet: jest.fn(),
+  apiPost: jest.fn(),
+  apiPut: jest.fn(),
+  apiDelete: jest.fn(),
+}));
 
-const mockCreateClient = createClient as jest.MockedFunction<typeof createClient>
+const mockApiGet = apiClient.apiGet as jest.MockedFunction<
+  typeof apiClient.apiGet
+>;
+const mockApiPost = apiClient.apiPost as jest.MockedFunction<
+  typeof apiClient.apiPost
+>;
+const mockApiPut = apiClient.apiPut as jest.MockedFunction<
+  typeof apiClient.apiPut
+>;
+const mockApiDelete = apiClient.apiDelete as jest.MockedFunction<
+  typeof apiClient.apiDelete
+>;
 
-describe('Goal Actions', () => {
-  let mockSupabase: ReturnType<typeof createClient>
-
+describe("Goal Actions", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.clearAllMocks();
+  });
 
-    mockSupabase = {
-      auth: {
-        getUser: jest.fn(),
-      },
-      from: jest.fn(),
-    }
+  describe("createGoal", () => {
+    it("should create a new goal", async () => {
+      mockApiPost.mockResolvedValue({
+        success: true,
+        data: { success: true, goal_id: "goal-123" },
+      });
 
-    mockCreateClient.mockResolvedValue(mockSupabase)
-  })
+      const formData = new FormData();
+      formData.set("title", "Lose Weight");
+      formData.set("description", "Lose 10kg");
+      formData.set("target_value", "70");
+      formData.set("current_value", "80");
+      formData.set("unit", "kg");
+      formData.set("target_date", "2024-12-31");
 
-  describe('updateGoal', () => {
-    it('should update an existing goal and ignore deleted records', async () => {
-      const mockUser = { id: 'user-123' }
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
+      const result = await createGoal(formData);
 
-      const existingGoal = { initial_value: 10 }
-      const goalSingle = jest.fn().mockResolvedValue({ data: existingGoal, error: null })
-      const goalIs = jest.fn().mockReturnValue({ single: goalSingle })
-      const goalEq2 = jest.fn().mockReturnValue({ is: goalIs })
-      const goalEq1 = jest.fn().mockReturnValue({ eq: goalEq2 })
-      const goalSelect = jest.fn().mockReturnValue({ eq: goalEq1 })
+      expect(result.success).toBe(true);
+      expect(result.goalId).toBe("goal-123");
+      expect(mockApiPost).toHaveBeenCalledWith("/api/goals", {
+        title: "Lose Weight",
+        description: "Lose 10kg",
+        target_value: 70,
+        current_value: 80,
+        unit: "kg",
+        target_date: "2024-12-31",
+      });
+    });
 
-      const updateIs = jest.fn().mockResolvedValue({ error: null })
-      const updateEq2 = jest.fn().mockReturnValue({ is: updateIs })
-      const updateEq1 = jest.fn().mockReturnValue({ eq: updateEq2 })
-      const updateMock = jest.fn().mockReturnValue({ eq: updateEq1 })
+    it("should handle errors when creating goal", async () => {
+      mockApiPost.mockResolvedValue({
+        success: false,
+        error: "Failed to create goal",
+      });
 
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'goals') {
-          return {
-            select: goalSelect,
-            update: updateMock,
-          }
-        }
-        return { select: jest.fn().mockReturnThis() }
-      })
+      const formData = new FormData();
+      formData.set("title", "Test Goal");
+      formData.set("target_value", "100");
+      formData.set("unit", "kg");
 
-      const formData = new FormData()
-      formData.set('title', 'New Title')
-      formData.set('description', 'Updated description')
-      formData.set('target_value', '100')
-      formData.set('current_value', '20')
-      formData.set('unit', 'kg')
-      formData.set('target_date', '')
+      const result = await createGoal(formData);
 
-      const expectedStatus = calculateGoalStatus({
-        initial_value: existingGoal.initial_value,
-        current_value: 20,
-        target_value: 100,
-        target_date: null,
-      })
+      expect(result.error).toBe("Failed to create goal");
+    });
+  });
 
-      const result = await updateGoal('goal-123', formData)
+  describe("getGoals", () => {
+    it("should fetch all goals", async () => {
+      const mockGoals = [
+        { id: "goal-1", title: "Goal 1" },
+        { id: "goal-2", title: "Goal 2" },
+      ];
 
-      expect(result.success).toBe(true)
-      expect(updateMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'New Title',
-          description: 'Updated description',
-          target_value: 100,
-          current_value: 20,
-          unit: 'kg',
-          target_date: null,
-          status: expectedStatus,
-          achieved: expectedStatus === 'completed',
-          updated_at: expect.any(String),
-        })
-      )
-      expect(updateIs).toHaveBeenCalledWith('deleted_at', null)
-    })
-  })
+      mockApiGet.mockResolvedValue({
+        success: true,
+        data: { goals: mockGoals },
+      });
 
-  describe('deleteGoal', () => {
-    it('should archive and soft delete a goal', async () => {
-      const mockUser = { id: 'user-123' }
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
+      const result = await getGoals();
 
-      const updateIs = jest.fn().mockResolvedValue({ error: null })
-      const updateEq2 = jest.fn().mockReturnValue({ is: updateIs })
-      const updateEq1 = jest.fn().mockReturnValue({ eq: updateEq2 })
-      const updateMock = jest.fn().mockReturnValue({ eq: updateEq1 })
+      expect(result.goals).toEqual(mockGoals);
+      expect(mockApiGet).toHaveBeenCalledWith("/api/goals");
+    });
 
-      mockSupabase.from.mockReturnValue({
-        update: updateMock,
-      })
+    it("should return empty array on error", async () => {
+      mockApiGet.mockResolvedValue({
+        success: false,
+        error: "Failed to fetch",
+      });
 
-      const result = await deleteGoal('goal-123')
+      const result = await getGoals();
 
-      expect(result.success).toBe(true)
-      expect(updateMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          deleted_at: expect.any(String),
-          status: 'archived',
-          updated_at: expect.any(String),
-        })
-      )
-      expect(updateIs).toHaveBeenCalledWith('deleted_at', null)
-    })
-  })
-})
+      expect(result.goals).toEqual([]);
+    });
+  });
+
+  describe("updateGoal", () => {
+    it("should update an existing goal", async () => {
+      mockApiPut.mockResolvedValue({
+        success: true,
+        data: { success: true },
+      });
+
+      const formData = new FormData();
+      formData.set("title", "Updated Title");
+      formData.set("current_value", "50");
+
+      const result = await updateGoal("goal-123", formData);
+
+      expect(result.success).toBe(true);
+      expect(mockApiPut).toHaveBeenCalledWith("/api/goals/goal-123", {
+        title: "Updated Title",
+        current_value: 50,
+      });
+    });
+
+    it("should handle errors when updating goal", async () => {
+      mockApiPut.mockResolvedValue({
+        success: false,
+        error: "Goal not found",
+      });
+
+      const formData = new FormData();
+      formData.set("title", "Test");
+
+      const result = await updateGoal("invalid-id", formData);
+
+      expect(result.error).toBe("Goal not found");
+    });
+  });
+
+  describe("updateGoalProgress", () => {
+    it("should update goal progress", async () => {
+      mockApiPut.mockResolvedValue({
+        success: true,
+        data: { success: true },
+      });
+
+      const result = await updateGoalProgress("goal-123", 75);
+
+      expect(result.success).toBe(true);
+      expect(mockApiPut).toHaveBeenCalledWith("/api/goals/goal-123/progress", {
+        current_value: 75,
+      });
+    });
+  });
+
+  describe("deleteGoal", () => {
+    it("should delete a goal", async () => {
+      mockApiDelete.mockResolvedValue({
+        success: true,
+        data: { success: true },
+      });
+
+      const result = await deleteGoal("goal-123");
+
+      expect(result.success).toBe(true);
+      expect(mockApiDelete).toHaveBeenCalledWith("/api/goals/goal-123");
+    });
+
+    it("should handle errors when deleting goal", async () => {
+      mockApiDelete.mockResolvedValue({
+        success: false,
+        error: "Failed to delete",
+      });
+
+      const result = await deleteGoal("invalid-id");
+
+      expect(result.error).toBe("Failed to delete");
+    });
+  });
+});

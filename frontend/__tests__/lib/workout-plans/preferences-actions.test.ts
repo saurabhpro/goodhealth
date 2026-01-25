@@ -1,342 +1,210 @@
 /**
- * Unit tests for User Workout Preferences Actions
+ * Unit tests for workout plan preferences actions
  */
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
   getUserPreferences,
   upsertUserPreferences,
-  updateUserPreferences,
   getUserTemplates,
-  getUserTemplate,
   createUserTemplate,
-  updateUserTemplate,
   deleteUserTemplate,
-  incrementTemplateUsage,
-} from '@/lib/workout-plans/preferences-actions'
-import { createClient } from '@/lib/supabase/server'
+} from "@/lib/workout-plans/preferences-actions";
+import * as apiClient from "@/lib/api/client";
 
-// Mock Supabase
-jest.mock('@/lib/supabase/server')
-const mockCreateClient = createClient as jest.MockedFunction<typeof createClient>
-
-// Mock revalidatePath
-jest.mock('next/cache', () => ({
+jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
-}))
+}));
 
-describe('User Preferences Actions', () => {
-  const mockUser = {
-    id: 'user-123',
-    email: 'test@example.com',
-  }
+jest.mock("@/lib/api/client", () => ({
+  apiGet: jest.fn(),
+  apiPost: jest.fn(),
+  apiPut: jest.fn(),
+  apiDelete: jest.fn(),
+}));
 
-  const mockSupabase = {
-    auth: {
-      getUser: jest.fn(),
-    },
-    from: jest.fn(),
-  }
+const mockApiGet = apiClient.apiGet as jest.MockedFunction<
+  typeof apiClient.apiGet
+>;
+const mockApiPost = apiClient.apiPost as jest.MockedFunction<
+  typeof apiClient.apiPost
+>;
+const mockApiPut = apiClient.apiPut as jest.MockedFunction<
+  typeof apiClient.apiPut
+>;
+const mockApiDelete = apiClient.apiDelete as jest.MockedFunction<
+  typeof apiClient.apiDelete
+>;
 
+describe("Workout Plan Preferences Actions", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockCreateClient.mockResolvedValue(mockSupabase as any)
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: mockUser },
-      error: null,
-    } as any)
-  })
+    jest.clearAllMocks();
+  });
 
-  describe('getUserPreferences', () => {
-    it('should return user preferences when they exist', async () => {
+  describe("getUserPreferences", () => {
+    it("should fetch user preferences", async () => {
       const mockPreferences = {
-        user_id: 'user-123',
-        liked_exercises: ['bench press', 'squats'],
-        avoided_exercises: ['pull-ups'],
+        fitness_level: "intermediate",
         preferred_duration: 60,
-      }
+        gym_access: true,
+      };
 
-      const mockQuery = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockPreferences, error: null }),
-      }
+      mockApiGet.mockResolvedValue({
+        success: true,
+        data: { preferences: mockPreferences },
+      });
 
-      mockSupabase.from.mockReturnValue(mockQuery as any)
+      const result = await getUserPreferences();
 
-      const result = await getUserPreferences()
+      expect(result.preferences).toEqual(mockPreferences);
+      expect(result.error).toBeNull();
+      expect(mockApiGet).toHaveBeenCalledWith("/api/workout-plans/preferences");
+    });
 
-      expect(result.preferences).toEqual(mockPreferences)
-      expect(result.error).toBeUndefined()
-      expect(mockSupabase.from).toHaveBeenCalledWith('user_workout_preferences')
-    })
+    it("should handle errors when fetching preferences", async () => {
+      mockApiGet.mockResolvedValue({
+        success: false,
+        error: "Failed to load preferences",
+      });
 
-    it('should return undefined preferences when none exist', async () => {
-      const mockQuery = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
-          data: null,
-          error: { code: 'PGRST116' },
-        }),
-      }
+      const result = await getUserPreferences();
 
-      mockSupabase.from.mockReturnValue(mockQuery as any)
+      expect(result.preferences).toBeNull();
+      expect(result.error).toBe("Failed to load preferences");
+    });
+  });
 
-      const result = await getUserPreferences()
+  describe("upsertUserPreferences", () => {
+    it("should save user preferences", async () => {
+      mockApiPut.mockResolvedValue({
+        success: true,
+        data: { preferences: {} },
+      });
 
-      expect(result.preferences).toBeUndefined()
-      expect(result.error).toBeUndefined()
-    })
-
-    it('should return error when not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      } as any)
-
-      const result = await getUserPreferences()
-
-      expect(result.error).toBe('Not authenticated')
-    })
-
-    it('should return error on database failure', async () => {
-      const mockQuery = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
-          data: null,
-          error: { code: 'OTHER_ERROR', message: 'Database error' },
-        }),
-      }
-
-      mockSupabase.from.mockReturnValue(mockQuery as any)
-
-      const result = await getUserPreferences()
-
-      expect(result.error).toBe('Database error')
-    })
-  })
-
-  describe('upsertUserPreferences', () => {
-    it('should create new preferences', async () => {
-      const newPreferences = {
-        liked_exercises: ['bench press'],
-        avoided_exercises: ['pull-ups'],
-        preferred_duration: 60,
-      }
-
-      const mockQuery = {
-        upsert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
-          data: { ...newPreferences, user_id: 'user-123' },
-          error: null,
-        }),
-      }
-
-      mockSupabase.from.mockReturnValue(mockQuery as any)
-
-      const result = await upsertUserPreferences(newPreferences)
-
-      expect(result.preferences).toEqual({
-        ...newPreferences,
-        user_id: 'user-123',
-      })
-      expect(result.error).toBeUndefined()
-      expect(mockQuery.upsert).toHaveBeenCalledWith(
-        {
-          ...newPreferences,
-          user_id: 'user-123',
-        },
-        { onConflict: 'user_id' }
-      )
-    })
-
-    it('should return error when not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      } as any)
-
-      const result = await upsertUserPreferences({})
-
-      expect(result.error).toBe('Not authenticated')
-    })
-  })
-
-  describe('updateUserPreferences', () => {
-    it('should update specific preference fields', async () => {
-      const updates = {
+      const result = await upsertUserPreferences({
+        fitness_level: "advanced",
         preferred_duration: 90,
-        liked_exercises: ['deadlifts', 'bench press'],
-      }
+      });
 
-      const mockQuery = {
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
-          data: { user_id: 'user-123', ...updates },
-          error: null,
-        }),
-      }
+      expect(result.success).toBe(true);
+      expect(mockApiPut).toHaveBeenCalledWith("/api/workout-plans/preferences", {
+        fitness_level: "advanced",
+        preferred_duration: 90,
+      });
+    });
 
-      mockSupabase.from.mockReturnValue(mockQuery as any)
+    it("should handle errors when saving preferences", async () => {
+      mockApiPut.mockResolvedValue({
+        success: false,
+        error: "Failed to save preferences",
+      });
 
-      const result = await updateUserPreferences(updates)
+      const result = await upsertUserPreferences({});
 
-      expect(result.preferences).toEqual({ user_id: 'user-123', ...updates })
-      expect(result.error).toBeUndefined()
-    })
-  })
+      expect(result.error).toBe("Failed to save preferences");
+    });
+  });
 
-  describe('getUserTemplates', () => {
-    it('should return all user templates', async () => {
+  describe("getUserTemplates", () => {
+    it("should fetch all user templates", async () => {
       const mockTemplates = [
-        {
-          id: 'template-1',
-          user_id: 'user-123',
-          name: 'My Workout',
-          exercises: [],
-        },
-        {
-          id: 'template-2',
-          user_id: 'user-123',
-          name: 'Another Workout',
-          exercises: [],
-        },
-      ]
+        { id: "template-1", name: "Push Day" },
+        { id: "template-2", name: "Pull Day" },
+      ];
 
-      const mockQuery = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        is: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: mockTemplates, error: null }),
-      }
+      mockApiGet.mockResolvedValue({
+        success: true,
+        data: { templates: mockTemplates },
+      });
 
-      mockSupabase.from.mockReturnValue(mockQuery as any)
+      const result = await getUserTemplates();
 
-      const result = await getUserTemplates()
+      expect(result.templates).toEqual(mockTemplates);
+      expect(result.error).toBeNull();
+      expect(mockApiGet).toHaveBeenCalledWith("/api/workout-plans/templates");
+    });
 
-      expect(result.templates).toEqual(mockTemplates)
-      expect(result.error).toBeUndefined()
-    })
+    it("should fetch active templates only", async () => {
+      mockApiGet.mockResolvedValue({
+        success: true,
+        data: { templates: [] },
+      });
 
-    // Note: Filter tests are skipped as they test Supabase's query builder
-    // which is already tested by Supabase. The basic CRUD operations are tested above.
-  })
+      await getUserTemplates({ isActive: true });
 
-  describe('getUserTemplate', () => {
-    it('should return a single template by ID', async () => {
-      const mockTemplate = {
-        id: 'template-1',
-        user_id: 'user-123',
-        name: 'My Workout',
-        exercises: [],
-      }
+      expect(mockApiGet).toHaveBeenCalledWith(
+        "/api/workout-plans/templates?is_active=true"
+      );
+    });
 
-      const mockQuery = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        is: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: mockTemplate, error: null }),
-      }
+    it("should return empty array on error", async () => {
+      mockApiGet.mockResolvedValue({
+        success: false,
+        error: "Failed to load templates",
+      });
 
-      mockSupabase.from.mockReturnValue(mockQuery as any)
+      const result = await getUserTemplates();
 
-      const result = await getUserTemplate('template-1')
+      expect(result.templates).toEqual([]);
+      expect(result.error).toBe("Failed to load templates");
+    });
+  });
 
-      expect(result.template).toEqual(mockTemplate)
-      expect(result.error).toBeUndefined()
-    })
-  })
+  describe("createUserTemplate", () => {
+    it("should create a new template", async () => {
+      mockApiPost.mockResolvedValue({
+        success: true,
+        data: { template_id: "template-123" },
+      });
 
-  describe('createUserTemplate', () => {
-    it('should create a new template', async () => {
-      const newTemplate = {
-        name: 'New Workout',
-        description: 'A test workout',
-        exercises: [],
-        intensity_level: 'medium' as const,
-      }
+      const result = await createUserTemplate({
+        name: "New Template",
+        workout_type: "strength",
+      });
 
-      const mockQuery = {
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
-          data: { ...newTemplate, id: 'new-id', user_id: 'user-123' },
-          error: null,
-        }),
-      }
+      expect(result.success).toBe(true);
+      expect(result.templateId).toBe("template-123");
+      expect(mockApiPost).toHaveBeenCalledWith("/api/workout-plans/templates", {
+        name: "New Template",
+        workout_type: "strength",
+      });
+    });
 
-      mockSupabase.from.mockReturnValue(mockQuery as any)
+    it("should handle errors when creating template", async () => {
+      mockApiPost.mockResolvedValue({
+        success: false,
+        error: "Failed to create template",
+      });
 
-      const result = await createUserTemplate(newTemplate)
+      const result = await createUserTemplate({});
 
-      expect(result.template).toEqual({
-        ...newTemplate,
-        id: 'new-id',
-        user_id: 'user-123',
-      })
-      expect(result.error).toBeUndefined()
-    })
-  })
+      expect(result.error).toBe("Failed to create template");
+    });
+  });
 
-  describe('updateUserTemplate', () => {
-    it('should update a template', async () => {
-      const updates = {
-        name: 'Updated Workout',
-        intensity_level: 'high' as const,
-      }
+  describe("deleteUserTemplate", () => {
+    it("should delete a template", async () => {
+      mockApiDelete.mockResolvedValue({
+        success: true,
+        data: { success: true },
+      });
 
-      const mockQuery = {
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
-          data: { id: 'template-1', user_id: 'user-123', ...updates },
-          error: null,
-        }),
-      }
+      const result = await deleteUserTemplate("template-123");
 
-      mockSupabase.from.mockReturnValue(mockQuery as any)
+      expect(result.success).toBe(true);
+      expect(mockApiDelete).toHaveBeenCalledWith(
+        "/api/workout-plans/templates/template-123"
+      );
+    });
 
-      const result = await updateUserTemplate('template-1', updates)
+    it("should handle errors when deleting template", async () => {
+      mockApiDelete.mockResolvedValue({
+        success: false,
+        error: "Failed to delete template",
+      });
 
-      expect(result.template).toEqual({
-        id: 'template-1',
-        user_id: 'user-123',
-        ...updates,
-      })
-      expect(result.error).toBeUndefined()
-    })
-  })
+      const result = await deleteUserTemplate("invalid-id");
 
-  describe('deleteUserTemplate', () => {
-    it('should return error when not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      } as any)
-
-      const result = await deleteUserTemplate('template-1')
-
-      expect(result.error).toBe('Not authenticated')
-    })
-  })
-
-  describe('incrementTemplateUsage', () => {
-    it('should return error when not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      } as any)
-
-      const result = await incrementTemplateUsage('template-1')
-
-      expect(result.error).toBe('Not authenticated')
-    })
-  })
-})
+      expect(result.error).toBe("Failed to delete template");
+    });
+  });
+});

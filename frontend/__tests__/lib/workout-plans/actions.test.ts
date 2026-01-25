@@ -1,5 +1,5 @@
 /**
- * Unit tests for workout plan CRUD operations
+ * Unit tests for workout plan actions
  */
 
 import {
@@ -10,540 +10,228 @@ import {
   deleteWorkoutPlan,
   activateWorkoutPlan,
   completeWorkoutPlan,
-} from '@/lib/workout-plans/actions'
-import { createClient } from '@/lib/supabase/server'
-import type { InsertWorkoutPlan, UpdateWorkoutPlan } from '@/types'
+  deactivateWorkoutPlan,
+} from "@/lib/workout-plans/actions";
+import * as apiClient from "@/lib/api/client";
 
-// Mock Next.js cache revalidation
-jest.mock('next/cache', () => ({
+jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
-}))
+}));
 
-// Mock Supabase client
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(),
-}))
+jest.mock("@/lib/api/client", () => ({
+  apiGet: jest.fn(),
+  apiPost: jest.fn(),
+  apiPut: jest.fn(),
+  apiDelete: jest.fn(),
+}));
 
-const mockCreateClient = createClient as jest.MockedFunction<typeof createClient>
+const mockApiGet = apiClient.apiGet as jest.MockedFunction<
+  typeof apiClient.apiGet
+>;
+const mockApiPost = apiClient.apiPost as jest.MockedFunction<
+  typeof apiClient.apiPost
+>;
+const mockApiPut = apiClient.apiPut as jest.MockedFunction<
+  typeof apiClient.apiPut
+>;
+const mockApiDelete = apiClient.apiDelete as jest.MockedFunction<
+  typeof apiClient.apiDelete
+>;
 
-describe('Workout Plan Actions', () => {
-  let mockSupabase: ReturnType<typeof createClient>
-
+describe("Workout Plan Actions", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.clearAllMocks();
+  });
 
-    mockSupabase = {
-      auth: {
-        getUser: jest.fn(),
-      },
-      from: jest.fn(),
-    }
+  describe("createWorkoutPlan", () => {
+    it("should create a new workout plan", async () => {
+      const mockPlan = { id: "plan-123", name: "Test Plan" };
+      mockApiPost.mockResolvedValue({
+        success: true,
+        data: { success: true, plan: mockPlan },
+      });
 
-    mockCreateClient.mockResolvedValue(mockSupabase)
-  })
+      const result = await createWorkoutPlan({
+        name: "Test Plan",
+        goal_type: "strength",
+        weeks_duration: 4,
+        workouts_per_week: 3,
+      });
 
-  describe('createWorkoutPlan', () => {
-    it('should create a workout plan successfully', async () => {
-      const mockUser = { id: 'user-123' }
-      const mockPlan = {
-        id: 'plan-123',
-        user_id: 'user-123',
-        name: 'My Fitness Plan',
-        goal_type: 'muscle_building' as const,
-        weeks_duration: 8,
-        workouts_per_week: 4,
-      }
+      expect(result.success).toBe(true);
+      expect(result.plan).toEqual(mockPlan);
+      expect(mockApiPost).toHaveBeenCalledWith("/api/workout-plans", {
+        name: "Test Plan",
+        goal_type: "strength",
+        weeks_duration: 4,
+        workouts_per_week: 3,
+      });
+    });
 
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
+    it("should handle errors when creating plan", async () => {
+      mockApiPost.mockResolvedValue({
+        success: false,
+        error: "Failed to create workout plan",
+      });
 
-      const mockInsert = jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: mockPlan,
-            error: null,
-          }),
-        }),
-      })
+      const result = await createWorkoutPlan({
+        name: "Test Plan",
+        goal_type: "strength",
+        weeks_duration: 4,
+        workouts_per_week: 3,
+      });
 
-      mockSupabase.from.mockReturnValue({
-        insert: mockInsert,
-      })
+      expect(result.error).toBe("Failed to create workout plan");
+    });
+  });
 
-      const planData: Omit<InsertWorkoutPlan, 'user_id'> = {
-        name: 'My Fitness Plan',
-        goal_type: 'muscle_building',
-        weeks_duration: 8,
-        workouts_per_week: 4,
-      }
-
-      const result = await createWorkoutPlan(planData)
-
-      expect(result.success).toBe(true)
-      expect(result.plan).toEqual(mockPlan)
-      expect(mockInsert).toHaveBeenCalledWith({
-        ...planData,
-        user_id: 'user-123',
-      })
-    })
-
-    it('should return error when user is not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-      })
-
-      const planData: Omit<InsertWorkoutPlan, 'user_id'> = {
-        name: 'My Plan',
-        goal_type: 'weight_loss',
-      }
-
-      const result = await createWorkoutPlan(planData)
-
-      expect(result.error).toBe('Not authenticated')
-    })
-
-    it('should handle database errors', async () => {
-      const mockUser = { id: 'user-123' }
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Database error' },
-            }),
-          }),
-        }),
-      })
-
-      const planData: Omit<InsertWorkoutPlan, 'user_id'> = {
-        name: 'My Plan',
-        goal_type: 'endurance',
-      }
-
-      const result = await createWorkoutPlan(planData)
-
-      expect(result.error).toContain('Failed to create workout plan')
-    })
-  })
-
-  describe('getWorkoutPlans', () => {
-    it('should fetch all workout plans for authenticated user', async () => {
-      const mockUser = { id: 'user-123' }
+  describe("getWorkoutPlans", () => {
+    it("should fetch all workout plans", async () => {
       const mockPlans = [
-        { id: 'plan-1', name: 'Plan 1', user_id: 'user-123' },
-        { id: 'plan-2', name: 'Plan 2', user_id: 'user-123' },
-      ]
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            is: jest.fn().mockReturnValue({
-              order: jest.fn().mockResolvedValue({
-                data: mockPlans,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const result = await getWorkoutPlans()
-
-      expect(result.plans).toEqual(mockPlans)
-      expect(result.plans).toHaveLength(2)
-    })
-
-    it('should return empty array when user is not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-      })
-
-      const result = await getWorkoutPlans()
-
-      expect(result.plans).toEqual([])
-    })
-
-    it('should handle database errors gracefully', async () => {
-      const mockUser = { id: 'user-123' }
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            is: jest.fn().mockReturnValue({
-              order: jest.fn().mockResolvedValue({
-                data: null,
-                error: { message: 'Database error' },
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const result = await getWorkoutPlans()
-
-      expect(result.plans).toEqual([])
-      expect(result.error).toBe('Database error')
-    })
-  })
-
-  describe('getWorkoutPlan', () => {
-    it('should fetch a single workout plan with sessions', async () => {
-      const mockUser = { id: 'user-123' }
-      const mockPlan = {
-        id: 'plan-123',
-        name: 'My Plan',
-        user_id: 'user-123',
-        workout_plan_sessions: [
-          { id: 'session-1', week_number: 1, day_of_week: 1 },
-        ],
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              is: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
-                  data: mockPlan,
-                  error: null,
-                }),
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const result = await getWorkoutPlan('plan-123')
-
-      expect(result.plan).toEqual(mockPlan)
-    })
-
-    it('should return error when user is not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-      })
-
-      const result = await getWorkoutPlan('plan-123')
-
-      expect(result.error).toBe('Not authenticated')
-    })
-
-    it('should return error when plan is not found', async () => {
-      const mockUser = { id: 'user-123' }
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              is: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
-                  data: null,
-                  error: { message: 'Not found' },
-                }),
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const result = await getWorkoutPlan('nonexistent-plan')
-
-      expect(result.error).toContain('Failed to fetch workout plan')
-    })
-  })
-
-  describe('updateWorkoutPlan', () => {
-    it('should update a workout plan successfully', async () => {
-      const mockUser = { id: 'user-123' }
-      const mockUpdatedPlan = {
-        id: 'plan-123',
-        name: 'Updated Plan Name',
-        user_id: 'user-123',
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              select: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
-                  data: mockUpdatedPlan,
-                  error: null,
-                }),
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const updateData: UpdateWorkoutPlan = {
-        name: 'Updated Plan Name',
-      }
-
-      const result = await updateWorkoutPlan('plan-123', updateData)
-
-      expect(result.success).toBe(true)
-      expect(result.plan).toEqual(mockUpdatedPlan)
-    })
-
-    it('should return error when user is not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-      })
-
-      const result = await updateWorkoutPlan('plan-123', { name: 'New Name' })
-
-      expect(result.error).toBe('Not authenticated')
-    })
-  })
-
-  describe('deleteWorkoutPlan', () => {
-    it('should delete a workout plan successfully', async () => {
-      const mockUser = { id: 'user-123' }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      const mockUpdate = jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              is: jest.fn().mockResolvedValue({
-                error: null,
-              }),
-            }),
-          }),
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: mockUpdate,
-      })
-
-      const result = await deleteWorkoutPlan('plan-123')
-
-      expect(result.success).toBe(true)
-      expect(mockUpdate).toHaveBeenCalledWith({
-        deleted_at: expect.any(String),
-        status: 'archived',
-        updated_at: expect.any(String),
-      })
-    })
-
-    it('should return error when user is not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-      })
-
-      const result = await deleteWorkoutPlan('plan-123')
-
-      expect(result.error).toBe('Not authenticated')
-    })
-
-    it('should handle database errors', async () => {
-      const mockUser = { id: 'user-123' }
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              is: jest.fn().mockResolvedValue({
-                error: { message: 'Delete failed' },
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const result = await deleteWorkoutPlan('plan-123')
-
-      expect(result.error).toBe('Delete failed')
-    })
-  })
-
-  describe('activateWorkoutPlan', () => {
-    it('should activate a workout plan successfully', async () => {
-      const mockUser = { id: 'user-123' }
-      const mockActivatedPlan = {
-        id: 'plan-123',
-        status: 'active',
-        user_id: 'user-123',
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      // Mock check for existing active plans
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'workout_plans') {
-          const selectMock = jest.fn()
-          selectMock.mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                is: jest.fn().mockResolvedValue({
-                  data: [], // No active plans
-                  error: null,
-                }),
-              }),
-            }),
-          })
-
-          const updateMock = jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                select: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({
-                    data: mockActivatedPlan,
-                    error: null,
-                  }),
-                }),
-              }),
-            }),
-          })
-
-          return {
-            select: selectMock,
-            update: updateMock,
-          }
-        }
-      })
-
-      const result = await activateWorkoutPlan('plan-123')
-
-      expect(result.success).toBe(true)
-      expect(result.plan).toEqual(mockActivatedPlan)
-    })
-
-    it('should return error when another plan is already active', async () => {
-      const mockUser = { id: 'user-123' }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              is: jest.fn().mockResolvedValue({
-                data: [{ id: 'other-plan' }], // Another plan is active
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const result = await activateWorkoutPlan('plan-123')
-
-      expect(result.error).toContain('already have an active plan')
-    })
-
-    it('should return error when user is not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-      })
-
-      const result = await activateWorkoutPlan('plan-123')
-
-      expect(result.error).toBe('Not authenticated')
-    })
-  })
-
-  describe('completeWorkoutPlan', () => {
-    it('should complete a workout plan successfully', async () => {
-      const mockUser = { id: 'user-123' }
-      const mockCompletedPlan = {
-        id: 'plan-123',
-        status: 'completed',
-        user_id: 'user-123',
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              select: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
-                  data: mockCompletedPlan,
-                  error: null,
-                }),
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const result = await completeWorkoutPlan('plan-123')
-
-      expect(result.success).toBe(true)
-      expect(result.plan).toEqual(mockCompletedPlan)
-    })
-
-    it('should return error when user is not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-      })
-
-      const result = await completeWorkoutPlan('plan-123')
-
-      expect(result.error).toBe('Not authenticated')
-    })
-
-    it('should handle database errors', async () => {
-      const mockUser = { id: 'user-123' }
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              select: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
-                  data: null,
-                  error: { message: 'Update failed' },
-                }),
-              }),
-            }),
-          }),
-        }),
-      })
-
-      const result = await completeWorkoutPlan('plan-123')
-
-      expect(result.error).toContain('Failed to complete workout plan')
-    })
-  })
-})
+        { id: "plan-1", name: "Plan 1" },
+        { id: "plan-2", name: "Plan 2" },
+      ];
+
+      mockApiGet.mockResolvedValue({
+        success: true,
+        data: { plans: mockPlans },
+      });
+
+      const result = await getWorkoutPlans();
+
+      expect(result.plans).toEqual(mockPlans);
+      expect(mockApiGet).toHaveBeenCalledWith("/api/workout-plans");
+    });
+
+    it("should return empty array on error", async () => {
+      mockApiGet.mockResolvedValue({
+        success: false,
+        error: "Failed to fetch",
+      });
+
+      const result = await getWorkoutPlans();
+
+      expect(result.plans).toEqual([]);
+    });
+  });
+
+  describe("getWorkoutPlan", () => {
+    it("should fetch a single workout plan", async () => {
+      const mockPlan = { id: "plan-123", name: "Test Plan" };
+
+      mockApiGet.mockResolvedValue({
+        success: true,
+        data: mockPlan,
+      });
+
+      const result = await getWorkoutPlan("plan-123");
+
+      expect(result.plan).toEqual(mockPlan);
+      expect(mockApiGet).toHaveBeenCalledWith("/api/workout-plans/plan-123");
+    });
+
+    it("should handle errors when fetching plan", async () => {
+      mockApiGet.mockResolvedValue({
+        success: false,
+        error: "Plan not found",
+      });
+
+      const result = await getWorkoutPlan("invalid-id");
+
+      expect(result.error).toBe("Plan not found");
+    });
+  });
+
+  describe("updateWorkoutPlan", () => {
+    it("should update a workout plan", async () => {
+      const mockPlan = { id: "plan-123", name: "Updated Plan" };
+
+      mockApiPut.mockResolvedValue({
+        success: true,
+        data: { success: true, plan: mockPlan },
+      });
+
+      const result = await updateWorkoutPlan("plan-123", { name: "Updated Plan" });
+
+      expect(result.success).toBe(true);
+      expect(result.plan).toEqual(mockPlan);
+      expect(mockApiPut).toHaveBeenCalledWith("/api/workout-plans/plan-123", {
+        name: "Updated Plan",
+      });
+    });
+  });
+
+  describe("deleteWorkoutPlan", () => {
+    it("should delete a workout plan", async () => {
+      mockApiDelete.mockResolvedValue({
+        success: true,
+        data: { success: true },
+      });
+
+      const result = await deleteWorkoutPlan("plan-123");
+
+      expect(result.success).toBe(true);
+      expect(mockApiDelete).toHaveBeenCalledWith("/api/workout-plans/plan-123");
+    });
+  });
+
+  describe("activateWorkoutPlan", () => {
+    it("should activate a workout plan", async () => {
+      const mockPlan = { id: "plan-123", status: "active" };
+
+      mockApiPost.mockResolvedValue({
+        success: true,
+        data: { success: true, plan: mockPlan },
+      });
+
+      const result = await activateWorkoutPlan("plan-123");
+
+      expect(result.success).toBe(true);
+      expect(result.plan).toEqual(mockPlan);
+      expect(mockApiPost).toHaveBeenCalledWith(
+        "/api/workout-plans/plan-123/activate",
+        {}
+      );
+    });
+  });
+
+  describe("completeWorkoutPlan", () => {
+    it("should complete a workout plan", async () => {
+      const mockPlan = { id: "plan-123", status: "completed" };
+
+      mockApiPost.mockResolvedValue({
+        success: true,
+        data: { success: true, plan: mockPlan },
+      });
+
+      const result = await completeWorkoutPlan("plan-123");
+
+      expect(result.success).toBe(true);
+      expect(result.plan).toEqual(mockPlan);
+      expect(mockApiPost).toHaveBeenCalledWith(
+        "/api/workout-plans/plan-123/complete",
+        {}
+      );
+    });
+  });
+
+  describe("deactivateWorkoutPlan", () => {
+    it("should deactivate a workout plan", async () => {
+      const mockPlan = { id: "plan-123", status: "draft" };
+
+      mockApiPost.mockResolvedValue({
+        success: true,
+        data: { success: true, plan: mockPlan },
+      });
+
+      const result = await deactivateWorkoutPlan("plan-123");
+
+      expect(result.success).toBe(true);
+      expect(result.plan).toEqual(mockPlan);
+      expect(mockApiPost).toHaveBeenCalledWith(
+        "/api/workout-plans/plan-123/deactivate",
+        {}
+      );
+    });
+  });
+});
