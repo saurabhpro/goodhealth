@@ -2,14 +2,12 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from supabase import Client
 
 from app.models.workout import (
-    Exercise,
     ExerciseCreate,
-    Workout,
     WorkoutCreate,
     WorkoutUpdate,
     WorkoutWithExercises,
@@ -26,15 +24,13 @@ class WorkoutsService:
     def __init__(self, supabase: Client):
         self.supabase = supabase
 
-    async def create_workout(
-        self, user_id: str, data: WorkoutCreate
-    ) -> dict[str, Any]:
+    async def create_workout(self, user_id: str, data: WorkoutCreate) -> dict[str, Any]:
         """Create a new workout with exercises.
-        
+
         Args:
             user_id: The user's ID
             data: Workout creation data including exercises
-            
+
         Returns:
             Dict with success status and workout_id or error
         """
@@ -49,9 +45,7 @@ class WorkoutsService:
                 "effort_level": data.effort_level,
             }
 
-            response = self.supabase.table("workouts").insert(
-                workout_data
-            ).execute()
+            response = self.supabase.table("workouts").insert(workout_data).execute()
 
             if not response.data:
                 return {"success": False, "error": "Failed to create workout"}
@@ -62,24 +56,27 @@ class WorkoutsService:
             # Create exercises if provided
             if data.exercises:
                 exercise_records = [
-                    self._build_exercise_record(ex, workout_id)
-                    for ex in data.exercises
+                    self._build_exercise_record(ex, workout_id) for ex in data.exercises
                 ]
-                
-                ex_response = self.supabase.table("exercises").insert(
-                    exercise_records
-                ).execute()
+
+                ex_response = (
+                    self.supabase.table("exercises").insert(exercise_records).execute()
+                )
 
                 if not ex_response.data:
-                    logger.warning(f"Failed to create exercises for workout {workout_id}")
+                    logger.warning(
+                        f"Failed to create exercises for workout {workout_id}"
+                    )
 
             # Update workout plan session if linked
             if data.session_id:
-                self.supabase.table("workout_plan_sessions").update({
-                    "status": "completed",
-                    "completed_workout_id": workout_id,
-                    "completed_at": datetime.now().isoformat(),
-                }).eq("id", data.session_id).execute()
+                self.supabase.table("workout_plan_sessions").update(
+                    {
+                        "status": "completed",
+                        "completed_workout_id": workout_id,
+                        "completed_at": datetime.now().isoformat(),
+                    }
+                ).eq("id", data.session_id).execute()
 
             # Sync goal progress
             goal_sync = GoalSyncService(self.supabase)
@@ -92,21 +89,25 @@ class WorkoutsService:
             return {"success": False, "error": str(e)}
 
     async def get_workouts(
-        self, user_id: str, limit: Optional[int] = None
+        self, user_id: str, limit: int | None = None
     ) -> list[WorkoutWithSelfie]:
         """Get all workouts for a user with exercises and selfies.
-        
+
         Args:
             user_id: The user's ID
             limit: Optional limit on number of workouts
-            
+
         Returns:
             List of workouts with exercises and selfies
         """
-        query = self.supabase.table("workouts").select(
-            "*, exercises(*), workout_selfies(id, file_path, caption, taken_at)"
-        ).eq("user_id", user_id).is_("deleted_at", "null").order(
-            "date", desc=True
+        query = (
+            self.supabase.table("workouts")
+            .select(
+                "*, exercises(*), workout_selfies(id, file_path, caption, taken_at)"
+            )
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .order("date", desc=True)
         )
 
         if limit:
@@ -129,21 +130,25 @@ class WorkoutsService:
 
     async def get_workout(
         self, user_id: str, workout_id: str
-    ) -> Optional[WorkoutWithExercises]:
+    ) -> WorkoutWithExercises | None:
         """Get a single workout by ID.
-        
+
         Args:
             user_id: The user's ID
             workout_id: The workout ID
-            
+
         Returns:
             Workout with exercises or None if not found
         """
-        response = self.supabase.table("workouts").select(
-            "*, exercises(*)"
-        ).eq("id", workout_id).eq("user_id", user_id).is_(
-            "deleted_at", "null"
-        ).single().execute()
+        response = (
+            self.supabase.table("workouts")
+            .select("*, exercises(*)")
+            .eq("id", workout_id)
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .single()
+            .execute()
+        )
 
         return response.data if response.data else None
 
@@ -151,19 +156,19 @@ class WorkoutsService:
         self, user_id: str, workout_id: str, data: WorkoutUpdate
     ) -> dict[str, Any]:
         """Update a workout and its exercises.
-        
+
         Args:
             user_id: The user's ID
             workout_id: The workout ID
             data: Update data
-            
+
         Returns:
             Dict with success status or error
         """
         try:
             # Build update dict (only non-None values)
             update_data: dict[str, Any] = {"updated_at": datetime.now().isoformat()}
-            
+
             if data.name is not None:
                 update_data["name"] = data.name
             if data.date is not None:
@@ -176,9 +181,13 @@ class WorkoutsService:
                 update_data["effort_level"] = data.effort_level
 
             # Update workout
-            response = self.supabase.table("workouts").update(
-                update_data
-            ).eq("id", workout_id).eq("user_id", user_id).execute()
+            response = (
+                self.supabase.table("workouts")
+                .update(update_data)
+                .eq("id", workout_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Workout not found"}
@@ -186,9 +195,9 @@ class WorkoutsService:
             # Update exercises if provided
             if data.exercises is not None:
                 # Soft delete existing exercises
-                self.supabase.table("exercises").update({
-                    "deleted_at": datetime.now().isoformat()
-                }).eq("workout_id", workout_id).is_("deleted_at", "null").execute()
+                self.supabase.table("exercises").update(
+                    {"deleted_at": datetime.now().isoformat()}
+                ).eq("workout_id", workout_id).is_("deleted_at", "null").execute()
 
                 # Insert new exercises
                 if data.exercises:
@@ -210,20 +219,23 @@ class WorkoutsService:
 
     async def delete_workout(self, user_id: str, workout_id: str) -> dict[str, Any]:
         """Soft delete a workout.
-        
+
         Args:
             user_id: The user's ID
             workout_id: The workout ID
-            
+
         Returns:
             Dict with success status or error
         """
         try:
-            response = self.supabase.table("workouts").update({
-                "deleted_at": datetime.now().isoformat()
-            }).eq("id", workout_id).eq("user_id", user_id).is_(
-                "deleted_at", "null"
-            ).execute()
+            response = (
+                self.supabase.table("workouts")
+                .update({"deleted_at": datetime.now().isoformat()})
+                .eq("id", workout_id)
+                .eq("user_id", user_id)
+                .is_("deleted_at", "null")
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Workout not found"}
@@ -260,11 +272,11 @@ class WorkoutsService:
             "notes": exercise.notes,
         }
 
-    async def _get_signed_url(self, file_path: Optional[str]) -> Optional[str]:
+    async def _get_signed_url(self, file_path: str | None) -> str | None:
         """Get signed URL for a selfie file."""
         if not file_path:
             return None
-        
+
         try:
             result = self.supabase.storage.from_("workout-selfies").create_signed_url(
                 file_path, 3600

@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from google import genai
 from google.genai import types
@@ -18,10 +18,10 @@ class GeminiClient:
     def __init__(self) -> None:
         """Initialize the Gemini client."""
         settings = get_settings()
-        
+
         if not settings.gemini_api_key:
             raise ValueError("GEMINI_API_KEY must be set in environment")
-        
+
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model_name = settings.gemini_model
 
@@ -34,17 +34,17 @@ class GeminiClient:
         top_p: float = 0.95,
     ) -> str:
         """Generate content using Gemini.
-        
+
         Args:
             prompt: The prompt to send to the model
             temperature: Sampling temperature (0.0 to 1.0)
             max_tokens: Maximum output tokens
             top_k: Top-k sampling parameter
             top_p: Top-p (nucleus) sampling parameter
-            
+
         Returns:
             Generated text response
-            
+
         Raises:
             Exception: If generation fails
         """
@@ -75,15 +75,15 @@ class GeminiClient:
         max_tokens: int = 16000,
     ) -> dict[str, Any]:
         """Generate JSON content using Gemini.
-        
+
         Args:
             prompt: The prompt (should request JSON output)
             temperature: Sampling temperature
             max_tokens: Maximum output tokens
-            
+
         Returns:
             Parsed JSON response as a dictionary
-            
+
         Raises:
             ValueError: If response is not valid JSON
         """
@@ -106,10 +106,10 @@ class GeminiClient:
     @staticmethod
     def _extract_json(text: str) -> str:
         """Extract JSON from text, handling markdown code blocks.
-        
+
         Args:
             text: Raw text that may contain JSON in code blocks
-            
+
         Returns:
             Cleaned JSON string
         """
@@ -120,7 +120,7 @@ class GeminiClient:
             start = text.find("```")
             end = text.rfind("```")
             if end > start:
-                inner = text[start + 3:end]
+                inner = text[start + 3 : end]
                 # Remove optional language tag (e.g., "json")
                 if inner.startswith("json"):
                     inner = inner[4:]
@@ -140,7 +140,7 @@ class GeminiClient:
 
 
 # Singleton instance
-_gemini_client: Optional[GeminiClient] = None
+_gemini_client: GeminiClient | None = None
 
 
 def get_gemini_client() -> GeminiClient:

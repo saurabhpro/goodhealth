@@ -1,6 +1,5 @@
 """Workouts API routes."""
 
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 
@@ -24,21 +23,21 @@ async def create_workout(
     db: Database,
 ) -> WorkoutResponse:
     """Create a new workout with exercises.
-    
+
     Args:
         data: Workout creation data including exercises
         user_id: Current authenticated user
         db: Database client
-        
+
     Returns:
         WorkoutResponse with success status and workout_id
     """
     service = WorkoutsService(db)
     result = await service.create_workout(user_id, data)
-    
+
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
-    
+
     return WorkoutResponse(
         success=True,
         workout_id=result.get("workout_id"),
@@ -49,21 +48,21 @@ async def create_workout(
 async def get_workouts(
     user_id: CurrentUser,
     db: Database,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ) -> WorkoutListResponse:
     """Get all workouts for the current user.
-    
+
     Args:
         user_id: Current authenticated user
         db: Database client
         limit: Optional limit on number of workouts
-        
+
     Returns:
         WorkoutListResponse with list of workouts
     """
     service = WorkoutsService(db)
     workouts = await service.get_workouts(user_id, limit)
-    
+
     return WorkoutListResponse(workouts=workouts)
 
 
@@ -74,21 +73,21 @@ async def get_workout(
     db: Database,
 ) -> WorkoutWithExercises:
     """Get a single workout by ID.
-    
+
     Args:
         workout_id: The workout ID
         user_id: Current authenticated user
         db: Database client
-        
+
     Returns:
         Workout with exercises
     """
     service = WorkoutsService(db)
     workout = await service.get_workout(user_id, workout_id)
-    
+
     if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
-    
+
     return workout
 
 
@@ -100,22 +99,22 @@ async def update_workout(
     db: Database,
 ) -> WorkoutResponse:
     """Update a workout and its exercises.
-    
+
     Args:
         workout_id: The workout ID
         data: Update data
         user_id: Current authenticated user
         db: Database client
-        
+
     Returns:
         WorkoutResponse with success status
     """
     service = WorkoutsService(db)
     result = await service.update_workout(user_id, workout_id, data)
-    
+
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
-    
+
     return WorkoutResponse(success=True)
 
 
@@ -126,19 +125,19 @@ async def delete_workout(
     db: Database,
 ) -> WorkoutResponse:
     """Soft delete a workout.
-    
+
     Args:
         workout_id: The workout ID
         user_id: Current authenticated user
         db: Database client
-        
+
     Returns:
         WorkoutResponse with success status
     """
     service = WorkoutsService(db)
     result = await service.delete_workout(user_id, workout_id)
-    
+
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
-    
+
     return WorkoutResponse(success=True)

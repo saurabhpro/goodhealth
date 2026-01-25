@@ -1,7 +1,8 @@
 """Tests for selfies API endpoints."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -90,21 +91,23 @@ class TestGetWorkoutSelfie:
     def test_get_workout_selfie_success(self, client, mock_auth, mock_selfies_service):
         """Test successful selfie retrieval."""
         mock_selfies_service.get_workout_selfies = AsyncMock(
-            return_value=[{
-                "id": "selfie-123",
-                "workout_id": "workout-456",
-                "user_id": "test-user-123",
-                "file_path": "user/workout/selfie.jpg",
-                "file_name": "selfie.jpg",
-                "file_size": 1024000,
-                "mime_type": "image/jpeg",
-                "caption": "Great workout!",
-                "taken_at": "2024-01-15T10:00:00Z",
-                "created_at": "2024-01-15T10:00:00Z",
-                "updated_at": "2024-01-15T10:00:00Z",
-                "deleted_at": None,
-                "signed_url": "https://storage.example.com/signed",
-            }]
+            return_value=[
+                {
+                    "id": "selfie-123",
+                    "workout_id": "workout-456",
+                    "user_id": "test-user-123",
+                    "file_path": "user/workout/selfie.jpg",
+                    "file_name": "selfie.jpg",
+                    "file_size": 1024000,
+                    "mime_type": "image/jpeg",
+                    "caption": "Great workout!",
+                    "taken_at": "2024-01-15T10:00:00Z",
+                    "created_at": "2024-01-15T10:00:00Z",
+                    "updated_at": "2024-01-15T10:00:00Z",
+                    "deleted_at": None,
+                    "signed_url": "https://storage.example.com/signed",
+                }
+            ]
         )
 
         response = client.get(
@@ -136,9 +139,7 @@ class TestDeleteSelfie:
 
     def test_delete_selfie_success(self, client, mock_auth, mock_selfies_service):
         """Test successful selfie deletion."""
-        mock_selfies_service.delete_selfie = AsyncMock(
-            return_value={"success": True}
-        )
+        mock_selfies_service.delete_selfie = AsyncMock(return_value={"success": True})
 
         response = client.delete(
             "/api/selfies/selfie-123",
@@ -168,9 +169,7 @@ class TestUpdateSelfieCaption:
 
     def test_update_caption_success(self, client, mock_auth, mock_selfies_service):
         """Test successful caption update."""
-        mock_selfies_service.update_caption = AsyncMock(
-            return_value={"success": True}
-        )
+        mock_selfies_service.update_caption = AsyncMock(return_value={"success": True})
 
         response = client.put(
             "/api/selfies/selfie-123/caption",
@@ -184,9 +183,7 @@ class TestUpdateSelfieCaption:
 
     def test_update_caption_empty(self, client, mock_auth, mock_selfies_service):
         """Test updating caption to empty string."""
-        mock_selfies_service.update_caption = AsyncMock(
-            return_value={"success": True}
-        )
+        mock_selfies_service.update_caption = AsyncMock(return_value={"success": True})
 
         response = client.put(
             "/api/selfies/selfie-123/caption",
@@ -244,7 +241,9 @@ class TestGetRecentSelfies:
         data = response.json()
         assert len(data["selfies"]) == 2
 
-    def test_get_recent_selfies_with_limit(self, client, mock_auth, mock_selfies_service):
+    def test_get_recent_selfies_with_limit(
+        self, client, mock_auth, mock_selfies_service
+    ):
         """Test recent selfies with custom limit."""
         mock_selfies_service.get_recent_selfies = AsyncMock(return_value=[])
 

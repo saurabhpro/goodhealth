@@ -1,11 +1,12 @@
 """Tests for profiles API endpoints."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
+from app.dependencies import get_current_user_id, get_db
 from app.main import app
-from app.dependencies import get_db, get_current_user_id
 
 
 @pytest.fixture
@@ -19,10 +20,10 @@ def client(mock_db):
     """Create test client with mocked dependencies."""
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
-    
+
     with TestClient(app) as test_client:
         yield test_client
-    
+
     app.dependency_overrides.clear()
 
 
@@ -88,9 +89,7 @@ class TestUpdateProfile:
 
     def test_update_profile_success(self, client, mock_profiles_service):
         """Test successful profile update."""
-        mock_profiles_service.update_profile = AsyncMock(
-            return_value={"success": True}
-        )
+        mock_profiles_service.update_profile = AsyncMock(return_value={"success": True})
 
         response = client.put(
             "/api/profile",

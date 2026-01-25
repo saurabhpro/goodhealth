@@ -1,8 +1,5 @@
 """Weekly analysis API routes."""
 
-from datetime import date
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException
 
 from app.models.weekly_analysis import WeeklyAnalysisRequest, WeeklyAnalysisResponse
@@ -17,27 +14,27 @@ async def generate_weekly_analysis(
     request: WeeklyAnalysisRequest,
 ) -> WeeklyAnalysisResponse:
     """Generate weekly workout analysis.
-    
+
     Args:
         request: The analysis request with user_id and optional week_start_date
-        
+
     Returns:
         WeeklyAnalysisResponse with the analysis or error
     """
     try:
         supabase = get_supabase_client()
         analyzer = WeeklyAnalyzer(supabase)
-        
+
         result = await analyzer.generate_analysis(
             user_id=request.user_id,
             week_start=request.week_start_date,
         )
-        
+
         if not result.success:
             raise HTTPException(status_code=400, detail=result.error)
-        
+
         return result
-        
+
     except HTTPException:
         raise
     except Exception as e:

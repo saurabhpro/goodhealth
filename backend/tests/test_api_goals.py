@@ -1,11 +1,12 @@
 """Tests for goals API endpoints."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
+from app.dependencies import get_current_user_id, get_db
 from app.main import app
-from app.dependencies import get_db, get_current_user_id
 
 
 @pytest.fixture
@@ -19,10 +20,10 @@ def client(mock_db):
     """Create test client with mocked dependencies."""
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
-    
+
     with TestClient(app) as test_client:
         yield test_client
-    
+
     app.dependency_overrides.clear()
 
 
@@ -64,7 +65,10 @@ class TestCreateGoal:
     def test_create_goal_invalid_date(self, client, mock_goals_service):
         """Test goal creation with past target date."""
         mock_goals_service.create_goal = AsyncMock(
-            return_value={"success": False, "error": "Target date cannot be in the past"}
+            return_value={
+                "success": False,
+                "error": "Target date cannot be in the past",
+            }
         )
 
         response = client.post(
@@ -158,9 +162,7 @@ class TestDeleteGoal:
 
     def test_delete_goal_success(self, client, mock_goals_service):
         """Test successful goal deletion."""
-        mock_goals_service.delete_goal = AsyncMock(
-            return_value={"success": True}
-        )
+        mock_goals_service.delete_goal = AsyncMock(return_value={"success": True})
 
         response = client.delete(
             "/api/goals/goal-123",

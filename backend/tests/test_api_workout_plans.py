@@ -1,11 +1,12 @@
 """Tests for workout plans API endpoints."""
 
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
+from app.dependencies import get_current_user_id, get_db
 from app.main import app
-from app.dependencies import get_db, get_current_user_id
 
 
 def create_mock_db():
@@ -39,10 +40,10 @@ def client(mock_db):
     # Override dependencies
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
-    
+
     with TestClient(app) as test_client:
         yield test_client
-    
+
     # Clean up
     app.dependency_overrides.clear()
 
@@ -90,12 +91,14 @@ class TestUpsertUserPreferences:
     def test_upsert_preferences_success(self, client, mock_db):
         """Test successful preferences upsert."""
         mock_db.execute.return_value = MagicMock(
-            data=[{
-                "id": "pref-123",
-                "user_id": "test-user-123",
-                "fitness_level": "advanced",
-                "preferred_duration": 90,
-            }]
+            data=[
+                {
+                    "id": "pref-123",
+                    "user_id": "test-user-123",
+                    "fitness_level": "advanced",
+                    "preferred_duration": 90,
+                }
+            ]
         )
 
         response = client.put(
@@ -212,10 +215,12 @@ class TestGetPlanWeekSessions:
         # First call for plan verification, second for sessions
         mock_db.execute.side_effect = [
             MagicMock(data={"id": "plan-123"}),
-            MagicMock(data=[
-                {"id": "session-1", "workout_name": "Push Day", "week_number": 1},
-                {"id": "session-2", "workout_name": "Pull Day", "week_number": 1},
-            ]),
+            MagicMock(
+                data=[
+                    {"id": "session-1", "workout_name": "Push Day", "week_number": 1},
+                    {"id": "session-2", "workout_name": "Pull Day", "week_number": 1},
+                ]
+            ),
         ]
 
         response = client.get(

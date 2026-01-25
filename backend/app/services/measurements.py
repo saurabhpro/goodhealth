@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from supabase import Client
 
@@ -22,11 +22,11 @@ class MeasurementsService:
         self, user_id: str, data: MeasurementCreate
     ) -> dict[str, Any]:
         """Create a new body measurement.
-        
+
         Args:
             user_id: The user's ID
             data: Measurement creation data
-            
+
         Returns:
             Dict with success status and measurement data or error
         """
@@ -34,8 +34,8 @@ class MeasurementsService:
             measurement_data = {
                 "user_id": user_id,
                 "measured_at": (
-                    data.measured_at.isoformat() 
-                    if data.measured_at 
+                    data.measured_at.isoformat()
+                    if data.measured_at
                     else datetime.now().isoformat()
                 ),
                 "weight": data.weight,
@@ -64,9 +64,11 @@ class MeasurementsService:
                 "notes": data.notes,
             }
 
-            response = self.supabase.table("body_measurements").insert(
-                measurement_data
-            ).execute()
+            response = (
+                self.supabase.table("body_measurements")
+                .insert(measurement_data)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Failed to create measurement"}
@@ -82,20 +84,24 @@ class MeasurementsService:
             return {"success": False, "error": str(e)}
 
     async def get_measurements(
-        self, user_id: str, limit: Optional[int] = None
+        self, user_id: str, limit: int | None = None
     ) -> list[Measurement]:
         """Get all measurements for a user.
-        
+
         Args:
             user_id: The user's ID
             limit: Optional limit on number of measurements
-            
+
         Returns:
             List of measurements
         """
-        query = self.supabase.table("body_measurements").select("*").eq(
-            "user_id", user_id
-        ).is_("deleted_at", "null").order("measured_at", desc=True)
+        query = (
+            self.supabase.table("body_measurements")
+            .select("*")
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .order("measured_at", desc=True)
+        )
 
         if limit:
             query = query.limit(limit)
@@ -103,36 +109,48 @@ class MeasurementsService:
         response = query.execute()
         return response.data or []
 
-    async def get_latest_measurement(self, user_id: str) -> Optional[Measurement]:
+    async def get_latest_measurement(self, user_id: str) -> Measurement | None:
         """Get the most recent measurement for a user.
-        
+
         Args:
             user_id: The user's ID
-            
+
         Returns:
             Latest measurement or None
         """
-        response = self.supabase.table("body_measurements").select("*").eq(
-            "user_id", user_id
-        ).is_("deleted_at", "null").order("measured_at", desc=True).limit(1).execute()
+        response = (
+            self.supabase.table("body_measurements")
+            .select("*")
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .order("measured_at", desc=True)
+            .limit(1)
+            .execute()
+        )
 
         return response.data[0] if response.data else None
 
     async def get_measurement(
         self, user_id: str, measurement_id: str
-    ) -> Optional[Measurement]:
+    ) -> Measurement | None:
         """Get a single measurement by ID.
-        
+
         Args:
             user_id: The user's ID
             measurement_id: The measurement ID
-            
+
         Returns:
             Measurement or None if not found
         """
-        response = self.supabase.table("body_measurements").select("*").eq(
-            "id", measurement_id
-        ).eq("user_id", user_id).is_("deleted_at", "null").single().execute()
+        response = (
+            self.supabase.table("body_measurements")
+            .select("*")
+            .eq("id", measurement_id)
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .single()
+            .execute()
+        )
 
         return response.data if response.data else None
 
@@ -140,19 +158,19 @@ class MeasurementsService:
         self, user_id: str, measurement_id: str, data: MeasurementUpdate
     ) -> dict[str, Any]:
         """Update a measurement.
-        
+
         Args:
             user_id: The user's ID
             measurement_id: The measurement ID
             data: Update data
-            
+
         Returns:
             Dict with success status or error
         """
         try:
             # Build update dict with all fields that are set
             update_data: dict[str, Any] = {"updated_at": datetime.now().isoformat()}
-            
+
             # Map all fields
             field_mapping = {
                 "measured_at": lambda v: v.isoformat() if v else None,
@@ -187,9 +205,13 @@ class MeasurementsService:
                 if value is not None:
                     update_data[field] = transform(value)
 
-            response = self.supabase.table("body_measurements").update(
-                update_data
-            ).eq("id", measurement_id).eq("user_id", user_id).execute()
+            response = (
+                self.supabase.table("body_measurements")
+                .update(update_data)
+                .eq("id", measurement_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Measurement not found"}
@@ -204,20 +226,23 @@ class MeasurementsService:
         self, user_id: str, measurement_id: str
     ) -> dict[str, Any]:
         """Soft delete a measurement.
-        
+
         Args:
             user_id: The user's ID
             measurement_id: The measurement ID
-            
+
         Returns:
             Dict with success status or error
         """
         try:
-            response = self.supabase.table("body_measurements").update({
-                "deleted_at": datetime.now().isoformat()
-            }).eq("id", measurement_id).eq("user_id", user_id).is_(
-                "deleted_at", "null"
-            ).execute()
+            response = (
+                self.supabase.table("body_measurements")
+                .update({"deleted_at": datetime.now().isoformat()})
+                .eq("id", measurement_id)
+                .eq("user_id", user_id)
+                .is_("deleted_at", "null")
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Measurement not found"}

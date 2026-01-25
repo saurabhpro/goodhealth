@@ -1,15 +1,14 @@
 """Workout Plans CRUD service."""
 
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Optional
+from datetime import datetime
+from typing import Any
 
 from supabase import Client
 
 from app.models.workout_plan import (
     WorkoutPlan,
     WorkoutPlanCreate,
-    WorkoutPlanSession,
     WorkoutPlanUpdate,
     WorkoutPlanWithSessions,
 )
@@ -27,11 +26,11 @@ class WorkoutPlansCrudService:
         self, user_id: str, data: WorkoutPlanCreate
     ) -> dict[str, Any]:
         """Create a new workout plan.
-        
+
         Args:
             user_id: The user's ID
             data: Plan creation data
-            
+
         Returns:
             Dict with success status and plan or error
         """
@@ -47,9 +46,7 @@ class WorkoutPlansCrudService:
                 "avg_workout_duration": data.avg_workout_duration,
             }
 
-            response = self.supabase.table("workout_plans").insert(
-                plan_data
-            ).execute()
+            response = self.supabase.table("workout_plans").insert(plan_data).execute()
 
             if not response.data:
                 return {"success": False, "error": "Failed to create workout plan"}
@@ -62,38 +59,45 @@ class WorkoutPlansCrudService:
 
     async def get_plans(self, user_id: str) -> list[WorkoutPlan]:
         """Get all workout plans for a user.
-        
+
         Args:
             user_id: The user's ID
-            
+
         Returns:
             List of workout plans
         """
-        response = self.supabase.table("workout_plans").select(
-            "*, goals(*)"
-        ).eq("user_id", user_id).is_("deleted_at", "null").order(
-            "created_at", desc=True
-        ).execute()
+        response = (
+            self.supabase.table("workout_plans")
+            .select("*, goals(*)")
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .order("created_at", desc=True)
+            .execute()
+        )
 
         return response.data or []
 
     async def get_plan(
         self, user_id: str, plan_id: str
-    ) -> Optional[WorkoutPlanWithSessions]:
+    ) -> WorkoutPlanWithSessions | None:
         """Get a workout plan with all sessions.
-        
+
         Args:
             user_id: The user's ID
             plan_id: The plan ID
-            
+
         Returns:
             Plan with sessions or None if not found
         """
-        response = self.supabase.table("workout_plans").select(
-            "*, goals(*), workout_plan_sessions(*)"
-        ).eq("id", plan_id).eq("user_id", user_id).is_(
-            "deleted_at", "null"
-        ).single().execute()
+        response = (
+            self.supabase.table("workout_plans")
+            .select("*, goals(*), workout_plan_sessions(*)")
+            .eq("id", plan_id)
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .single()
+            .execute()
+        )
 
         return response.data if response.data else None
 
@@ -101,12 +105,12 @@ class WorkoutPlansCrudService:
         self, user_id: str, plan_id: str, data: WorkoutPlanUpdate
     ) -> dict[str, Any]:
         """Update a workout plan.
-        
+
         Args:
             user_id: The user's ID
             plan_id: The plan ID
             data: Update data
-            
+
         Returns:
             Dict with success status and plan or error
         """
@@ -129,9 +133,13 @@ class WorkoutPlansCrudService:
                 if value is not None:
                     update_data[field] = value
 
-            response = self.supabase.table("workout_plans").update(
-                update_data
-            ).eq("id", plan_id).eq("user_id", user_id).execute()
+            response = (
+                self.supabase.table("workout_plans")
+                .update(update_data)
+                .eq("id", plan_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Plan not found"}
@@ -144,22 +152,29 @@ class WorkoutPlansCrudService:
 
     async def delete_plan(self, user_id: str, plan_id: str) -> dict[str, Any]:
         """Soft delete a workout plan.
-        
+
         Args:
             user_id: The user's ID
             plan_id: The plan ID
-            
+
         Returns:
             Dict with success status or error
         """
         try:
-            response = self.supabase.table("workout_plans").update({
-                "deleted_at": datetime.now().isoformat(),
-                "status": "archived",
-                "updated_at": datetime.now().isoformat(),
-            }).eq("id", plan_id).eq("user_id", user_id).is_(
-                "deleted_at", "null"
-            ).execute()
+            response = (
+                self.supabase.table("workout_plans")
+                .update(
+                    {
+                        "deleted_at": datetime.now().isoformat(),
+                        "status": "archived",
+                        "updated_at": datetime.now().isoformat(),
+                    }
+                )
+                .eq("id", plan_id)
+                .eq("user_id", user_id)
+                .is_("deleted_at", "null")
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Plan not found"}
@@ -172,19 +187,24 @@ class WorkoutPlansCrudService:
 
     async def activate_plan(self, user_id: str, plan_id: str) -> dict[str, Any]:
         """Activate a workout plan.
-        
+
         Args:
             user_id: The user's ID
             plan_id: The plan ID
-            
+
         Returns:
             Dict with success status and plan or error
         """
         try:
             # Check for existing active plan
-            active = self.supabase.table("workout_plans").select("id").eq(
-                "user_id", user_id
-            ).eq("status", "active").is_("deleted_at", "null").execute()
+            active = (
+                self.supabase.table("workout_plans")
+                .select("id")
+                .eq("user_id", user_id)
+                .eq("status", "active")
+                .is_("deleted_at", "null")
+                .execute()
+            )
 
             if active.data:
                 return {
@@ -192,11 +212,19 @@ class WorkoutPlansCrudService:
                     "error": "You already have an active plan. Complete or archive it first.",
                 }
 
-            response = self.supabase.table("workout_plans").update({
-                "status": "active",
-                "started_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat(),
-            }).eq("id", plan_id).eq("user_id", user_id).execute()
+            response = (
+                self.supabase.table("workout_plans")
+                .update(
+                    {
+                        "status": "active",
+                        "started_at": datetime.now().isoformat(),
+                        "updated_at": datetime.now().isoformat(),
+                    }
+                )
+                .eq("id", plan_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Plan not found"}
@@ -209,20 +237,28 @@ class WorkoutPlansCrudService:
 
     async def complete_plan(self, user_id: str, plan_id: str) -> dict[str, Any]:
         """Complete a workout plan.
-        
+
         Args:
             user_id: The user's ID
             plan_id: The plan ID
-            
+
         Returns:
             Dict with success status and plan or error
         """
         try:
-            response = self.supabase.table("workout_plans").update({
-                "status": "completed",
-                "completed_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat(),
-            }).eq("id", plan_id).eq("user_id", user_id).execute()
+            response = (
+                self.supabase.table("workout_plans")
+                .update(
+                    {
+                        "status": "completed",
+                        "completed_at": datetime.now().isoformat(),
+                        "updated_at": datetime.now().isoformat(),
+                    }
+                )
+                .eq("id", plan_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Plan not found"}
@@ -235,19 +271,27 @@ class WorkoutPlansCrudService:
 
     async def deactivate_plan(self, user_id: str, plan_id: str) -> dict[str, Any]:
         """Deactivate/archive a workout plan.
-        
+
         Args:
             user_id: The user's ID
             plan_id: The plan ID
-            
+
         Returns:
             Dict with success status and plan or error
         """
         try:
-            response = self.supabase.table("workout_plans").update({
-                "status": "archived",
-                "updated_at": datetime.now().isoformat(),
-            }).eq("id", plan_id).eq("user_id", user_id).execute()
+            response = (
+                self.supabase.table("workout_plans")
+                .update(
+                    {
+                        "status": "archived",
+                        "updated_at": datetime.now().isoformat(),
+                    }
+                )
+                .eq("id", plan_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Plan not found"}
@@ -258,23 +302,25 @@ class WorkoutPlansCrudService:
             logger.error(f"Error deactivating workout plan: {e}")
             return {"success": False, "error": str(e)}
 
-    async def get_current_week_sessions(
-        self, user_id: str
-    ) -> dict[str, Any]:
+    async def get_current_week_sessions(self, user_id: str) -> dict[str, Any]:
         """Get current week's sessions for active workout plan.
-        
+
         Args:
             user_id: The user's ID
-            
+
         Returns:
             Dict with sessions and current_week
         """
         # Find active plan
-        plan_response = self.supabase.table("workout_plans").select(
-            "id, started_at, weeks_duration"
-        ).eq("user_id", user_id).or_(
-            "status.eq.active,status.eq.draft"
-        ).is_("deleted_at", "null").limit(1).execute()
+        plan_response = (
+            self.supabase.table("workout_plans")
+            .select("id, started_at, weeks_duration")
+            .eq("user_id", user_id)
+            .or_("status.eq.active,status.eq.draft")
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
 
         if not plan_response.data:
             return {"sessions": [], "current_week": 1}
@@ -294,11 +340,15 @@ class WorkoutPlansCrudService:
             )
 
         # Fetch sessions for current week
-        sessions_response = self.supabase.table("workout_plan_sessions").select(
-            "*"
-        ).eq("plan_id", plan["id"]).eq("week_number", current_week).is_(
-            "deleted_at", "null"
-        ).order("day_of_week").execute()
+        sessions_response = (
+            self.supabase.table("workout_plan_sessions")
+            .select("*")
+            .eq("plan_id", plan["id"])
+            .eq("week_number", current_week)
+            .is_("deleted_at", "null")
+            .order("day_of_week")
+            .execute()
+        )
 
         return {
             "sessions": sessions_response.data or [],

@@ -1,7 +1,7 @@
 """FastAPI application entry point."""
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,11 +53,17 @@ app.add_middleware(JWTAuthMiddleware)
 # Include routers
 app.include_router(workouts.router, prefix=settings.api_prefix, tags=["Workouts"])
 app.include_router(goals.router, prefix=settings.api_prefix, tags=["Goals"])
-app.include_router(workout_plans.router, prefix=settings.api_prefix, tags=["Workout Plans"])
-app.include_router(measurements.router, prefix=settings.api_prefix, tags=["Measurements"])
+app.include_router(
+    workout_plans.router, prefix=settings.api_prefix, tags=["Workout Plans"]
+)
+app.include_router(
+    measurements.router, prefix=settings.api_prefix, tags=["Measurements"]
+)
 app.include_router(selfies.router, prefix=settings.api_prefix, tags=["Selfies"])
 app.include_router(profiles.router, prefix=settings.api_prefix, tags=["Profiles"])
-app.include_router(weekly_analysis.router, prefix=settings.api_prefix, tags=["Weekly Analysis"])
+app.include_router(
+    weekly_analysis.router, prefix=settings.api_prefix, tags=["Weekly Analysis"]
+)
 
 
 @app.get("/health")

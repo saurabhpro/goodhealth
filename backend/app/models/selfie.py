@@ -1,15 +1,14 @@
 """Workout selfie Pydantic models."""
 
 from datetime import datetime
-from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class SelfieBase(BaseModel):
     """Base selfie model with common fields."""
 
-    caption: Optional[str] = None
+    caption: str | None = None
 
 
 class SelfieCreate(SelfieBase):
@@ -18,8 +17,8 @@ class SelfieCreate(SelfieBase):
     workout_id: str
     file_name: str
     file_path: str
-    file_size: Optional[int] = None
-    mime_type: Optional[str] = None
+    file_size: int | None = None
+    mime_type: str | None = None
 
 
 class SelfieUpdate(BaseModel):
@@ -36,23 +35,23 @@ class Selfie(SelfieBase):
     user_id: str
     file_name: str
     file_path: str
-    file_size: Optional[int] = None
-    mime_type: Optional[str] = None
+    file_size: int | None = None
+    mime_type: str | None = None
     taken_at: datetime
     created_at: datetime
-    deleted_at: Optional[datetime] = None
+    deleted_at: datetime | None = None
 
 
 class SelfieWithUrl(Selfie):
     """Selfie model with signed URL for viewing."""
 
-    signed_url: Optional[str] = None
+    signed_url: str | None = None
 
 
 class SelfieWithWorkout(SelfieWithUrl):
     """Selfie with associated workout info."""
 
-    workouts: Optional[dict] = None
+    workouts: dict | None = None
 
 
 class SelfieListResponse(BaseModel):
@@ -65,13 +64,13 @@ class SelfieResponse(BaseModel):
     """Response model for single selfie operations."""
 
     success: bool
-    selfie: Optional[SelfieWithUrl] = None
-    selfie_id: Optional[str] = None
-    error: Optional[str] = None
+    selfie: SelfieWithUrl | None = None
+    selfie_id: str | None = None
+    error: str | None = None
 
 
 class SelfieUrlResponse(BaseModel):
     """Response model for selfie URL retrieval."""
 
-    url: Optional[str] = None
-    error: Optional[str] = None
+    url: str | None = None
+    error: str | None = None

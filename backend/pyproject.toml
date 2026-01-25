@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
-    "google-generativeai>=0.3.0",
+    "google-genai>=1.0.0",
     "supabase>=2.0.0",
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
@@ -35,8 +35,11 @@ target-version = ["py311"]
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
-ignore = []
+# E501: line too long - handled by black for code, ignore for string literals
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"

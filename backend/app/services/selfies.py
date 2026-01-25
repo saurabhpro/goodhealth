@@ -3,11 +3,11 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from supabase import Client
 
-from app.models.selfie import Selfie, SelfieWithUrl, SelfieWithWorkout
+from app.models.selfie import SelfieWithUrl, SelfieWithWorkout
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +29,12 @@ class SelfiesService:
         file_content: bytes,
         file_name: str,
         mime_type: str,
-        caption: Optional[str] = None,
+        caption: str | None = None,
     ) -> dict[str, Any]:
         """Upload a selfie for a workout.
-        
+
         Only ONE selfie is allowed per workout - replaces existing.
-        
+
         Args:
             user_id: The user's ID
             workout_id: The workout ID
@@ -42,7 +42,7 @@ class SelfiesService:
             file_name: Original file name
             mime_type: File MIME type
             caption: Optional caption
-            
+
         Returns:
             Dict with success status and selfie_id or error
         """
@@ -58,25 +58,34 @@ class SelfiesService:
                 }
 
             # Verify workout belongs to user
-            workout_response = self.supabase.table("workouts").select("id").eq(
-                "id", workout_id
-            ).eq("user_id", user_id).is_("deleted_at", "null").single().execute()
+            workout_response = (
+                self.supabase.table("workouts")
+                .select("id")
+                .eq("id", workout_id)
+                .eq("user_id", user_id)
+                .is_("deleted_at", "null")
+                .single()
+                .execute()
+            )
 
             if not workout_response.data:
                 return {"success": False, "error": "Workout not found or access denied"}
 
             # Check and soft delete existing selfie
-            existing = self.supabase.table("workout_selfies").select(
-                "id, file_path"
-            ).eq("workout_id", workout_id).eq("user_id", user_id).is_(
-                "deleted_at", "null"
-            ).execute()
+            existing = (
+                self.supabase.table("workout_selfies")
+                .select("id, file_path")
+                .eq("workout_id", workout_id)
+                .eq("user_id", user_id)
+                .is_("deleted_at", "null")
+                .execute()
+            )
 
             if existing.data:
                 for selfie in existing.data:
-                    self.supabase.table("workout_selfies").update({
-                        "deleted_at": datetime.now().isoformat()
-                    }).eq("id", selfie["id"]).execute()
+                    self.supabase.table("workout_selfies").update(
+                        {"deleted_at": datetime.now().isoformat()}
+                    ).eq("id", selfie["id"]).execute()
 
             # Generate unique filename
             timestamp = int(datetime.now().timestamp() * 1000)
@@ -104,9 +113,9 @@ class SelfiesService:
                 "caption": caption,
             }
 
-            response = self.supabase.table("workout_selfies").insert(
-                selfie_data
-            ).execute()
+            response = (
+                self.supabase.table("workout_selfies").insert(selfie_data).execute()
+            )
 
             if not response.data:
                 # Clean up uploaded file
@@ -123,22 +132,27 @@ class SelfiesService:
         self, user_id: str, workout_id: str
     ) -> list[SelfieWithUrl]:
         """Get selfies for a workout (should only be 1).
-        
+
         Args:
             user_id: The user's ID
             workout_id: The workout ID
-            
+
         Returns:
             List of selfies with signed URLs
         """
-        response = self.supabase.table("workout_selfies").select("*").eq(
-            "workout_id", workout_id
-        ).eq("user_id", user_id).is_("deleted_at", "null").order(
-            "taken_at", desc=True
-        ).limit(1).execute()
+        response = (
+            self.supabase.table("workout_selfies")
+            .select("*")
+            .eq("workout_id", workout_id)
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .order("taken_at", desc=True)
+            .limit(1)
+            .execute()
+        )
 
         selfies = response.data or []
-        
+
         # Add signed URLs
         result = []
         for selfie in selfies:
@@ -147,12 +161,12 @@ class SelfiesService:
 
         return result
 
-    async def get_signed_url(self, file_path: Optional[str]) -> Optional[str]:
+    async def get_signed_url(self, file_path: str | None) -> str | None:
         """Get a signed URL for viewing a selfie.
-        
+
         Args:
             file_path: Storage file path
-            
+
         Returns:
             Signed URL or None
         """
@@ -170,29 +184,33 @@ class SelfiesService:
 
     async def delete_selfie(self, user_id: str, selfie_id: str) -> dict[str, Any]:
         """Soft delete a selfie.
-        
+
         Args:
             user_id: The user's ID
             selfie_id: The selfie ID
-            
+
         Returns:
             Dict with success status or error
         """
         try:
             # Get selfie to verify ownership
-            selfie = self.supabase.table("workout_selfies").select(
-                "id, file_path, workout_id"
-            ).eq("id", selfie_id).eq("user_id", user_id).is_(
-                "deleted_at", "null"
-            ).single().execute()
+            selfie = (
+                self.supabase.table("workout_selfies")
+                .select("id, file_path, workout_id")
+                .eq("id", selfie_id)
+                .eq("user_id", user_id)
+                .is_("deleted_at", "null")
+                .single()
+                .execute()
+            )
 
             if not selfie.data:
                 return {"success": False, "error": "Selfie not found or access denied"}
 
             # Soft delete (keep file for recovery)
-            self.supabase.table("workout_selfies").update({
-                "deleted_at": datetime.now().isoformat()
-            }).eq("id", selfie_id).execute()
+            self.supabase.table("workout_selfies").update(
+                {"deleted_at": datetime.now().isoformat()}
+            ).eq("id", selfie_id).execute()
 
             return {"success": True}
 
@@ -204,19 +222,23 @@ class SelfiesService:
         self, user_id: str, selfie_id: str, caption: str
     ) -> dict[str, Any]:
         """Update selfie caption.
-        
+
         Args:
             user_id: The user's ID
             selfie_id: The selfie ID
             caption: New caption
-            
+
         Returns:
             Dict with success status or error
         """
         try:
-            response = self.supabase.table("workout_selfies").update({
-                "caption": caption
-            }).eq("id", selfie_id).eq("user_id", user_id).execute()
+            response = (
+                self.supabase.table("workout_selfies")
+                .update({"caption": caption})
+                .eq("id", selfie_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Selfie not found"}
@@ -231,19 +253,23 @@ class SelfiesService:
         self, user_id: str, limit: int = 10
     ) -> list[SelfieWithWorkout]:
         """Get recent selfies across all workouts.
-        
+
         Args:
             user_id: The user's ID
             limit: Maximum number of selfies
-            
+
         Returns:
             List of selfies with workout info
         """
-        response = self.supabase.table("workout_selfies").select(
-            "*, workouts:workout_id(id, name, date)"
-        ).eq("user_id", user_id).is_("deleted_at", "null").order(
-            "taken_at", desc=True
-        ).limit(limit).execute()
+        response = (
+            self.supabase.table("workout_selfies")
+            .select("*, workouts:workout_id(id, name, date)")
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .order("taken_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
 
         selfies = response.data or []
 

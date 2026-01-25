@@ -23,24 +23,24 @@ async def upload_selfie(
     caption: str = Form(None),
 ) -> SelfieResponse:
     """Upload a selfie for a workout.
-    
+
     Only ONE selfie is allowed per workout - replaces existing.
-    
+
     Args:
         workout_id: The workout ID
         user_id: Current authenticated user
         db: Database client
         file: The image file to upload
         caption: Optional caption
-        
+
     Returns:
         SelfieResponse with success status and selfie_id
     """
     service = SelfiesService(db)
-    
+
     # Read file content
     file_content = await file.read()
-    
+
     result = await service.upload_selfie(
         user_id=user_id,
         workout_id=workout_id,
@@ -49,10 +49,10 @@ async def upload_selfie(
         mime_type=file.content_type or "image/jpeg",
         caption=caption,
     )
-    
+
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
-    
+
     return SelfieResponse(
         success=True,
         selfie_id=result.get("selfie_id"),
@@ -66,18 +66,18 @@ async def get_workout_selfie(
     db: Database,
 ) -> SelfieListResponse:
     """Get selfie for a workout.
-    
+
     Args:
         workout_id: The workout ID
         user_id: Current authenticated user
         db: Database client
-        
+
     Returns:
         SelfieListResponse with selfies (should be 0 or 1)
     """
     service = SelfiesService(db)
     selfies = await service.get_workout_selfies(user_id, workout_id)
-    
+
     return SelfieListResponse(selfies=selfies)
 
 
@@ -88,21 +88,21 @@ async def delete_selfie(
     db: Database,
 ) -> SelfieResponse:
     """Delete a selfie.
-    
+
     Args:
         selfie_id: The selfie ID
         user_id: Current authenticated user
         db: Database client
-        
+
     Returns:
         SelfieResponse with success status
     """
     service = SelfiesService(db)
     result = await service.delete_selfie(user_id, selfie_id)
-    
+
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
-    
+
     return SelfieResponse(success=True)
 
 
@@ -114,22 +114,22 @@ async def update_caption(
     db: Database,
 ) -> SelfieResponse:
     """Update selfie caption.
-    
+
     Args:
         selfie_id: The selfie ID
         data: Update data with new caption
         user_id: Current authenticated user
         db: Database client
-        
+
     Returns:
         SelfieResponse with success status
     """
     service = SelfiesService(db)
     result = await service.update_caption(user_id, selfie_id, data.caption)
-    
+
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
-    
+
     return SelfieResponse(success=True)
 
 
@@ -140,18 +140,18 @@ async def get_recent_selfies(
     limit: int = 10,
 ) -> SelfieListResponse:
     """Get recent selfies across all workouts.
-    
+
     Args:
         user_id: Current authenticated user
         db: Database client
         limit: Maximum number of selfies (default 10)
-        
+
     Returns:
         SelfieListResponse with recent selfies
     """
     service = SelfiesService(db)
     selfies = await service.get_recent_selfies(user_id, limit)
-    
+
     return SelfieListResponse(selfies=selfies)
 
 
@@ -162,16 +162,16 @@ async def get_selfie_url(
     db: Database,
 ) -> SelfieUrlResponse:
     """Get a signed URL for viewing a selfie.
-    
+
     Args:
         path: The file path in storage
         user_id: Current authenticated user (for auth check)
         db: Database client
-        
+
     Returns:
         SelfieUrlResponse with signed URL
     """
     service = SelfiesService(db)
     url = await service.get_signed_url(path)
-    
+
     return SelfieUrlResponse(url=url)

@@ -1,7 +1,7 @@
 """User profile Pydantic models."""
 
 from datetime import datetime
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -9,25 +9,25 @@ from pydantic import BaseModel, Field
 class ProfileBase(BaseModel):
     """Base profile model with common fields."""
 
-    full_name: Optional[str] = None
-    date_of_birth: Optional[str] = None
-    gender: Optional[Literal["male", "female", "other", "prefer_not_to_say"]] = None
-    height_cm: Optional[float] = Field(None, ge=50, le=300)
-    fitness_level: Optional[Literal["beginner", "intermediate", "advanced"]] = None
-    fitness_goals: Optional[list[str]] = None
-    medical_conditions: Optional[str] = None
-    injuries: Optional[str] = None
+    full_name: str | None = None
+    date_of_birth: str | None = None
+    gender: Literal["male", "female", "other", "prefer_not_to_say"] | None = None
+    height_cm: float | None = Field(None, ge=50, le=300)
+    fitness_level: Literal["beginner", "intermediate", "advanced"] | None = None
+    fitness_goals: list[str] | None = None
+    medical_conditions: str | None = None
+    injuries: str | None = None
 
 
 class ProfileUpdate(ProfileBase):
     """Model for updating profile."""
 
     # User preferences
-    theme: Optional[str] = None
-    accent_theme: Optional[str] = None
-    weight_unit: Optional[str] = None
-    distance_unit: Optional[str] = None
-    notification_preferences: Optional[dict[str, Any]] = None
+    theme: str | None = None
+    accent_theme: str | None = None
+    weight_unit: str | None = None
+    distance_unit: str | None = None
+    notification_preferences: dict[str, Any] | None = None
 
 
 class Profile(ProfileBase):
@@ -35,12 +35,12 @@ class Profile(ProfileBase):
 
     id: str
     email: str
-    avatar_url: Optional[str] = None
-    theme: Optional[str] = None
-    accent_theme: Optional[str] = None
-    weight_unit: Optional[str] = None
-    distance_unit: Optional[str] = None
-    notification_preferences: Optional[dict[str, Any]] = None
+    avatar_url: str | None = None
+    theme: str | None = None
+    accent_theme: str | None = None
+    weight_unit: str | None = None
+    distance_unit: str | None = None
+    notification_preferences: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -49,5 +49,5 @@ class ProfileResponse(BaseModel):
     """Response model for profile operations."""
 
     success: bool = True
-    profile: Optional[Profile] = None
-    error: Optional[str] = None
+    profile: Profile | None = None
+    error: str | None = None

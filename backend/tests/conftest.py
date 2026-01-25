@@ -1,14 +1,15 @@
 """Pytest configuration and fixtures."""
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 
 
 @pytest.fixture
 def mock_supabase():
     """Create a mock Supabase client."""
     mock = MagicMock()
-    
+
     # Setup chainable methods
     mock.table.return_value = mock
     mock.select.return_value = mock
@@ -28,10 +29,10 @@ def mock_supabase():
     mock.not_.return_value = mock
     mock.order.return_value = mock
     mock.limit.return_value = mock
-    
+
     # Default execute response
     mock.execute.return_value = MagicMock(data=[])
-    
+
     return mock
 
 

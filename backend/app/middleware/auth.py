@@ -1,7 +1,6 @@
 """JWT Authentication middleware for Supabase tokens."""
 
 import logging
-from typing import Optional
 
 import httpx
 from fastapi import Request
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
     """Middleware to extract and verify Supabase JWT tokens.
-    
+
     Uses Supabase's auth.getUser() API to verify tokens.
     Attaches user_id to request.state if token is valid.
     Does not block requests - authentication is enforced at route level.
@@ -45,17 +44,17 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
 
         return await call_next(request)
 
-    async def _verify_token_with_supabase(self, token: str) -> Optional[str]:
+    async def _verify_token_with_supabase(self, token: str) -> str | None:
         """Verify JWT token using Supabase's auth.getUser() API.
-        
+
         This is more reliable than manual JWT verification as it:
         - Handles key rotation automatically
         - Validates token hasn't been revoked
         - Works with both HS256 and ES256 tokens
-        
+
         Args:
             token: The JWT access token string
-            
+
         Returns:
             User ID if token is valid, None otherwise
         """

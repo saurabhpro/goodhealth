@@ -1,11 +1,12 @@
 """Tests for measurements API endpoints."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
+from app.dependencies import get_current_user_id, get_db
 from app.main import app
-from app.dependencies import get_db, get_current_user_id
 
 
 @pytest.fixture
@@ -19,10 +20,10 @@ def client(mock_db):
     """Create test client with mocked dependencies."""
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
-    
+
     with TestClient(app) as test_client:
         yield test_client
-    
+
     app.dependency_overrides.clear()
 
 
@@ -149,9 +150,7 @@ class TestGetLatestMeasurement:
 
     def test_get_latest_measurement_none(self, client, mock_measurements_service):
         """Test when no measurements exist."""
-        mock_measurements_service.get_latest_measurement = AsyncMock(
-            return_value=None
-        )
+        mock_measurements_service.get_latest_measurement = AsyncMock(return_value=None)
 
         response = client.get(
             "/api/measurements/latest",

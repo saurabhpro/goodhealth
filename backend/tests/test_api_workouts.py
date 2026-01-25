@@ -1,11 +1,12 @@
 """Tests for workouts API endpoints."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 
+from app.dependencies import get_current_user_id, get_db
 from app.main import app
-from app.dependencies import get_db, get_current_user_id
 
 
 @pytest.fixture
@@ -19,10 +20,10 @@ def client(mock_db):
     """Create test client with mocked dependencies."""
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[get_current_user_id] = lambda: "test-user-123"
-    
+
     with TestClient(app) as test_client:
         yield test_client
-    
+
     app.dependency_overrides.clear()
 
 
@@ -216,9 +217,7 @@ class TestUpdateWorkout:
 
     def test_update_workout_success(self, client, mock_workouts_service):
         """Test successful workout update."""
-        mock_workouts_service.update_workout = AsyncMock(
-            return_value={"success": True}
-        )
+        mock_workouts_service.update_workout = AsyncMock(return_value={"success": True})
 
         response = client.put(
             "/api/workouts/workout-123",
@@ -239,9 +238,7 @@ class TestDeleteWorkout:
 
     def test_delete_workout_success(self, client, mock_workouts_service):
         """Test successful workout deletion."""
-        mock_workouts_service.delete_workout = AsyncMock(
-            return_value={"success": True}
-        )
+        mock_workouts_service.delete_workout = AsyncMock(return_value={"success": True})
 
         response = client.delete(
             "/api/workouts/workout-123",

@@ -1,18 +1,16 @@
 """Tests for goal sync service."""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.models.goal import Goal
 from app.services.goal_sync import (
-    GoalSyncService,
-    WorkoutCountStrategy,
     DurationStrategy,
-    UniqueDaysStrategy,
-    WeightStrategy,
-    MaxRepsStrategy,
-    DistanceStrategy,
+    GoalSyncService,
     SyncContext,
+    UniqueDaysStrategy,
+    WorkoutCountStrategy,
     is_goal_achieved,
 )
 
@@ -22,51 +20,69 @@ class TestIsGoalAchieved:
 
     def test_increasing_goal_achieved(self):
         """Test increasing goal that is achieved."""
-        assert is_goal_achieved(
-            initial_value=0,
-            current_value=50,
-            target_value=50,
-        ) is True
+        assert (
+            is_goal_achieved(
+                initial_value=0,
+                current_value=50,
+                target_value=50,
+            )
+            is True
+        )
 
     def test_increasing_goal_exceeded(self):
         """Test increasing goal that exceeds target."""
-        assert is_goal_achieved(
-            initial_value=0,
-            current_value=60,
-            target_value=50,
-        ) is True
+        assert (
+            is_goal_achieved(
+                initial_value=0,
+                current_value=60,
+                target_value=50,
+            )
+            is True
+        )
 
     def test_increasing_goal_not_achieved(self):
         """Test increasing goal not yet achieved."""
-        assert is_goal_achieved(
-            initial_value=0,
-            current_value=30,
-            target_value=50,
-        ) is False
+        assert (
+            is_goal_achieved(
+                initial_value=0,
+                current_value=30,
+                target_value=50,
+            )
+            is False
+        )
 
     def test_decreasing_goal_achieved(self):
         """Test decreasing goal (e.g., weight loss) achieved."""
-        assert is_goal_achieved(
-            initial_value=80,
-            current_value=70,
-            target_value=70,
-        ) is True
+        assert (
+            is_goal_achieved(
+                initial_value=80,
+                current_value=70,
+                target_value=70,
+            )
+            is True
+        )
 
     def test_decreasing_goal_exceeded(self):
         """Test decreasing goal exceeded (went below target)."""
-        assert is_goal_achieved(
-            initial_value=80,
-            current_value=65,
-            target_value=70,
-        ) is True
+        assert (
+            is_goal_achieved(
+                initial_value=80,
+                current_value=65,
+                target_value=70,
+            )
+            is True
+        )
 
     def test_decreasing_goal_not_achieved(self):
         """Test decreasing goal not yet achieved."""
-        assert is_goal_achieved(
-            initial_value=80,
-            current_value=75,
-            target_value=70,
-        ) is False
+        assert (
+            is_goal_achieved(
+                initial_value=80,
+                current_value=75,
+                target_value=70,
+            )
+            is False
+        )
 
 
 class TestWorkoutCountStrategy:
@@ -79,7 +95,7 @@ class TestWorkoutCountStrategy:
         mock_supabase.execute.return_value = MagicMock(
             data=[{"id": "1"}, {"id": "2"}, {"id": "3"}]
         )
-        
+
         strategy = WorkoutCountStrategy()
         goal = Goal(**sample_goal)
         ctx = SyncContext(
@@ -87,16 +103,16 @@ class TestWorkoutCountStrategy:
             user_id="user-456",
             goal=goal,
         )
-        
+
         result = await strategy.calculate(ctx)
-        
+
         assert result == 3
 
     @pytest.mark.asyncio
     async def test_count_workouts_empty(self, mock_supabase, sample_goal):
         """Test counting workouts when none exist."""
         mock_supabase.execute.return_value = MagicMock(data=[])
-        
+
         strategy = WorkoutCountStrategy()
         goal = Goal(**sample_goal)
         ctx = SyncContext(
@@ -104,9 +120,9 @@ class TestWorkoutCountStrategy:
             user_id="user-456",
             goal=goal,
         )
-        
+
         result = await strategy.calculate(ctx)
-        
+
         assert result == 0
 
 
@@ -123,7 +139,7 @@ class TestDurationStrategy:
                 {"duration_minutes": 30},
             ]
         )
-        
+
         strategy = DurationStrategy()
         goal = Goal(**{**sample_goal, "unit": "minutes"})
         ctx = SyncContext(
@@ -131,9 +147,9 @@ class TestDurationStrategy:
             user_id="user-456",
             goal=goal,
         )
-        
+
         result = await strategy.calculate(ctx)
-        
+
         assert result == 135
 
     @pytest.mark.asyncio
@@ -146,7 +162,7 @@ class TestDurationStrategy:
                 {"duration_minutes": 30},
             ]
         )
-        
+
         strategy = DurationStrategy()
         goal = Goal(**{**sample_goal, "unit": "minutes"})
         ctx = SyncContext(
@@ -154,9 +170,9 @@ class TestDurationStrategy:
             user_id="user-456",
             goal=goal,
         )
-        
+
         result = await strategy.calculate(ctx)
-        
+
         assert result == 90
 
 
@@ -174,7 +190,7 @@ class TestUniqueDaysStrategy:
                 {"date": "2024-01-17"},
             ]
         )
-        
+
         strategy = UniqueDaysStrategy()
         goal = Goal(**{**sample_goal, "unit": "days"})
         ctx = SyncContext(
@@ -182,9 +198,9 @@ class TestUniqueDaysStrategy:
             user_id="user-456",
             goal=goal,
         )
-        
+
         result = await strategy.calculate(ctx)
-        
+
         assert result == 3  # 3 unique days
 
 
@@ -195,10 +211,10 @@ class TestGoalSyncService:
     async def test_sync_user_goals_no_goals(self, mock_supabase):
         """Test syncing when user has no goals."""
         mock_supabase.execute.return_value = MagicMock(data=[])
-        
+
         service = GoalSyncService(mock_supabase)
         result = await service.sync_user_goals("user-456")
-        
+
         assert result.success is True
         assert result.updated == 0
 
@@ -208,9 +224,9 @@ class TestGoalSyncService:
         mock_supabase.execute.return_value = MagicMock(
             data=[{**sample_goal, "unit": "unknown_unit"}]
         )
-        
+
         service = GoalSyncService(mock_supabase)
         result = await service.sync_user_goals("user-456")
-        
+
         assert result.success is True
         assert result.updated == 0  # No strategy for unknown unit

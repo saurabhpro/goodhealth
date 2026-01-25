@@ -1,7 +1,6 @@
 """Body measurement Pydantic models."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -9,40 +8,40 @@ from pydantic import BaseModel, Field
 class MeasurementBase(BaseModel):
     """Base measurement model with common fields."""
 
-    measured_at: Optional[datetime] = None
-    
+    measured_at: datetime | None = None
+
     # Weight and composition
-    weight: Optional[float] = Field(None, ge=0)
-    body_fat_percentage: Optional[float] = Field(None, ge=0, le=100)
-    muscle_mass: Optional[float] = Field(None, ge=0)
-    bone_mass: Optional[float] = Field(None, ge=0)
-    water_percentage: Optional[float] = Field(None, ge=0, le=100)
-    protein_percentage: Optional[float] = Field(None, ge=0, le=100)
-    
+    weight: float | None = Field(None, ge=0)
+    body_fat_percentage: float | None = Field(None, ge=0, le=100)
+    muscle_mass: float | None = Field(None, ge=0)
+    bone_mass: float | None = Field(None, ge=0)
+    water_percentage: float | None = Field(None, ge=0, le=100)
+    protein_percentage: float | None = Field(None, ge=0, le=100)
+
     # Body dimensions
-    height: Optional[float] = Field(None, ge=0)
-    neck: Optional[float] = Field(None, ge=0)
-    shoulders: Optional[float] = Field(None, ge=0)
-    chest: Optional[float] = Field(None, ge=0)
-    waist: Optional[float] = Field(None, ge=0)
-    hips: Optional[float] = Field(None, ge=0)
-    
+    height: float | None = Field(None, ge=0)
+    neck: float | None = Field(None, ge=0)
+    shoulders: float | None = Field(None, ge=0)
+    chest: float | None = Field(None, ge=0)
+    waist: float | None = Field(None, ge=0)
+    hips: float | None = Field(None, ge=0)
+
     # Limb measurements
-    bicep_left: Optional[float] = Field(None, ge=0)
-    bicep_right: Optional[float] = Field(None, ge=0)
-    forearm_left: Optional[float] = Field(None, ge=0)
-    forearm_right: Optional[float] = Field(None, ge=0)
-    thigh_left: Optional[float] = Field(None, ge=0)
-    thigh_right: Optional[float] = Field(None, ge=0)
-    calf_left: Optional[float] = Field(None, ge=0)
-    calf_right: Optional[float] = Field(None, ge=0)
-    
+    bicep_left: float | None = Field(None, ge=0)
+    bicep_right: float | None = Field(None, ge=0)
+    forearm_left: float | None = Field(None, ge=0)
+    forearm_right: float | None = Field(None, ge=0)
+    thigh_left: float | None = Field(None, ge=0)
+    thigh_right: float | None = Field(None, ge=0)
+    calf_left: float | None = Field(None, ge=0)
+    calf_right: float | None = Field(None, ge=0)
+
     # Health metrics
-    bmr: Optional[int] = Field(None, ge=0)  # Basal Metabolic Rate
-    metabolic_age: Optional[int] = Field(None, ge=0)
-    visceral_fat: Optional[int] = Field(None, ge=0)
-    
-    notes: Optional[str] = None
+    bmr: int | None = Field(None, ge=0)  # Basal Metabolic Rate
+    metabolic_age: int | None = Field(None, ge=0)
+    visceral_fat: int | None = Field(None, ge=0)
+
+    notes: str | None = None
 
 
 class MeasurementCreate(MeasurementBase):
@@ -62,9 +61,9 @@ class Measurement(MeasurementBase):
 
     id: str
     user_id: str
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None
 
 
 class MeasurementListResponse(BaseModel):
@@ -77,5 +76,5 @@ class MeasurementResponse(BaseModel):
     """Response model for single measurement operations."""
 
     success: bool
-    measurement: Optional[Measurement] = None
-    error: Optional[str] = None
+    measurement: Measurement | None = None
+    error: str | None = None

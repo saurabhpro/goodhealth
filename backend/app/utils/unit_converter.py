@@ -13,16 +13,14 @@ class UnitConverter:
     MILES_TO_KM = 1.60934
 
     @classmethod
-    def convert_weight(
-        cls, value: float, from_unit: str, to_unit: str
-    ) -> float:
+    def convert_weight(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert weight between kg and lbs.
-        
+
         Args:
             value: The weight value to convert
             from_unit: Source unit (kg or lbs)
             to_unit: Target unit (kg or lbs)
-            
+
         Returns:
             Converted weight value, rounded to 1 decimal place
         """
@@ -40,16 +38,14 @@ class UnitConverter:
             raise ValueError(f"Cannot convert weight from {from_unit} to {to_unit}")
 
     @classmethod
-    def convert_distance(
-        cls, value: float, from_unit: str, to_unit: str
-    ) -> float:
+    def convert_distance(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert distance between km and miles.
-        
+
         Args:
             value: The distance value to convert
             from_unit: Source unit (km or miles)
             to_unit: Target unit (km or miles)
-            
+
         Returns:
             Converted distance value, rounded to 1 decimal place
         """
@@ -67,11 +63,15 @@ class UnitConverter:
             raise ValueError(f"Cannot convert distance from {from_unit} to {to_unit}")
 
     @classmethod
-    def normalize_weight(cls, value: float, unit: str, target_unit: str = "kg") -> float:
+    def normalize_weight(
+        cls, value: float, unit: str, target_unit: str = "kg"
+    ) -> float:
         """Normalize weight to a target unit (default kg)."""
         return cls.convert_weight(value, unit, target_unit)
 
     @classmethod
-    def normalize_distance(cls, value: float, unit: str, target_unit: str = "km") -> float:
+    def normalize_distance(
+        cls, value: float, unit: str, target_unit: str = "km"
+    ) -> float:
         """Normalize distance to a target unit (default km)."""
         return cls.convert_distance(value, unit, target_unit)

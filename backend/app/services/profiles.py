@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from supabase import Client
 
@@ -17,30 +17,32 @@ class ProfilesService:
     def __init__(self, supabase: Client):
         self.supabase = supabase
 
-    async def get_profile(self, user_id: str) -> Optional[Profile]:
+    async def get_profile(self, user_id: str) -> Profile | None:
         """Get user profile.
-        
+
         Args:
             user_id: The user's ID
-            
+
         Returns:
             Profile or None if not found
         """
-        response = self.supabase.table("profiles").select("*").eq(
-            "id", user_id
-        ).single().execute()
+        response = (
+            self.supabase.table("profiles")
+            .select("*")
+            .eq("id", user_id)
+            .single()
+            .execute()
+        )
 
         return response.data if response.data else None
 
-    async def update_profile(
-        self, user_id: str, data: ProfileUpdate
-    ) -> dict[str, Any]:
+    async def update_profile(self, user_id: str, data: ProfileUpdate) -> dict[str, Any]:
         """Update user profile.
-        
+
         Args:
             user_id: The user's ID
             data: Profile update data
-            
+
         Returns:
             Dict with success status or error
         """
@@ -59,8 +61,13 @@ class ProfilesService:
                     return {"success": False, "error": "Invalid date of birth format"}
 
             # Validate height if provided
-            if data.height_cm is not None and (data.height_cm < 50 or data.height_cm > 300):
-                return {"success": False, "error": "Height must be between 50 and 300 cm"}
+            if data.height_cm is not None and (
+                data.height_cm < 50 or data.height_cm > 300
+            ):
+                return {
+                    "success": False,
+                    "error": "Height must be between 50 and 300 cm",
+                }
 
             # Build update dict
             update_data: dict[str, Any] = {"updated_at": datetime.now().isoformat()}
@@ -87,9 +94,12 @@ class ProfilesService:
                 if value is not None:
                     update_data[field] = value
 
-            response = self.supabase.table("profiles").update(
-                update_data
-            ).eq("id", user_id).execute()
+            response = (
+                self.supabase.table("profiles")
+                .update(update_data)
+                .eq("id", user_id)
+                .execute()
+            )
 
             if not response.data:
                 return {"success": False, "error": "Profile not found"}

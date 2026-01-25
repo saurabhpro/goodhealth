@@ -1,7 +1,7 @@
 """Workout and Exercise Pydantic models."""
 
 from datetime import datetime
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -12,19 +12,19 @@ class ExerciseBase(BaseModel):
     name: str
     exercise_type: Literal["strength", "cardio", "flexibility", "other"] = "strength"
     # Strength fields
-    sets: Optional[int] = None
-    reps: Optional[int] = None
-    weight: Optional[float] = None
+    sets: int | None = None
+    reps: int | None = None
+    weight: float | None = None
     weight_unit: str = "kg"
     # Cardio fields
-    duration_minutes: Optional[int] = None
-    distance: Optional[float] = None
+    duration_minutes: int | None = None
+    distance: float | None = None
     distance_unit: str = "km"
-    speed: Optional[float] = None
-    calories: Optional[int] = None
-    resistance_level: Optional[int] = None
-    incline: Optional[float] = None
-    notes: Optional[str] = None
+    speed: float | None = None
+    calories: int | None = None
+    resistance_level: int | None = None
+    incline: float | None = None
+    notes: str | None = None
 
 
 class ExerciseCreate(ExerciseBase):
@@ -46,27 +46,27 @@ class WorkoutBase(BaseModel):
 
     name: str
     date: str  # ISO date string YYYY-MM-DD
-    duration_minutes: Optional[int] = None
-    description: Optional[str] = None
-    effort_level: Optional[int] = Field(None, ge=1, le=6)
+    duration_minutes: int | None = None
+    description: str | None = None
+    effort_level: int | None = Field(None, ge=1, le=6)
 
 
 class WorkoutCreate(WorkoutBase):
     """Model for creating a new workout."""
 
     exercises: list[ExerciseCreate] = Field(default_factory=list)
-    session_id: Optional[str] = None  # Link to workout plan session
+    session_id: str | None = None  # Link to workout plan session
 
 
 class WorkoutUpdate(BaseModel):
     """Model for updating an existing workout."""
 
-    name: Optional[str] = None
-    date: Optional[str] = None
-    duration_minutes: Optional[int] = None
-    description: Optional[str] = None
-    effort_level: Optional[int] = Field(None, ge=1, le=6)
-    exercises: Optional[list[ExerciseCreate]] = None
+    name: str | None = None
+    date: str | None = None
+    duration_minutes: int | None = None
+    description: str | None = None
+    effort_level: int | None = Field(None, ge=1, le=6)
+    exercises: list[ExerciseCreate] | None = None
 
 
 class Workout(WorkoutBase):
@@ -76,7 +76,7 @@ class Workout(WorkoutBase):
     user_id: str
     created_at: datetime
     updated_at: datetime
-    deleted_at: Optional[datetime] = None
+    deleted_at: datetime | None = None
 
 
 class WorkoutWithExercises(Workout):
@@ -95,13 +95,13 @@ class WorkoutListResponse(BaseModel):
     """Response model for listing workouts."""
 
     workouts: list[WorkoutWithSelfie]
-    total: Optional[int] = None
+    total: int | None = None
 
 
 class WorkoutResponse(BaseModel):
     """Response model for single workout operations."""
 
     success: bool
-    workout: Optional[WorkoutWithExercises] = None
-    workout_id: Optional[str] = None
-    error: Optional[str] = None
+    workout: WorkoutWithExercises | None = None
+    workout_id: str | None = None
+    error: str | None = None
