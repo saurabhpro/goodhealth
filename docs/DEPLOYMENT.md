@@ -10,6 +10,8 @@ GoodHealth uses a split deployment model:
 - Supabase project with database and auth configured
 - Google Gemini API key
 
+---
+
 ## Backend Deployment (Railway)
 
 ### One-Click Deploy
@@ -24,21 +26,21 @@ GoodHealth uses a split deployment model:
 2. Click **New Project** → **Deploy from GitHub repo**
 3. Select your `goodhealth` repository
 
-#### 2. Configure Root Directory (IMPORTANT)
+#### 2. Configure Root Directory (CRITICAL)
 
-Since this is a monorepo, you **must** set the root directory:
+Since this is a monorepo, you **must** set the root directory in the Dashboard:
 
 1. Click on your service → **Settings**
 2. Under **Source** section, find **Root Directory**
 3. Set it to: `backend`
 4. Save the changes
 
-> **Note**: This step is critical! Without it, Railway will detect the root `package.json` and try to build the frontend instead of the Python backend.
+> **⚠️ Important**: This step is critical! Without it, Railway will detect the root `package.json` and try to build the frontend instead of the Python backend.
 
 #### 3. Builder Configuration
 
-Railway uses **Railpack** to auto-detect and build Python projects. The configuration is in:
-- `railway.json` (repo root) - specifies Railpack builder and root directory
+Railway uses **Railpack** to auto-detect and build Python projects. The configuration files are:
+- `railway.json` (repo root) - specifies Railpack builder
 - `backend/railpack.toml` - Python version and start command
 - `backend/Procfile` - web process command
 
@@ -67,7 +69,7 @@ GEMINI_MODEL=gemini-3.0-flash
 
 1. Go to Settings → Networking
 2. Click **Generate Domain**
-3. Copy the URL (e.g., `https://goodhealth-backend.up.railway.app`)
+3. Copy the URL (e.g., `https://goodhealth.up.railway.app`)
 
 #### 6. Verify Deployment
 
@@ -126,42 +128,50 @@ web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 2. Click **Add New** → **Project**
 3. Import your `goodhealth` repository
 
-#### 2. Configure Build Settings
+#### 2. Configure Root Directory (CRITICAL)
 
-Vercel should auto-detect from `vercel.json`:
+Since this is a monorepo, you **must** set the root directory in the Dashboard:
+
+1. Go to **Settings** → **General**
+2. Find **Root Directory**
+3. Set it to: `frontend`
+4. Save the changes
+
+> **⚠️ Important**: This step is critical! Without it, Vercel will look at the root `package.json` and fail to detect Next.js.
+
+#### 3. Build Settings
+
+With Root Directory set to `frontend`, Vercel will auto-detect Next.js from `frontend/vercel.json`:
 
 ```json
 {
-  "buildCommand": "cd frontend && yarn build",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "cd frontend && yarn install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "installCommand": "yarn install",
+  "buildCommand": "yarn build",
+  "outputDirectory": ".next"
 }
 ```
 
-If not, set manually:
+The settings should auto-populate:
 - **Framework Preset**: Next.js
-- **Root Directory**: `frontend`
 - **Build Command**: `yarn build`
 - **Output Directory**: `.next`
+- **Install Command**: `yarn install`
 
-#### 3. Set Environment Variables
+#### 4. Set Environment Variables
 
-In Vercel Dashboard → Settings → Environment Variables:
+In Vercel Dashboard → Settings → Environment Variables, add as **plain values** (not secret references):
 
-```env
-# Supabase (public)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+| Variable | Value | Environments |
+|----------|-------|--------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://your-project.supabase.co` | All |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key | All |
+| `NEXT_PUBLIC_APP_URL` | `https://your-app.vercel.app` | All |
+| `PYTHON_API_URL` | `https://goodhealth.up.railway.app` | All |
 
-# App URL
-NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+> **Note**: Enter values as plain text, NOT as secret references (don't use `@secret_name` syntax).
 
-# Backend API (Railway URL)
-PYTHON_API_URL=https://your-backend.up.railway.app
-```
-
-#### 4. Deploy
+#### 5. Deploy
 
 Click **Deploy**. Vercel will build and deploy automatically.
 
@@ -189,8 +199,10 @@ Click **Deploy**. Vercel will build and deploy automatically.
 
 ### GitHub Actions (CI)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
+Add these as **Repository Secrets** at `github.com/your-repo/settings/secrets/actions`:
+
+| Secret | Required | Description |
+|--------|----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | For build |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | For build |
 | `NEXT_PUBLIC_APP_URL` | Yes | For build |
@@ -206,6 +218,7 @@ Click **Deploy**. Vercel will build and deploy automatically.
 
 ```bash
 curl https://your-backend.up.railway.app/health
+# Should return: {"status": "healthy"}
 ```
 
 ### 2. Test Authentication
@@ -291,33 +304,41 @@ jobs:
 
 ---
 
-## Scaling
-
-### Railway
-
-- **Horizontal**: Railway auto-scales based on traffic
-- **Resources**: Upgrade plan for more CPU/memory
-- **Regions**: Deploy to multiple regions if needed
-
-### Vercel
-
-- **Edge Functions**: Automatic global distribution
-- **Serverless**: Auto-scales to zero when idle
-- **Enterprise**: Custom scaling options
-
-### Supabase
-
-- **Connection Pooling**: Enabled by default
-- **Read Replicas**: Available on Pro plan
-- **Compute**: Upgrade for more resources
-
----
-
 ## Troubleshooting
 
-### Railway Building Frontend Instead of Backend
+### Vercel: "No Next.js version detected"
 
-**Symptom**: Railway runs `yarn build` and tries to build frontend
+**Cause**: Root Directory not set correctly
+
+**Fix**: 
+1. Go to Vercel Dashboard → Project → Settings → General
+2. Set **Root Directory** to `frontend`
+3. Save and redeploy
+
+### Vercel: "Secret not found" Error
+
+**Cause**: Environment variable configured as secret reference instead of plain value
+
+**Fix**:
+1. Go to Vercel → Settings → Environment Variables
+2. Delete the problematic variable
+3. Re-add it as a **plain text value** (don't use `@secret_name` syntax)
+4. Redeploy
+
+### Vercel: Node.js Version Mismatch
+
+**Cause**: `package.json` engines field conflicts with Vercel's Node version
+
+**Fix**: Use flexible version range in `frontend/package.json`:
+```json
+"engines": {
+  "node": ">=22.0.0"
+}
+```
+
+### Railway: Building Frontend Instead of Backend
+
+**Cause**: Root Directory not set correctly
 
 **Fix**: 
 1. Go to Railway Dashboard → Your Service → Settings
@@ -330,13 +351,6 @@ jobs:
 2. Verify environment variables are set correctly
 3. Check `/health` endpoint
 4. Verify Root Directory is set to `backend`
-
-### Frontend Build Fails
-
-1. Check Vercel build logs
-2. Run build locally: `cd frontend && yarn build`
-3. Verify environment variables
-4. Check for TypeScript errors
 
 ### Auth Not Working
 
@@ -360,13 +374,6 @@ jobs:
    curl -H "x-goog-api-key: YOUR_KEY" \
      "https://generativelanguage.googleapis.com/v1/models"
    ```
-
-### Database Errors
-
-1. Check Supabase logs
-2. Verify RLS policies are correct
-3. Check connection limits (Supabase Dashboard)
-4. Verify service key has correct permissions
 
 ---
 
