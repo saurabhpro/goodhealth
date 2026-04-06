@@ -2236,10 +2236,10 @@
     tslib "2.8.1"
     ws "^8.18.2"
 
-"@supabase/ssr@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@supabase/ssr/-/ssr-0.8.0.tgz#2b4e7380ebf5a204506bbff0e0cb4a529fdfd015"
-  integrity sha512-/PKk8kNFSs8QvvJ2vOww1mF5/c5W8y42duYtXvkOSe+yZKRgTTZywYG2l41pjhNomqESZCpZtXuWmYjFRMV+dw==
+"@supabase/ssr@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@supabase/ssr/-/ssr-0.10.0.tgz#673221a717d28dad608bc55b6765a76b5bf1ecd7"
+  integrity sha512-36jIu+DuKzg5EgA3fnH+zHvwASvpKcL4zPgmHoZaULroS5Q4mzeHcM69zJ0sXUHddO5IcHjQNZJ9Vyhl/DdbRw==
   dependencies:
     cookie "^1.0.2"
 
