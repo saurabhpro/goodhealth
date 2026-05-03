@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import type { TooltipContentProps } from 'recharts'
 import type { Database } from '@/types/database'
 
 type Measurement = Database['public']['Tables']['body_measurements']['Row']
@@ -57,32 +58,28 @@ function calculateIsPositiveChange(
   return null // Neutral metrics
 }
 
-interface CustomTooltipProps {
-  readonly active?: boolean
-  readonly payload?: ReadonlyArray<{ payload: { fullDate: string; value: number | null } }>
+interface CustomTooltipProps extends Pick<TooltipContentProps<number, string>, 'active' | 'payload'> {
   readonly currentMetric: MetricConfig
 }
 
-function CustomTooltip({ active, payload, currentMetric }: CustomTooltipProps) {
-  if (active && payload?.length) {
-    const data = payload[0].payload
-    return (
-      <div className="bg-background border rounded-lg p-3 shadow-lg">
-        <p className="text-sm font-medium mb-1">
-          {new Date(data.fullDate).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </p>
-        <p className="text-sm">
-          <span className="font-semibold">{currentMetric.label}:</span>{' '}
-          {data.value?.toFixed(1)} {currentMetric.unit}
-        </p>
-      </div>
-    )
-  }
-  return null
+function CustomTooltip({ active, payload, currentMetric }: Readonly<CustomTooltipProps>) {
+  if (!active || !payload?.length) return null
+  const data = payload[0].payload as { fullDate: string; value: number | null }
+  return (
+    <div className="bg-background border rounded-lg p-3 shadow-lg">
+      <p className="text-sm font-medium mb-1">
+        {new Date(data.fullDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })}
+      </p>
+      <p className="text-sm">
+        <span className="font-semibold">{currentMetric.label}:</span>{' '}
+        {data.value?.toFixed(1)} {currentMetric.unit}
+      </p>
+    </div>
+  )
 }
 
 export function MeasurementsChart({ measurements }: Readonly<MeasurementsChartProps>) {
