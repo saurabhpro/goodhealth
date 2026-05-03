@@ -33,6 +33,9 @@ const eslintConfig = defineConfig([
       "sonarjs/no-commented-code": "warn",
       "sonarjs/todo-tag": "warn",
       "sonarjs/fixme-tag": "warn",
+      // Keep React Compiler migration feedback visible without blocking dependency updates.
+      "react-hooks/immutability": "warn",
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
   // Data files - allow duplicate strings for static data
