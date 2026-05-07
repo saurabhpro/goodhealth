@@ -2262,9 +2262,9 @@
     ws "^8.18.2"
 
 "@supabase/ssr@^0.10.0":
-  version "0.10.2"
-  resolved "https://registry.yarnpkg.com/@supabase/ssr/-/ssr-0.10.2.tgz#55f4675eef530eaee4a2c9c5ec6a6f01802fe1f7"
-  integrity sha512-JFbchN63CXLFHJRNT7udec4/RoD9PmXkSGko3QSO6vUuqGBtSzdmxR7FPfQNr7SuFd65I7Xv46q66ALjEN1cgQ==
+  version "0.10.3"
+  resolved "https://registry.yarnpkg.com/@supabase/ssr/-/ssr-0.10.3.tgz#dcd5a47d4af828045a426e0032a88c69ef909be5"
+  integrity sha512-ux2CJgX89h0Fz2lY7ZNafNG2SkXpyRc5dz77K9eKeBLPdtywQixKwIuetDeIViAJBp/buOUVmgj8PVesOklNpw==
   dependencies:
     cookie "^1.0.2"
 
