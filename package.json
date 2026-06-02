@@ -16,6 +16,6 @@
     "test:coverage": "cd frontend && yarn test:coverage"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "concurrently": "^10.0.0"
   }
 }
