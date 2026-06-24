@@ -1,8 +1,13 @@
 """Pytest configuration and fixtures."""
 
+import os
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
+os.environ.setdefault("SUPABASE_URL", "http://supabase.test")
+os.environ.setdefault("SUPABASE_SERVICE_KEY", "test-service-key")
+os.environ.setdefault("GEMINI_API_KEY", "test-gemini-key")
 
 
 @pytest.fixture
