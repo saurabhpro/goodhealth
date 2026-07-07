@@ -13,84 +13,61 @@ logger = logging.getLogger(__name__)
 
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
-    """Middleware to extract and verify Supabase JWT tokens.
+    """Extract and verify Supabase JWT tokens via auth.getUser().
 
-    Uses Supabase's auth.getUser() API to verify tokens.
-    Attaches user_id to request.state if token is valid.
-    Does not block requests - authentication is enforced at route level.
+    Attaches user_id to request.state when the token is valid.
+    Routes enforce authentication via the get_current_user_id dependency.
     """
 
-    # Paths that don't require authentication
     PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc"}
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
-        """Process the request and extract user info from JWT."""
-        # Skip auth for public paths
         if request.url.path in self.PUBLIC_PATHS:
             return await call_next(request)
 
-        # Extract token from Authorization header
         auth_header = request.headers.get("Authorization")
         user_id = None
 
         if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header[7:]  # Remove "Bearer " prefix
-            user_id = await self._verify_token_with_supabase(token)
+            token = auth_header[7:]
+            user_id = await self._verify_token_with_supabase(request, token)
 
-        # Attach user_id to request state (may be None if not authenticated)
         request.state.user_id = user_id
 
         return await call_next(request)
 
-    async def _verify_token_with_supabase(self, token: str) -> str | None:
-        """Verify JWT token using Supabase's auth.getUser() API.
-
-        This is more reliable than manual JWT verification as it:
-        - Handles key rotation automatically
-        - Validates token hasn't been revoked
-        - Works with both HS256 and ES256 tokens
-
-        Args:
-            token: The JWT access token string
-
-        Returns:
-            User ID if token is valid, None otherwise
-        """
+    async def _verify_token_with_supabase(
+        self, request: Request, token: str
+    ) -> str | None:
         settings = get_settings()
 
-        if not settings.supabase_url:
-            logger.error("SUPABASE_URL not configured")
+        if not settings.supabase_url or not settings.supabase_service_key:
+            logger.error("Supabase auth is not fully configured")
             return None
 
+        client: httpx.AsyncClient = request.app.state.http_client
+
         try:
-            # Call Supabase auth.getUser() endpoint
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{settings.supabase_url}/auth/v1/user",
-                    headers={
-                        "Authorization": f"Bearer {token}",
-                        "apikey": settings.supabase_service_key,
-                    },
-                    timeout=10.0,
-                )
-
-            if response.status_code == 200:
-                user_data = response.json()
-                user_id = user_data.get("id")
-                if user_id:
-                    return user_id
-                return None
-            elif response.status_code == 401:
-                return None
-            else:
-                logger.warning(f"Supabase auth error: {response.status_code}")
-                return None
-
+            response = await client.get(
+                f"{settings.supabase_url}/auth/v1/user",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "apikey": settings.supabase_service_key,
+                },
+            )
         except httpx.TimeoutException:
             logger.error("Supabase auth request timed out")
             return None
-        except Exception as e:
-            logger.error(f"Unexpected error verifying token: {e}")
+        except httpx.HTTPError as exc:
+            logger.error("Supabase auth request failed: %s", exc)
             return None
+
+        if response.status_code == 200:
+            user_data = response.json()
+            user_id = user_data.get("id")
+            return user_id if user_id else None
+        if response.status_code != 401:
+            logger.warning("Supabase auth error: %s", response.status_code)
+        return None
