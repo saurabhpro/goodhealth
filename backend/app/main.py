@@ -1,8 +1,10 @@
 """FastAPI application entry point."""
 
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -18,17 +20,26 @@ from app.routers import (
     workouts,
 )
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
-    # Startup
-    print(f"Starting {settings.app_name}...")
-    yield
-    # Shutdown
-    print(f"Shutting down {settings.app_name}...")
+    settings.assert_required_for_runtime()
+    if not settings.cors_origins and not settings.debug:
+        logger.warning(
+            "CORS_ORIGINS is empty in non-debug mode; cross-origin requests will be rejected"
+        )
+
+    app.state.http_client = httpx.AsyncClient(timeout=10.0, trust_env=False)
+    logger.info("Starting %s", settings.app_name)
+    try:
+        yield
+    finally:
+        await app.state.http_client.aclose()
+        logger.info("Shutting down %s", settings.app_name)
 
 
 app = FastAPI(
@@ -38,7 +49,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS (must be added before other middleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -47,10 +57,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add JWT authentication middleware
 app.add_middleware(JWTAuthMiddleware)
 
-# Include routers
 app.include_router(workouts.router, prefix=settings.api_prefix, tags=["Workouts"])
 app.include_router(goals.router, prefix=settings.api_prefix, tags=["Goals"])
 app.include_router(
